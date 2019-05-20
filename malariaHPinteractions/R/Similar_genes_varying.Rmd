@@ -1,0 +1,1241 @@
+---
+title: "Similar genes varying across datasets"
+output:
+  html_document: default  
+  html_notebook: default
+---
+
+```{r, echo = T, eval = T, results='hide', message = F, warning=F}
+# libraries required
+
+library(dplyr)
+library(tibble)
+library(MASS)
+library(ggplot2)
+library(purrr)
+library(gplots)
+library(UpSetR)
+library(ggfortify)
+library(reshape2)
+library(stringr)
+library(grid)
+library(edgeR)
+library(ggpubr)
+```
+
+```{r, echo = T, eval = T}
+# All the thresholds
+HostGene <- 10000
+ParasiteGene <- 1000
+HostRead <- 1e6
+ParasiteRead <- 1e4
+BCV <- 0.9
+
+```
+
+```{r, echo = T, eval = T, results='hide'}
+# Step 1: threshold based on read count and parasite count
+
+# use allHPexp to check which runs comply with threshold values
+allHPexp <- read.delim("/SAN/Plasmo_compare/SRAdb/allHPexp.txt", sep = ',') %>%
+  # get all runs with HostSum and ParasiteSum above thresholds
+  filter(HostSum >= HostRead & ParasiteSum >= ParasiteRead) %>%
+  # get all runs with number of host and parasite genes above threshold
+  filter(NumberOfHostGenes >= HostGene & NumberOfParaGenes >= ParasiteGene)
+```
+
+```{r}
+# divide the datasets into host and parasite and then check how many genes are found for each level of BCV at the given number of gene and read thresholds
+studyIDs <- as.character(read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F)[-4,1])
+p_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt")
+h_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt")
+
+compare_genes_host <- list()
+compare_genes_para <- list()
+
+for(i in 1:length(studyIDs))
+{
+  # print(i)
+  # get the runs from allHPexp and leave out the rest from further analysis
+  if(nrow(subset(allHPexp, Study==as.character(studyIDs[i]))["RunID"]) > 0)
+  {
+    s <- as.character(studyIDs[i])
+    good_runs <- sapply(subset(allHPexp, Study==s)["RunID"], function(x) paste0(x, "_", studyIDs[i], sep = ''))
+    host = unique(as.character(allHPexp[allHPexp$Study==s,"Host"]))
+    para = unique(as.character(allHPexp[allHPexp$Study==s,"Parasite"]))
+  
+    # Step 2: Get top 80% dispersed genes
+    # load dataset
+    data <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[i], "/", studyIDs[i], "_disp.txt", collapse = "")) %>%
+      # make a column for gene IDs
+      tibble::rownames_to_column('gene')
+      # get only good columns (runs that complied with threshold)
+    
+    if(length(setdiff(good_runs, colnames(data))) > 0)
+     good_runs <- good_runs[-which(good_runs==setdiff(good_runs, colnames(data)))]
+    
+    data <- data[,c(good_runs,"study_disp", "gene")]
+    
+    #separate host and parasite parts
+    study = as.data.frame(data)
+    study[str_detect(study[,"gene"], "^P+"),(ncol(study)+1)] <- "parasite"
+    study[str_detect(study[,"gene"], "^E+"),ncol(study)] <- "host"
+    study[str_detect(study[,1], "^b+"),ncol(study)] <- "parasite"
+    study[str_detect(study[,1], "^t+"),ncol(study)] <- "parasite"
+    colnames(study)[ncol(study)] <- "Species"
+    host_genes <- study[study$Species=="host",]
+    para_genes <- study[study$Species=="parasite",]
+    
+    if(nrow(host_genes)>0 & length(good_runs)>1)
+        {
+          host_genes %>%
+            # get genes that have genes at least 10 times the number of samples
+            #filter(rowSums(.[,good_runs]) >= (5*length(good_runs))) %>%
+            # get rank
+            mutate(disp_rank = dense_rank(-study_disp)) %>%
+            # arrange by rank
+            arrange(disp_rank) %>%
+            # get 80% best ranks, 1 being best rank of all
+            filter(row_number() / n() <= BCV) -> host_genes_BCV
+    }
+    if(nrow(host_genes)>0 & length(good_runs)==1)
+        {
+          host_genes %>%
+            # get genes that have genes at least 10 times the number of samples
+            # filter(rowSums(.[,good_runs]) >= (5*length(good_runs))) %>%
+            # get rank
+            mutate(disp_rank = dense_rank(-study_disp)) %>%
+            # arrange by rank
+            arrange(disp_rank) %>%
+            # get 80% best ranks, 1 being best rank of all
+            filter(row_number() / n() <= BCV) -> host_genes_BCV
+        }
+      # else
+        # {
+        #   data <- data[,c(good_runs,"study_disp", "gene")] %>%
+        #     # get genes that have genes at least 10 times the number of samples
+        #     filter(rowSums(.[,good_runs]) >= (10*length(good_runs))) %>%
+        #     # get rank
+        #     mutate(disp_rank = dense_rank(desc(study_disp))) %>%
+        #     # arrange by rank
+        #     arrange(disp_rank) %>%
+        #     # get 80% best ranks, 1 being best rank of all
+        #     filter(row_number() / n() <= BCV)
+        # }
+       
+    if(nrow(para_genes)>0 & length(good_runs)>1)
+    {
+      para_genes %>%
+        # get genes that have genes at least 10 times the number of samples
+        #filter(rowSums(.[,good_runs]) >= (5*length(good_runs))) %>%
+        # get rank
+        mutate(disp_rank = dense_rank(-study_disp)) %>%
+        # arrange by rank
+        arrange(disp_rank) %>%
+        # get 80% best ranks, 1 being best rank of all
+        filter(row_number() / n() <= BCV) -> para_genes_BCV
+    }
+    if(nrow(para_genes)>0 & length(good_runs)==1)
+    {
+      para_genes %>%
+        # get genes that have genes at least 10 times the number of samples
+        # filter(rowSums(.[,good_runs]) >= (5*length(good_runs))) %>%
+        # get rank
+        mutate(disp_rank = dense_rank(-study_disp)) %>%
+        # arrange by rank
+        arrange(disp_rank) %>%
+        # get 80% best ranks, 1 being best rank of all
+        filter(row_number() / n() <= BCV) -> para_genes_BCV
+    }
+        
+      # save it and write it in a text file
+      # save(data, file = paste0(studyIDs[i],"_BCVcomply.RData", collapse = ''))
+      # write.table(data, paste0(studyIDs[i],"_BCVcomply.txt", collapse = ''), sep = '\t', row.names = F)
+    
+
+     if(host == "human")
+       check_h <- "h_g"
+     if(host == "mouse")
+       check_h <- "m_g"
+     if(host == "monkey")
+       check_h <- "mo_g"
+    
+     if(para == "Pfalciparum")
+       check_p <- "Pf_g"
+     if(para == "Pberghei")
+       check_p <- "Pb_g"
+     if(para == "Pvivax")
+       check_p <- "Pv_g"
+     if(para == "Pyoelii")
+       check_p <- "Py_g"
+     if(para == "Pchabaudi")
+       check_p <- "Pch_g"
+     if(para == "Pcoatneyi")
+       check_p <- "Pco_g"
+     if(para == "Pcynomolgi")
+       check_p <- "Pcy_g"
+    
+    ortholog_singlecopy_host <- c()
+    ortholog_singlecopy_para <- c()
+    
+    for(a in 1:nrow(host_genes_BCV))
+      ortholog_singlecopy_host[a] <- length(grep(pattern = host_genes_BCV$gene[a], h_o[,check_h])) > 0
+    
+    
+    for(b in 1:nrow(para_genes_BCV))
+      ortholog_singlecopy_para[b] <- length(grep(pattern = para_genes_BCV$gene[b], p_o[,check_p])) > 0
+    
+    
+      host_rank_df = data.frame(host_gene = as.character(host_genes_BCV$gene), rank = host_genes_BCV$disp_rank, single.copy.host.ortho = ortholog_singlecopy_host)
+      compare_genes_host[[as.character(s)]] <- host_rank_df
+      
+      para_rank_df = data.frame(para_gene = as.character(para_genes_BCV$gene), rank = para_genes_BCV$disp_rank, single.copy.para.ortho = ortholog_singlecopy_para)
+      compare_genes_para[[as.character(s)]] <- para_rank_df
+      
+  }
+}
+
+ignore_studies <- c("SRP083918", "SRP029990", "SRP091969", "SRP071199", "SRP056443", "SRP099925", "ERP001696", "SRP164767", "SRP106638", "SRP116117")
+
+compare_genes_host_rm <- list()
+for(i in names(compare_genes_host))
+{
+  if(length(grep(i, ignore_studies))>0)
+    compare_genes_host_rm[[i]] <- NULL
+  else
+    compare_genes_host_rm[[i]] <- compare_genes_host[[i]]
+}
+
+compare_genes_para_rm <- list()
+for(i in names(compare_genes_para))
+{
+  if(length(grep(i, ignore_studies))>0)
+    compare_genes_para_rm[[i]] <- NULL
+  else
+    compare_genes_para_rm[[i]] <- compare_genes_para[[i]]
+}
+
+compare_genes_host <- compare_genes_host_rm
+compare_genes_para <- compare_genes_para_rm
+
+```
+
+
+```{r}
+
+# get dataframes for each host. Each data frame will represent one host each. Each df will contain the study names, the number of genes we get from that study at a certain BCV and the the number genes out of these that are 1:1 orthologs with the other hosts
+
+host_ortho_df_list <- list() # this list will contain three data frame, one each for every host
+hosts <- c("human", "monkey", "mouse")
+for(i in hosts)
+{
+  #get the studies in compare_genes_host 
+  studies <- intersect(as.character(unique(allHPexp[allHPexp$Host==i,"Study"])), names(compare_genes_host))
+  
+  df <- data.frame()
+  for(j in 1:length(studies))
+  {
+    h <- compare_genes_host[[studies[j]]]
+    df[j,1] <- studies[j]
+    df[j,2] <- nrow(h)
+    df[j,3] <- h %>% filter(single.copy.host.ortho==TRUE) %>% nrow()
+  }
+  colnames(df) <- c("Study", "Number.Of.Host.Genes", "Number.Of.Single.Copy.Genes")
+  host_ortho_df_list[[i]] <- df
+}
+save(host_ortho_df_list, file = paste0("host_ortho_df_list_BCV",BCV,"rm.RData", collapse = ''))
+
+######## parasites ##########
+
+para_ortho_df_list <- list() # this list will contain three data frame, one each for every host
+para <- as.character(unique(allHPexp$Parasite))
+for(i in para)
+{
+  #get the studies in compare_genes_host 
+  studies <- intersect(as.character(unique(allHPexp[allHPexp$Parasite==i,"Study"])), names(compare_genes_para))
+  
+  df <- data.frame()
+  for(j in 1:length(studies))
+  {
+    p <- compare_genes_para[[studies[j]]]
+    df[j,1] <- studies[j]
+    df[j,2] <- nrow(p)
+    df[j,3] <- p %>% filter(single.copy.para.ortho==TRUE) %>% nrow()
+  }
+  colnames(df) <- c("Study", "Number.Of.Para.Genes", "Number.Of.Single.Copy.Genes")
+  para_ortho_df_list[[i]] <- df
+}
+save(para_ortho_df_list, file = paste0("para_ortho_df_list_BCV",BCV,"rm.RData", collapse = ''))
+print(paste0("BCV = ", BCV, collapse = ''))
+print(host_ortho_df_list)
+print(para_ortho_df_list)
+```
+
+```{r}
+# Step 2: Threshold based on BCV
+
+# studyIDs <- as.character(read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F)[,1])
+# studyIDs <- studyIDs[-4]
+# studyIDs <- studyIDs[-22]
+# studyIDs <- studyIDs[-31]
+# studyIDs <- studyIDs[-37]
+# compare_genes <- list()
+# 
+# for(i in 1:length(studyIDs))
+# {
+#   # print(i)
+#   # get the runs from allHPexp and leave out the rest from further analysis
+#   if(nrow(subset(allHPexp, Study==as.character(studyIDs[i]))["RunID"]) > 0)
+#   {
+#     s <- as.character(studyIDs[i])
+#     good_runs <- sapply(subset(allHPexp, Study==s)["RunID"], function(x) paste0(x, "_", studyIDs[i], sep = ''))
+#   
+#     # Step 2: Get top 80% dispersed genes
+#     # load dataset
+#     data <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[i], "/", studyIDs[i], "_disp.txt", collapse = "")) %>%
+#       # make a column for gene IDs
+#       tibble::rownames_to_column('gene')
+#       # get only good columns (runs that complied with threshold)
+#     
+#     if(length(setdiff(good_runs, colnames(data))) > 0)
+#      good_runs <- good_runs[-which(good_runs==setdiff(good_runs, colnames(data)))]
+#     
+#     if(length(good_runs)>1)
+#     {
+#       data <- data[,c(good_runs,"study_disp", "gene")] %>%
+#         # get genes that have genes at least 10 times the number of samples
+#         filter(rowSums(.[,good_runs]) >= (5*length(good_runs))) %>%
+#         # get rank
+#         mutate(disp_rank = dense_rank(desc(study_disp))) %>%
+#         # arrange by rank
+#         arrange(disp_rank) %>%
+#         # get 80% best ranks, 1 being best rank of all
+#         filter(row_number() / n() <= BCV)
+#     }else
+#     {
+#       data <- data[,c(good_runs,"study_disp", "gene")] %>%
+#         # get genes that have genes at least 10 times the number of samples
+#         filter(rowSums(.[,good_runs]) >= (10*length(good_runs))) %>%
+#         # get rank
+#         mutate(disp_rank = dense_rank(desc(study_disp))) %>%
+#         # arrange by rank
+#         arrange(disp_rank) %>%
+#         # get 80% best ranks, 1 being best rank of all
+#         filter(row_number() / n() <= BCV)
+#     }
+#    
+#     #data <- data[-grep(pattern = "P", data$gene),]
+# 
+#     
+#     # save it and write it in a text file
+#     # save(data, file = paste0(studyIDs[i],"_BCVcomply.RData", collapse = ''))
+#     # write.table(data, paste0(studyIDs[i],"_BCVcomply.txt", collapse = ''), sep = '\t', row.names = F)
+#     gene_rank_df = data.frame(gene = as.character(data$gene), rank = data$disp_rank)
+#     
+#     compare_genes[[as.character(s)]] <- gene_rank_df
+#   }
+# }
+
+#save(compare_genes, file = "compare_genes.RData")
+#load("compare_genes.RData")
+```
+
+
+```{r}
+# Step 3: Venn diagram
+
+# UpSetR
+
+# mPch
+# mousePchabaudi <- list(ERP004042 = as.character(compare_genes[["ERP004042"]][,1]), 
+#                        ERP002116 = as.character(compare_genes[["ERP002116"]][,1]), 
+#                        ERP000983 = as.character(compare_genes[["ERP000983"]][,1]), 
+#                        ERP002273 = as.character(compare_genes[["ERP002273"]][,1]), 
+#                        ERP005730 = as.character(compare_genes[["ERP005730"]][,1]), 
+#                        ERP110375 = as.character(compare_genes[["ERP110375"]][,1]),
+#                        ERP001696 = as.character(compare_genes[["ERP001696"]][,1])) # , ERP001696 = as.character(compare_genes[["ERP001696"]][,1])
+# pdf(file="/SAN/Plasmo_compare/SRAdb/mousePchabaudi_similargenes.pdf", onefile = F) # or other device
+# upset(fromList(mousePchabaudi), sets = names(mousePchabaudi), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("mouse - P. chabaudi",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# 
+# # mPb
+# mousePberghei <- list(ERP004598 = as.character(compare_genes[["ERP004598"]][,1]), 
+#                       SRP109709 = as.character(compare_genes[["SRP109709"]][,1]),
+#                       SRP099925 = as.character(compare_genes[["SRP099925"]][,1])) # , SRP099925 = as.character(compare_genes[["SRP099925"]][,1])
+# pdf(file="/SAN/Plasmo_compare/SRAdb/mousePberghei_similargenes.pdf", onefile = F)
+# upset(fromList(mousePberghei), sets = names(mousePberghei), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("mouse - P. berghei",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # mPy
+# mousePyoelii <- list(SRP164768 = as.character(compare_genes[["SRP164768"]][,1]), 
+#                      SRP112213 = as.character(compare_genes[["SRP112213"]][,1]))
+# pdf(file="/SAN/Plasmo_compare/SRAdb/mousePyoelii_similargenes.pdf", onefile = F)
+# upset(fromList(mousePyoelii), sets = names(mousePyoelii), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("mouse - P. yoelii",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # hPf
+# humanPfalciparum <- list(DRP000987 = as.character(compare_genes[["DRP000987"]][,1]), 
+#                          SRP032775 = as.character(compare_genes[["SRP032775"]][,1]),  
+#                          ERP106451 = as.character(compare_genes[["ERP106451"]][,1]), 
+#                          ERP023982 = as.character(compare_genes[["ERP023982"]][,1]),
+#                          SRP091969 = as.character(compare_genes[["SRP091969"]][,1]),
+#                          SRP083918 = as.character(compare_genes[["SRP083918"]][,1]),
+#                          SRP029990 = as.character(compare_genes[["SRP029990"]][,1])) # , SRP091969 = as.character(compare_genes[["SRP091969"]][,1]), , SRP083918 = as.character(compare_genes[["SRP083918"]][,1]), SRP029990 = as.character(compare_genes[["SRP029990"]][,1]),
+# pdf(file="/SAN/Plasmo_compare/SRAdb/humanPfalciparum_similargenes.pdf", onefile = F)
+# upset(fromList(humanPfalciparum), sets = names(humanPfalciparum), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("human - P. falciparum",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # hPb
+# humanPberghei <- list(SRP110282 = as.character(compare_genes[["SRP110282"]][,1]), 
+#                       ERP105548 = as.character(compare_genes[["ERP105548"]][,1]))
+# pdf(file="/SAN/Plasmo_compare/SRAdb/humanPberghei_similargenes.pdf", onefile = F)
+# upset(fromList(humanPberghei), sets = names(humanPberghei), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("human - P. berghei",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # hPv
+# humanPvivax <-list(SRP081020 = as.character(compare_genes[["SRP081020"]][,1]), 
+#                    SRP056443 = as.character(compare_genes[["SRP056443"]][,1]))
+# pdf(file="/SAN/Plasmo_compare/SRAdb/humanPvivax_similargenes.pdf", onefile = F)
+# upset(fromList(humanPvivax), sets = names(humanPvivax), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("human - P. vivax",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # moPcy
+# monkeyPcynomolgi = list(SRP118996 = as.character(compare_genes[["SRP118996"]][,1]), 
+#                         SRP118827 = as.character(compare_genes[["SRP118827"]][,1]), 
+#                         SRP118503 = as.character(compare_genes[["SRP118503"]][,1]), 
+#                         SRP116793 = as.character(compare_genes[["SRP116793"]][,1]), 
+#                         SRP108356 = as.character(compare_genes[["SRP108356"]][,1]), 
+#                         SRP096160 = as.character(compare_genes[["SRP096160"]][,1]), 
+#                         ERP020067 = as.character(compare_genes[["ERP020067"]][,1]))
+# pdf(file="/SAN/Plasmo_compare/SRAdb/monkeyPcynomolgi_similargenes.pdf", onefile = F)
+# upset(fromList(monkeyPcynomolgi), sets = names(monkeyPcynomolgi), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("monkey - P. cynomolgi",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+# 
+# # moPco
+# monkeyPcoatneyi = list(SRP116593 = as.character(compare_genes[["SRP116593"]][,1]), 
+#                        SRP116117 = as.character(compare_genes[["SRP116117"]][,1]), 
+#                        SRP106638 = as.character(compare_genes[["SRP106638"]][,1]))
+# pdf(file="/SAN/Plasmo_compare/SRAdb/monkeyPcoatneyi_similargenes.pdf", onefile = F)
+# upset(fromList(monkeyPcoatneyi), sets = names(monkeyPcoatneyi), order.by = "freq",  mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("monkey - P. coatneyi",x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# dev.off()
+
+```
+
+```{r}
+# collect studeis of the same host -> then host parasite pair, host and parasite are still separate
+
+host_collection <- list()
+
+hosts <- as.character(unique(allHPexp$Host))
+
+for(i in hosts)
+{
+  studies <- intersect(as.character(unique(allHPexp[allHPexp$Host==i,"Study"])), names(compare_genes_host))
+  hlist <- compare_genes_host[studies]
+  hlist <- lapply(hlist, function(x)x[,-3])
+  # get all genes of specific host
+  gene_names <- as.character(unique(unlist(sapply(hlist, function(x) x[,"host_gene"]))))
+  int <- as.character(gene_names)
+  
+  for(j in 1:length(hlist))
+  {
+    # intersection of genes from all studies
+    int <- intersect(int, as.character(hlist[[j]][,1]))
+  }
+  
+  # merge ranks for these genes from individual studies
+  silly.df <- data.frame()
+  host.df <- data.frame()
+  host.df[1:length(int),1] <- int
+  #silly.df[1:length(int),1] <- int
+  colnames(host.df)[1] <- "host_gene"
+  #colnames(silly.df)[1] <- "host_gene"
+  for(k in 1:length(hlist))
+  {
+    #host.df[1:nrow(int),1] <- int
+    new.df <- as.data.frame(hlist[[k]])
+    silly.df <- inner_join(host.df, new.df, by = "host_gene")
+    host.df[1:length(int),(k+1)] <- silly.df[,ncol(silly.df)]; colnames(host.df)[k+1] <- names(hlist)[k]
+  }
+  host_collection[[i]] <- host.df
+}
+
+######################## para_collection ##############
+
+parasites <- as.character(unique(allHPexp$Parasite))
+parasites <- parasites[-4]
+para_collection <- list()
+
+for(i in parasites)
+{
+  studies <- intersect(as.character(unique(allHPexp[allHPexp$Parasite==i,"Study"])), names(compare_genes_para))
+  plist <- compare_genes_para[studies]
+  
+  plist <- lapply(plist, function(x)x[,-3])
+  # get all genes of specific host
+  gene_names <- as.character(unique(unlist(sapply(plist, function(x) x[,"para_gene"]))))
+  int <- as.character(gene_names)
+  
+  for(j in 1:length(plist))
+  {
+    # intersection of genes from all studies
+    int <- intersect(int, as.character(plist[[j]][,1]))
+  }
+  
+  # merge ranks for these genes from individual studies
+  silly.df <- data.frame()
+  para.df <- data.frame()
+  para.df[1:length(int),1] <- int
+  #silly.df[1:length(int),1] <- int
+  colnames(para.df)[1] <- "para_gene"
+  #colnames(silly.df)[1] <- "host_gene"
+  for(k in 1:length(plist))
+  {
+    #host.df[1:nrow(int),1] <- int
+    new.df <- as.data.frame(plist[[k]])
+    silly.df <- inner_join(para.df, new.df, by = "para_gene")
+    para.df[1:length(int),(k+1)] <- silly.df[,ncol(silly.df)]; colnames(para.df)[k+1] <- names(plist)[k]
+  }
+  para_collection[[i]] <- para.df
+}
+
+############################################################################
+
+# weighted mean rank
+weighted.mean.rank <- list()
+for(i in names(host_collection))
+{
+  df <- as.data.frame(host_collection[[i]])
+  df1 <- df[,-1]
+  
+  studies <- colnames(df)[-1]
+  runs <- sapply(studies, function(x) nrow(allHPexp[allHPexp$Study==x,]))
+
+  wmr<-c()
+  for(j in 1:nrow(df))
+    wmr[j] = weighted.mean(df1[j,], runs)
+  
+  wmr.df <- data.frame(gene = df[,1], wmr = wmr)
+  
+  weighted.mean.rank[[i]] <- wmr.df
+  
+}
+
+############ parasite wmr ############
+
+# weighted mean rank
+weighted.mean.rank.p <- list()
+for(i in names(para_collection))
+{
+  df <- as.data.frame(para_collection[[i]])
+  df1 <- as.data.frame(df[,-1])
+  
+  studies <- colnames(df)[-1]
+  runs <- sapply(studies, function(x) nrow(allHPexp[allHPexp$Study==x,]))
+
+  wmr<-c()
+  for(j in 1:nrow(df))
+    wmr[j] = weighted.mean(df1[j,], runs)
+  
+  wmr.df <- data.frame(gene = df[,1], wmr.p = wmr)
+  
+  weighted.mean.rank.p[[i]] <- wmr.df
+  
+}
+```
+
+```{r}
+# get ortholog names of the genes from wmr table and plot possible correlation for each pair for hosts
+wmr.merge <- data.frame()
+wmr.ortho.list <- list()
+for(i in names(weighted.mean.rank))
+{
+  if(i == "human")
+   check_h <- "h_g"
+  if(i == "mouse")
+   check_h <- "m_g"
+  if(i == "monkey")
+   check_h <- "mo_g"
+     
+  h_o1 <- h_o[,c("Orthogroup", check_h)]
+     
+  host.ortho.wmr <- merge(weighted.mean.rank[[i]], h_o1, by.x = "gene", by.y = check_h)
+  wmr.ortho.list[[i]] <- host.ortho.wmr
+}
+
+# print("common human and monkey")
+# print(length(intersect(wmr.ortho.list[["human"]][,3], wmr.ortho.list[["monkey"]][,3])))
+
+# put all hosts together
+wmr.merge <- as.data.frame(wmr.ortho.list[[1]])
+wmr.merge <- wmr.merge[,-grep(pattern = "gene", colnames(wmr.merge))]
+colnames(wmr.merge)[1] <- names(wmr.ortho.list)[1]
+a = 3
+for(j in 2:(length(wmr.ortho.list)))
+{
+  wmr.merge <- inner_join(wmr.merge, wmr.ortho.list[[j]], by = c("Orthogroup"))
+  wmr.merge <- wmr.merge[,-grep(pattern = "gene", colnames(wmr.merge))]
+  colnames(wmr.merge)[a] <-  names(wmr.ortho.list)[j]
+  a = a+1
+}
+
+# plot wmr correlation between hosts
+wmr <- wmr.merge[,-which(colnames(wmr.merge)=="Orthogroup")]
+
+cor_hmo <- cor(wmr$human, wmr$monkey)
+cor_hmo <- round(cor_hmo, digits = 2)
+g_hmo <- ggplot(wmr, aes(x = human, y = monkey)) + geom_point(alpha = 0.7, color = "orange") + ggtitle("Human vs monkey w.m.r. correlation") + xlab("human gene w.m.r.") + ylab("monkey gene w.m.r") + geom_smooth(method=lm, se=FALSE) + annotate("text", x = 1000, y = 1000, label = paste0("R = ", cor_hmo, collapse = ''))
+
+cor_mmo <- cor(wmr$mouse, wmr$monkey)
+cor_mmo <- round(cor_mmo, digits = 2)
+g_mmo <- ggplot(wmr, aes(x = mouse, y = monkey)) + geom_point(alpha = 0.7, color = "orange") + ggtitle("Mouse vs monkey w.m.r. correlation") + xlab("mouse gene w.m.r.") + ylab("monkey gene w.m.r") + geom_smooth(method=lm, se=FALSE) + annotate("text", x = 1000, y = 1000, label = paste0("R = ", cor_mmo, collapse = ''))
+
+cor_hm <- cor(wmr$human, wmr$mouse)
+cor_hm <- round(cor_hm, digits = 2)
+g_hm <- ggplot(wmr, aes(x = human, y = mouse)) + geom_point(alpha = 0.7, color = "orange") + ggtitle("Human vs mouse w.m.r. correlation") + xlab("human gene w.m.r.") + ylab("mouse gene w.m.r") + geom_smooth(method=lm, se=FALSE) + annotate("text", x = 1000, y = 1000, label = paste0("R = ", cor_hm, collapse = ''))
+
+pdf(paste0("host_wmr_correlation_BCV0.9nofilterRM.pdf", collapse = ''))
+ggarrange(g_hm, g_hmo, g_mmo,
+          ncol = 1, nrow = 3,
+          widths = 2, heights = 6)
+dev.off()
+# MDS of weighted mean rank
+
+#plotMDS(wmr.merge)
+
+################parasites #########################
+
+wmr.merge.p <- data.frame()
+wmr.ortho.list.p <- list()
+for(i in names(weighted.mean.rank.p))
+{
+  if(i == "Pfalciparum")
+       check_p <- "Pf_g"
+     if(i == "Pberghei")
+       check_p <- "Pb_g"
+     if(i == "Pvivax")
+       check_p <- "Pv_g"
+     if(i == "Pyoelii")
+       check_p <- "Py_g"
+     if(i == "Pchabaudi")
+       check_p <- "Pch_g"
+     if(i == "Pcoatneyi")
+       check_p <- "Pco_g"
+     if(i == "Pcynomolgi")
+       check_p <- "Pcy_g"
+     
+  p_o1 <- p_o[,c("Orthogroup", check_p)]
+     
+  para.ortho.wmr <- merge(weighted.mean.rank.p[[i]], p_o1, by.x = "gene", by.y = check_p)
+  wmr.ortho.list.p[[i]] <- para.ortho.wmr
+}
+
+# print("common human and monkey")
+# print(length(intersect(wmr.ortho.list[["human"]][,3], wmr.ortho.list[["monkey"]][,3])))
+
+# put all hosts together
+# wmr.merge.p <- as.data.frame(wmr.ortho.list.p[[1]])
+# wmr.merge.p <- wmr.merge[,-grep(pattern = "gene", colnames(wmr.merge.p))]
+# colnames(wmr.merge.p)[1] <- names(wmr.ortho.list.p)[1]
+# a = 3
+# for(j in 2:(length(wmr.ortho.list.p)))
+# {
+#   wmr.merge.p <- inner_join(wmr.merge.p, wmr.ortho.list.p[[j]], by = c("Orthogroup"))
+#   wmr.merge.p <- wmr.merge[,-grep(pattern = "gene", colnames(wmr.merge.p))]
+#   colnames(wmr.merge.p)[a] <-  names(wmr.ortho.list.p)[j]
+#   a = a+1
+# }
+
+p.list <- list(Pberghei = as.character(wmr.ortho.list.p[["Pberghei"]][,3]), 
+               Pchabaudi = as.character(wmr.ortho.list.p[["Pchabaudi"]][,3]), 
+               Pfalciparum = as.character(wmr.ortho.list.p[["Pfalciparum"]][,3]),
+               Pvivax = as.character(wmr.ortho.list.p[["Pvivax"]][,3]), 
+               Pcoatneyi = as.character(wmr.ortho.list.p[["Pcoatneyi"]][,3]), 
+               Pcynomolgi = as.character(wmr.ortho.list.p[["Pcynomolgi"]][,3]), 
+               Pyoelii = as.character(wmr.ortho.list.p[["Pyoelii"]][,3]))
+
+  pdf(paste0("Para.orthogroups.bcv0.9RMnofilter10e5.pdf",collapse = ''), onefile = F)
+  upset(fromList(p.list), sets = names(p.list), order.by = "freq", mainbar.y.label = "Orthogroups in intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+  grid.text(paste0("Orthogroups in parasites at BCV = ",BCV,collapse = ''),x = 0.65, y=0.95, gp=gpar(fontsize=20))
+  dev.off()
+      
+```
+
+
+```{r, echo = T, eval = T, message = F, warning=FALSE}
+# Step 4: get study names of all hp pairs and the common genes in each hp pair and rank the genes
+
+# gene_names <- lapply(compare_genes, function(x) x[,1])
+# 
+# hostparasite <- unique(allHPexp$HostParasite)
+# common_gene_rank_list_all <- list()
+# ignore_studies <- c("SRP083918", "SRP029990", "SRP091969", "SRP071199", "SRP056443", "SRP099925", "ERP001696", "SRP164767", "SRP106638", "SRP116117")
+# 
+# for(i in hostparasite)
+# {
+#   print(i)
+#   hp_studies <- intersect(as.character(unique(allHPexp[allHPexp$HostParasite==i,"Study"])), names(compare_genes))
+#   if(length(hp_studies)==0)
+#  { hp_studies <- setdiff(hp_studies, ignore_studies)
+#   hp_genes <- list()
+#   for(j in hp_studies)
+#   {
+#     hp_genes[[as.character(j)]] <- as.character(gene_names[[j]])
+#   }
+#   
+#   # check how many host and parasite genes are in each study in the hp system
+#   hp_genes_study <- list()
+#   for(a in names(hp_genes))
+#   {
+#     study = as.data.frame(hp_genes[[a]])
+#     study[str_detect(study[,1], "^P+"),(ncol(study)+1)] <- "parasite"
+#     study[str_detect(study[,1], "^E+"),ncol(study)] <- "host"
+#     study[str_detect(study[,1], "^b+"),ncol(study)] <- "parasite"
+#     study[str_detect(study[,1], "^t+"),ncol(study)] <- "parasite"
+# 
+#     colnames(study)[ncol(study)] <- "Species"
+#     hp_genes_study[[a]] <- study
+#   }
+#   
+#   print(lapply(hp_genes_study, function(x) table(x$Species)))
+#   #-------end of checking number of host and parasite genes per study-------------#
+#   
+#   common_genes <- as.data.frame(as.character(Reduce(dplyr::intersect, hp_genes)))
+#   colnames(common_genes) <- c("gene")
+#   
+#   common_gene_rank_list <- list()
+#   for(k in 1:length(hp_studies))
+#   {
+#     compare_genes[[hp_studies[k]]] %>%
+#       semi_join(., common_genes) %>%
+#       merge(., common_genes) -> common_gene_rank #%>%
+#       #mutate(gene_rank = dense_rank(rank)) #---> keeping previous ranks
+#      
+#     colnames(common_gene_rank)[2] <- as.character(hp_studies[k])
+#     colnames(common_gene_rank)[1] <- paste0(i,"_gene",collapse = '')
+#     
+#     common_gene_rank_list[[as.character(hp_studies[k])]] <- common_gene_rank[,c(1,2)] # change to c(1,3) if re-ranking them
+#   }
+#   
+#   common_gene_rank_list %>%
+#     purrr::reduce(left_join, by = paste0(i,"_gene",collapse = '')) %>%
+#     as.data.frame() -> common_gene_rank_list_all[[as.character(i)]]
+# 
+# }}
+# save(common_gene_rank_list_all, file = "common_gene_rank_list_all.RData")
+```
+
+```{r}
+# check how many host genes are common among the studies present
+
+# gene_names <- lapply(compare_genes, function(x) x[,1])
+  # library(devtools)
+  # install_github("jokergoo/ComplexHeatmap")
+  # library(ComplexHeatmap)
+# genes_at_BCV <- data.frame()
+# hosts <- unique(allHPexp$Host)
+# for(i in 1:length(compare_genes))
+# {
+#   # check how many host and parasite genes are in each study in the hp system
+#   
+#   host = unique(as.character(allHPexp[allHPexp$Study==names(compare_genes)[i],"Host"]))
+#   para = unique(as.character(allHPexp[allHPexp$Study==names(compare_genes)[i],"Parasite"]))
+# 
+#   study = as.data.frame(compare_genes[[i]])
+#   study[str_detect(study[,1], "^P+"),(ncol(study)+1)] <- "parasite"
+#   study[str_detect(study[,1], "^E+"),ncol(study)] <- "host"
+#   study[str_detect(study[,1], "^b+"),ncol(study)] <- "parasite"
+#   study[str_detect(study[,1], "^t+"),ncol(study)] <- "parasite"
+# 
+#   colnames(study)[ncol(study)] <- "Species"
+#   host_genes <- nrow(study[study$Species=="host",])
+#   para_genes <- nrow(study[study$Species=="parasite",])
+#   
+#   genes_at_BCV[i,1] <- names(compare_genes)[i]
+#   genes_at_BCV[i,2] <- host
+#   genes_at_BCV[i,3] <- para
+#   genes_at_BCV[i,4] <- host_genes
+#   genes_at_BCV[i,5] <- para_genes
+#   genes_at_BCV[i,6] <- BCV
+#   
+#   # genes_at_BCV$Study[i] <- names(compare_genes)[i]
+#   # genes_at_BCV$Host[i] <- host
+# }
+# colnames(genes_at_BCV) <- c("Study", "Host", "Parasite", "HostGenes#", "ParaGenes#", "BCV")
+# 
+# genes_at_BCV_99 <- genes_at_BCV
+# genes_at_BCV_90 <- genes_at_BCV
+# genes_at_BCV_80 <- genes_at_BCV
+# genes_at_BCV_100 <- genes_at_BCV
+# 
+# genes_at_BCV <- rbind(genes_at_BCV_100, genes_at_BCV_99, genes_at_BCV_90, genes_at_BCV_80)
+# save(genes_at_BCV, file = "genes_at_BCV.RData")
+# write.table(genes_at_BCV, "genes_at_BCV.txt", sep = "\t", row.names = F)
+# 
+# hp_genes_study <- list()
+# hosts <- unique(allHPexp$Host)
+# for(i in hosts)
+# {
+#   hp_studies <- intersect(as.character(unique(allHPexp[allHPexp$Host==i,"Study"])), names(compare_genes))
+#   #hp_studies <- setdiff(hp_studies, ignore_studies)
+#   hp_studies_gene_rank <- list()
+#   for(j in hp_studies)
+#   {
+#     hp_studies_gene_rank[[as.character(j)]] <- compare_genes[[j]]
+#   }
+#   
+#   # check how many host and parasite genes are in each study in the hp system
+#   
+#   for(a in names(hp_studies_gene_rank))
+#   {
+#     study = as.data.frame(hp_studies_gene_rank[[a]])
+#     study[str_detect(study[,1], "^P+"),(ncol(study)+1)] <- "parasite"
+#     study[str_detect(study[,1], "^E+"),ncol(study)] <- "host"
+#     study[str_detect(study[,1], "^b+"),ncol(study)] <- "parasite"
+#     study[str_detect(study[,1], "^t+"),ncol(study)] <- "parasite"
+# 
+#     colnames(study)[ncol(study)] <- "Species"
+#     host_genes <- nrow(study[study$Species=="host",])
+#     #para_genes <- nrow(study[study$Species=="parasite",])
+# 
+#     name <- paste0("host_",i,collapse = '')
+#     hp_genes_study[[name]][[a]] <- host_genes
+#     
+#   }
+# }
+# 
+# for(i in hosts)
+# {
+#   host = hp_genes_study[[grep(pattern = i,names(hp_genes_study))]]
+#   
+#   # extract only host genes from all the studies of this host, leave out parasite genes
+#   host_genes <- lapply(host, function(x) as.character(x[x$Species=="host",1]))
+#   # I get a list where each element is a study of the host and each of these studies only have host genes
+#   
+#   upset(fromList(host_genes), empty.intersections = T, nsets = length(host_genes), sets = names(host_genes), order.by = "freq",   mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+#   
+#   grid.text(paste0("Common genes present in ", i, " studies", collapse = ''),x = 0.65, y=0.95, gp=gpar(fontsize=20))
+# 
+# }
+# 
+# # do this with common_gene_rank_list_all_df
+# 
+# for(i in hosts)
+# {
+#   host = common_gene_rank_list_all[grep(pattern = i,names(common_gene_rank_list_all))]
+#   
+#   # extract only host genes from all the studies of this host, leave out parasite genes
+#   host_genes <- lapply(host, function(x) as.character(x[x$Species=="host",1]))
+#   # I get a list where each element is a study of the host and each of these studies only have host genes
+#   
+#   upset(fromList(host_genes), empty.intersections = T, nsets = length(host_genes), sets = names(host_genes), order.by = "freq",   mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+#   
+#   grid.text(paste0("Common host genes present in ", i, " studies", collapse = ''),x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# }
+# 
+# # weighted mean rank of studies in each host from common_gene_rank_list_all_df
+# weighted_mean <- function(dataset)
+# {
+#   studies <- dataset[,-ncol(dataset)] %>%
+#     rename(rowname = colnames(.)[1]) %>%
+#     tibble::column_to_rownames()
+#   runs <- sapply(colnames(studies), function(x) nrow(allHPexp[allHPexp$Study==x,]))
+#   
+#   wmr<-c()
+#   for(i in 1:nrow(dataset))
+#     wmr[i] = weighted.mean(studies[i,], runs)
+#   
+#   studies <- cbind(studies, WMR = wmr, Species = dataset[, "Species"])
+#   
+#   return(studies)
+# }
+# 
+# weighted_mean_rank <- lapply(common_gene_rank_list_all_df, function(x) weighted_mean(x))
+# 
+# for(i in hosts)
+# {
+#   host = weighted_mean_rank[grep(pattern = i,names(weighted_mean_rank))]
+#   
+#   # extract only host genes from all the studies of this host, leave out parasite genes
+#   host_genes <- lapply(host, function(x) as.character(x[x$Species=="host",1]))
+#   # I get a list where each element is a study of the host and each of these studies only have host genes
+#   
+#   upset(fromList(host_genes), empty.intersections = T, nsets = length(host_genes), sets = names(host_genes), order.by = "freq",   mainbar.y.label = "Genes in intersections", sets.x.label = "Genes per dataset", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8), mode)
+#   
+#   grid.text(paste0("Common host genes present in ", i, " studies", collapse = ''),x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# }
+
+# do this for orthologous genes
+
+
+  
+```
+
+
+```{r}
+# MDS
+
+# d <- dist(common_gene_rank_list_all[["mousePberghei"]][,2:ncol(common_gene_rank_list_all[["mousePberghei"]])])
+# #autoplot(d)
+# fit <- cmdscale(d, eig = T, k = 2)
+# autoplot(fit)
+# x <- fit$points[,1]
+# y <- fit$points[,2]
+# plot(x,y,xlab = "Coordinate 1", ylab = "Coordinate 2")
+#text(x,y , labels = common_gene_rank_list_all[["monkeyPcynomolgi"]][,1], cex = 0.7)
+##
+# humanPfalciparum = as.data.frame(common_gene_rank_list_all[["humanPfalciparum"]])
+# humanPfalciparum[str_detect(humanPfalciparum[,1], "^P+"),(ncol(humanPfalciparum)+1)] <- "parasite"
+# humanPfalciparum[str_detect(humanPfalciparum[,1], "^E+"),ncol(humanPfalciparum)] <- "host"
+# colnames(humanPfalciparum)[ncol(humanPfalciparum)] <- "Species"
+# 
+# ##
+# humanPberghei = as.data.frame(common_gene_rank_list_all[["humanPberghei"]])
+# humanPberghei[str_detect(humanPberghei[,1], "^P+"),(ncol(humanPberghei)+1)] <- "parasite"
+# humanPberghei[str_detect(humanPberghei[,1], "^E+"),ncol(humanPberghei)] <- "host"
+# humanPberghei[str_detect(humanPberghei[,1], "^b+"),ncol(humanPberghei)] <- "parasite"
+# colnames(humanPberghei)[ncol(humanPberghei)] <- "Species"
+# 
+# ##
+# humanPvivax = as.data.frame(common_gene_rank_list_all[["humanPvivax"]])
+# humanPvivax[str_detect(humanPvivax[,1], "^P+"),(ncol(humanPvivax)+1)] <- "parasite"
+# humanPvivax[str_detect(humanPvivax[,1], "^E+"),ncol(humanPvivax)] <- "host"
+# colnames(humanPvivax)[ncol(humanPvivax)] <- "Species"
+# 
+# ##
+# mousePberghei = as.data.frame(common_gene_rank_list_all[["mousePberghei"]])
+# mousePberghei[str_detect(mousePberghei[,1], "^P+"),(ncol(mousePberghei)+1)] <- "parasite"
+# mousePberghei[str_detect(mousePberghei[,1], "^E+"),ncol(mousePberghei)] <- "host"
+# mousePberghei[str_detect(mousePberghei[,1], "^b+"),ncol(mousePberghei)] <- "parasite"
+# colnames(mousePberghei)[ncol(mousePberghei)] <- "Species"
+# 
+# ##
+# mousePchabaudi = as.data.frame(common_gene_rank_list_all[["mousePchabaudi"]])
+# mousePchabaudi[str_detect(mousePchabaudi[,1], "^P+"),(ncol(mousePchabaudi)+1)] <- "parasite"
+# mousePchabaudi[str_detect(mousePchabaudi[,1], "^E+"),ncol(mousePchabaudi)] <- "host"
+# colnames(mousePchabaudi)[ncol(mousePchabaudi)] <- "Species"
+# 
+# ##
+# mousePyoelii = as.data.frame(common_gene_rank_list_all[["mousePyoelii"]])
+# mousePyoelii[str_detect(mousePyoelii[,1], "^P+"),(ncol(mousePyoelii)+1)] <- "parasite"
+# mousePyoelii[str_detect(mousePyoelii[,1], "^E+"),ncol(mousePyoelii)] <- "host"
+# colnames(mousePyoelii)[ncol(mousePyoelii)] <- "Species"
+# 
+# ##
+# monkeyPcynomolgi = as.data.frame(common_gene_rank_list_all[["monkeyPcynomolgi"]])
+# monkeyPcynomolgi[str_detect(monkeyPcynomolgi[,1], "^P+"),(ncol(monkeyPcynomolgi)+1)] <- "parasite"
+# monkeyPcynomolgi[str_detect(monkeyPcynomolgi[,1], "^E+"),ncol(monkeyPcynomolgi)] <- "host"
+# colnames(monkeyPcynomolgi)[ncol(monkeyPcynomolgi)] <- "Species"
+# 
+# 
+# ##
+# monkeyPcoatneyi = as.data.frame(common_gene_rank_list_all[["monkeyPcoatneyi"]])
+# monkeyPcoatneyi[str_detect(monkeyPcoatneyi[,1], "^P+"),(ncol(monkeyPcoatneyi)+1)] <- "parasite"
+# monkeyPcoatneyi[str_detect(monkeyPcoatneyi[,1], "^E+"),ncol(monkeyPcoatneyi)] <- "host"
+# colnames(monkeyPcoatneyi)[ncol(monkeyPcoatneyi)] <- "Species"
+################################### plot pca ####################################################################
+
+# pc <- prcomp(subset(humanPberghei, select = -which(names(humanPberghei) %in% c("humanPberghei_gene","Species"))))
+# autoplot(pc, data = humanPberghei, colour = "Species", main = "human - P. berghei")
+# print(table(humanPberghei$Species))
+# 
+# pc <- prcomp(subset(humanPvivax, select = -which(names(humanPvivax) %in% c("humanPvivax_gene","Species")))) # only one study
+# autoplot(pc, data = humanPvivax, colour = "Species", main = "human - P. vivax")
+# print(table(humanPvivax$Species))
+# 
+# pc <- prcomp(subset(humanPfalciparum, select = -which(names(humanPfalciparum) %in% c("humanPfalciparum_gene","Species"))))
+# autoplot(pc, data = humanPfalciparum, colour = "Species", main = "human - P. falciparum")
+# print(table(humanPfalciparum$Species))
+# 
+# pc <- prcomp(subset(mousePberghei, select = -which(names(mousePberghei) %in% c("mousePberghei_gene","Species"))))
+# autoplot(pc, data = mousePberghei, colour = "Species", main = "mouse - P. berghei")
+# print(table(mousePberghei$Species))
+# 
+# pc <- prcomp(subset(mousePchabaudi, select = -which(names(mousePchabaudi) %in% c("mousePchabaudi_gene","Species"))))
+# autoplot(pc, data = mousePchabaudi, colour = "Species", main = "mouse - P. chabaudi")
+# print(table(mousePchabaudi$Species))
+# 
+# pc <- prcomp(subset(mousePyoelii, select = -which(names(mousePyoelii) %in% c("mousePyoelii_gene","Species"))))
+# autoplot(pc, data = mousePyoelii, colour = "Species", main = "mouse - P. yoelii")
+# print(table(mousePyoelii$Species))
+# 
+# pc <- prcomp(subset(monkeyPcynomolgi, select = -which(names(monkeyPcynomolgi) %in% c("monkeyPcynomolgi_gene","Species"))))
+# autoplot(pc, data = monkeyPcynomolgi, colour = "Species", main = "monkey - P. cynomolgi")
+# print(table(monkeyPcynomolgi$Species))
+# 
+# pc <- prcomp(subset(monkeyPcoatneyi, select = -which(names(monkeyPcoatneyi) %in% c("monkeyPcoatneyi_gene","Species"))))
+# autoplot(pc, data = monkeyPcoatneyi, colour = "Species", main = "monkey - P. coatneyi")
+# print(table(monkeyPcoatneyi$Species))
+
+################################# plot MDS to separaste studies ######################
+
+# plotMDS(subset(monkeyPcoatneyi, select = -which(names(monkeyPcoatneyi) %in% c("monkeyPcoatneyi_gene","Species")))) # has only 2 studies, needs 3
+# plotMDS(subset(monkeyPcynomolgi, select = -which(names(monkeyPcynomolgi) %in% c("monkeyPcynomolgi_gene","Species"))))
+# plotMDS(subset(mousePchabaudi, select = -which(names(mousePchabaudi) %in% c("mousePchabaudi_gene","Species"))))
+#   # plotMDS(subset(mousePberghei, select = -which(names(mousePberghei) %in% c("mousePberghei_gene","Species")))) 
+# # plotMDS(subset(mousePyoelii, select = -which(names(mousePyoelii) %in% c("mousePyoelii_gene","Species"))))
+# plotMDS(subset(humanPfalciparum, select = -which(names(humanPfalciparum) %in% c("humanPfalciparum_gene","Species"))))
+      # plotMDS(subset(humanPvivax, select = -which(names(humanPvivax) %in% c("humanPvivax_gene","Species"))))
+# plotMDS(subset(humanPberghei, select = -which(names(humanPberghei) %in% c("humanPberghei_gene","Species"))))
+
+```
+
+```{r}
+# orthologous genes
+
+# load("common_gene_rank_list_all.RData")
+# 
+# # get host and parasite single copy orthologous genes
+# p_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt")
+# h_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt")
+# 
+# # first reduce each hp data frame to usable orthologous genes and then work for each / collection of studies
+# # get host and parasite name
+# 
+# getHPorthologs <- function(hp)
+# {
+#  h <- strsplit(colnames(hp)[1], split = "P")[[1]][1]
+#  p <- strsplit(strsplit(colnames(hp)[1], split = "P")[[1]][2], split = "_")[[1]][1]
+#  
+#  if(h == "human")
+#    check_h <- "h_g"
+#  if(h == "mouse")
+#    check_h <- "m_g"
+#  if(h == "monkey")
+#    check_h <- "mo_g"
+# 
+#  hp %>%
+#   filter(Species == "host") -> hp_h
+#  colnames(hp_h)[1] <- check_h
+#  hp_h %>%
+#   inner_join(., h_o[,c("Orthogroup", check_h)], by = check_h) -> hp_h
+#  colnames(hp_h)[1] <- colnames(hp)[1]
+# 
+# 
+#  if(p == "falciparum")
+#    check_p <- "Pf_g"
+#  if(p == "berghei")
+#    check_p <- "Pb_g"
+#  if(p == "vivax")
+#    check_p <- "Pv_g"
+#  if(p == "yoelii")
+#    check_p <- "Py_g"
+#  if(p == "chabaudi")
+#    check_p <- "Pch_g"
+#  if(p == "coatneyi")
+#    check_p <- "Pco_g"
+#  if(p == "cynomolgi")
+#    check_p <- "Pcy_g"
+# 
+#  hp %>%
+#   filter(Species == "parasite") -> hp_p
+#  colnames(hp_p)[1] <- check_p
+#  hp_p %>%
+#   inner_join(., p_o[,c("Orthogroup", check_p)], by = check_p) -> hp_p
+#  colnames(hp_p)[ncol(hp_p)] = "Orthogroup"
+#  colnames(hp_p)[1] <- colnames(hp)[1]
+# 
+#  hp_h_p <- rbind(hp_h, hp_p)
+#  hp_h_p$Orthogroup <- as.character(hp_h_p$Orthogroup)
+# 
+#  return(hp_h_p)
+# }
+# 
+# # separate the hp datset based on species
+# common_gene_rank_list_all_df <- list(humanPfalciparum = humanPfalciparum, humanPberghei = humanPberghei, humanPvivax = humanPvivax, mousePyoelii = mousePyoelii, mousePchabaudi = mousePchabaudi, mousePberghei = mousePberghei, monkeyPcoatneyi = monkeyPcoatneyi, monkeyPcynomolgi = monkeyPcynomolgi)
+# 
+# ortholog_list <- lapply(common_gene_rank_list_all_df, function(x) getHPorthologs(x))
+# save(ortholog_list, file = "ortholog_all_studies.RData")
+# 
+# # merge all orthologous genes from all host-parasite systems into one data frame --> ultimate dataset for one network
+# 
+# all_genes_merged <-  data.frame(Orthogroup = c(as.character(h_o$Orthogroup), as.character(p_o$Orthogroups)))
+# l <- c(1,2,3,5,6,7,8)
+# for(i in l)
+# {
+#   hp_sys <- as.data.frame(ortholog_list[[i]])
+#   all_genes_merged <- inner_join(all_genes_merged, hp_sys, by = "Orthogroup")
+# }
+# 
+# 
+# # group according to tissue
+# 
+# ################################### blood ##################################
+# 
+# blood_list <- list(humanPfalciparum = humanPfalciparum[,c(1,2,3,5,6,7)], humanPvivax = humanPvivax, monkeyPcoatneyi = monkeyPcoatneyi, monkeyPcynomolgi = monkeyPcynomolgi[,c(1,2,3,4,5,6,9)], mousePberghei = mousePberghei, mousePchabaudi = mousePchabaudi[,c(1,4,6,7,8)], mousePyoelii = mousePyoelii[,c(1,3,4)])# , monkeyPcoatneyi = monkeyPcoatneyi, monkeyPcynomolgi = monkeyPcynomolgi[,c(1,2,3,4,5,6,9)], mousePberghei = mousePberghei, mousePchabaudi = mousePchabaudi[,c(1,4,6,7,8)] #, mousePyoelii = mousePyoelii[,c(1,3,4)]
+# 
+# blood_ortholog_list <- lapply(blood_list, function(x) getHPorthologs(x))
+# 
+# blood_all_genes_merged <-  data.frame(Orthogroup = c(as.character(h_o$Orthogroup), as.character(p_o$Orthogroups)))
+# for(i in names(blood_ortholog_list))
+#   blood_all_genes_merged <- inner_join(blood_all_genes_merged, as.data.frame(blood_ortholog_list[[i]]), by = "Orthogroup")
+# 
+# ################################### liver ################################
+# liver_list <- list(humanPberghei = humanPberghei, monkeyPcynomolgi = monkeyPcynomolgi[,c(1,7,8,9)])
+# 
+# liver_ortholog_list <- lapply(liver_list, function(x) getHPorthologs(x))
+# 
+# liver_all_genes_merged <-  data.frame(Orthogroup = c(as.character(h_o$Orthogroup), as.character(p_o$Orthogroups)))
+# for(i in names(liver_ortholog_list))
+#   liver_all_genes_merged <- inner_join(liver_all_genes_merged, as.data.frame(liver_ortholog_list[[i]]), by = "Orthogroup")
+# 
+# ################################## spleen ################################
+# 
+# spleen_list <- list(mousePyoelii = mousePyoelii[,c(1,2,4)], mousePchabaudi = mousePchabaudi[,c(1,2,3,5,8)])
+# spleen_ortholog_list <- lapply(spleen_list, function(x) getHPorthologs(x))
+# 
+# spleen_all_genes_merged <-  data.frame(Orthogroup = c(as.character(h_o$Orthogroup), as.character(p_o$Orthogroups)))
+# for(i in names(spleen_ortholog_list))
+#   spleen_all_genes_merged <- inner_join(spleen_all_genes_merged, as.data.frame(spleen_ortholog_list[[i]]), by = "Orthogroup")
+
+```
+
+```{r}
+
+# UpSetR for orthologous genes
+
+# ortholog_name_list <- lapply(ortholog_list, function(x) x[,ncol(x)])
+# blood_name_list <- lapply(blood_ortholog_list, function(x) x[,ncol(x)])
+# liver_name_list <- lapply(liver_ortholog_list, function(x) x[,ncol(x)])
+# spleen_name_list <- lapply(spleen_ortholog_list, function(x) x[,ncol(x)])
+# 
+# 
+# ### all ortholog ####
+# upset(fromList(ortholog_name_list), sets = names(ortholog_name_list), order.by = "freq",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups across datasets (intersections arranged by frequency)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# upset(fromList(ortholog_name_list), sets = names(ortholog_name_list), order.by = "degree",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups across datasets (intersections arranged by degree)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# 
+# ### blood ortholog ####
+# upset(fromList(blood_name_list), sets = names(blood_name_list), order.by = "freq",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in blood datasets (intersections arranged by frequency)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# upset(fromList(blood_name_list), sets = names(blood_name_list), order.by = "degree",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in blood datasets (intersections arranged by degree)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# ### liver ortholog ####
+# upset(fromList(liver_name_list), sets = names(liver_name_list), order.by = "freq",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in liver datasets (intersections arranged by frequency)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# upset(fromList(liver_name_list), sets = names(liver_name_list), order.by = "degree",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in liver datasets (intersections arranged by degree)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# ### spleen ortholog ####
+# upset(fromList(spleen_name_list), sets = names(spleen_name_list), order.by = "freq",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in spleen datasets (intersections arranged by frequency)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+# 
+# upset(fromList(spleen_name_list), sets = names(spleen_name_list), order.by = "degree",  mainbar.y.label = "Orthologous gene intersections", sets.x.label = "Orthogroups per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
+# grid.text("Orthogroups in spleen datasets (intersections arranged by degree)",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+
+```
+
+```{r}
+
+# plotMDS(blood_all_genes_merged[,c(3:7, 10,13,16:20, 23,24,27:29, 32)])
+# plotMDS(spleen_all_genes_merged[,c(3,6:8)])
+# plotMDS(liver_all_genes_merged[,c(3,4,7,8)])
+
+```
+
+```{r}
+# orthologous genes
+
+#load("common_gene_rank_list_all.RData")
+
+# get host and parasite single copy orthologous genes
+# p_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt")
+# h_o <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt")
+# 
+# # first reduce each hp data frame to usable orthologous genes and then work for each / collection of studies
+# # get host and parasite name
+# 
+# genes_orthologs <- data.frame()
+# for(i in 1:length(compare_genes))
+# {
+# 
+#    h <- unique(as.character(allHPexp[allHPexp$Study==names(compare_genes)[i], "Host"]))
+#    p <- unique(as.character(allHPexp[allHPexp$Study==names(compare_genes)[i], "Parasite"]))
+#    if(h == "human")
+#      check_h <- "h_g"
+#    if(h == "mouse")
+#      check_h <- "m_g"
+#    if(h == "monkey")
+#      check_h <- "mo_g"
+# 
+#    
+#    study = as.data.frame(compare_genes[[i]])
+#    study[str_detect(study[,1], "^P+"),(ncol(study)+1)] <- "parasite"
+#    study[str_detect(study[,1], "^E+"),ncol(study)] <- "host"
+#    study[str_detect(study[,1], "^b+"),ncol(study)] <- "parasite"
+#    study[str_detect(study[,1], "^t+"),ncol(study)] <- "parasite"
+# 
+#    colnames(study)[ncol(study)] <- "Species"
+#    hp = study
+# 
+#    hp %>%
+#      filter(Species == "host")-> hp_h
+#     colnames(hp_h)[1] <- check_h
+#    
+#     hp_h %>%
+#      inner_join(., h_o[,c("Orthogroup", check_h)], by = check_h) -> hp_h
+#    colnames(hp_h)[1] <- colnames(hp)[1]
+#    
+#    if(p == "Pfalciparum")
+#      check_p <- "Pf_g"
+#    if(p == "Pberghei")
+#      check_p <- "Pb_g"
+#    if(p == "Pvivax")
+#      check_p <- "Pv_g"
+#    if(p == "Pyoelii")
+#      check_p <- "Py_g"
+#    if(p == "Pchabaudi")
+#      check_p <- "Pch_g"
+#    if(p == "Pcoatneyi")
+#      check_p <- "Pco_g"
+#    if(p == "Pcynomolgi")
+#      check_p <- "Pcy_g"
+# 
+#    hp %>%
+#     filter(Species == "parasite") -> hp_p
+#    colnames(hp_p)[1] <- check_p
+#    
+#    hp_p %>%
+#     inner_join(., p_o[,c("Orthogroup", check_p)], by = check_p) -> hp_p
+#    colnames(hp_p)[1] <- colnames(hp)[1]
+#    
+#    genes_orthologs[i,1] <- names(compare_genes)[i]
+#    genes_orthologs[i,2] <- nrow(hp_h)
+#    genes_orthologs[i,3] <- nrow(hp_p)
+#    genes_orthologs[i,4] <- BCV
+# }
+# 
+# colnames(genes_orthologs) <- c("Study", "HostGenes#", "ParaGenes#", "BCV")
+# 
+# if(BCV == 1)
+#   genes_orthologs_100 <- genes_orthologs
+# if(BCV == 0.99)
+#   genes_orthologs_99 <- genes_orthologs
+# if(BCV == 0.9)
+#   genes_orthologs_90 <- genes_orthologs
+# if(BCV == 0.8)
+#   genes_orthologs_80 <- genes_orthologs
+# 
+# genes_orthologs <- rbind(genes_orthologs_100, genes_orthologs_99, genes_orthologs_90, genes_orthologs_80)
+# save(genes_orthologs, file = "genes_orthologs.RData")
+# write.table(genes_orthologs, "genes_orthologs.txt", sep = '\t', row.names = F)
+
+```
+
