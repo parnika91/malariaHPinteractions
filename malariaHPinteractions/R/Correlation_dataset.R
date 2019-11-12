@@ -2,9 +2,19 @@ library(WGCNA)
 library(foreach)
 library(doParallel)
 
-studyID <- "SRP118996_SRP032775"
+# function to assign an RData object to a name
+# https://stackoverflow.com/questions/5577221/how-can-i-load-an-object-into-a-variable-name-that-i-specify-from-an-r-data-file
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+options(echo=TRUE)
+args <- commandArgs()
+studyID <- args[1] # for example, for a dataset called SRP1188996.RData, write SRP118996 in the command line
 load(paste0("Data/", studyID, ".RData"))
-study <- SRP118996_SRP032775
+study <- loadRData(studyID)
 study <- t(study)
 
 ### correlation ####
@@ -17,7 +27,6 @@ PermAsso <- function()
 {
   perm <- foreach(i=1:reps, .combine = "+") %do%
     {
-      #rand.col <- host.para[sample(nrow(host.para), (nrow(host.para))),]       
       (abs(cor(study, study[sample(n, n),], use = 'pairwise.complete.obs') >= abs(ori_cor) +0))
     }
   return(perm)
