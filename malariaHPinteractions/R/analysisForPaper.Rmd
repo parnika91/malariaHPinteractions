@@ -37,14 +37,18 @@ This plot has host expression % on one axis and parasite expression % on the oth
 ```{r, echo=FALSE, eval=FALSE}
 # First get all the study IDs and the associated hosts and parasites. This info is stored in a comma separated text file named positive_experiments.txt. From this file we get name of host, of parasite and study ID.
 
-positive_experiments <- read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F, sep = ',')
-studyIDs <- positive_experiments[,1]
+library(dplyr)
+library(tibble)
+
+positive_experiments <- read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F, sep = '\t')
+studyIDs <- as.character(positive_experiments[,1])
 #studyIDs <- c("ERP020067", "SRP018945", "SRP066796", "ERP106451")
 
 # Second, we want the run IDs for each of the studies we read from the above file. So we go into the folder of each study and read the run IDs from runs_<study>.txt
 
 getAllHPexpression <- function(study)
 { 
+  print(study)
   study_df <- data.frame()
   
   # the following statement gives us both run ID and the study ID
@@ -56,68 +60,89 @@ getAllHPexpression <- function(study)
   # get hp_percent_<study>.txt
   hp_percent_study <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/hp_percent_",study,".txt",collapse=''), header = T, sep = '\t')
   
-  for(i in 1:number_of_runs)
-  {
-    # get runID
-    runID <- runIDs[i,1]
-    
-    # get the host and parasite expression percentages for the runID from hp_percent_study
-    host_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 2]
-    parasite_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 3]
-    
-    host <- positive_experiments[grep(study,positive_experiments[,1]),2]
-    parasite <- positive_experiments[grep(study,positive_experiments[,1]),3]
-    
-    count_file <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
-    if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse='')))
+            for(i in 1:number_of_runs)
     {
-      inputReadLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=6)[6]
-      mapPercentLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=10)[10]
+      # get runID
+      runID <- as.character(runIDs[i,1])
       
-      multipleReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=26)[c(24,26)]
+      # get the host and parasite expression percentages for the runID from hp_percent_study
+      # host_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 2]
+      # parasite_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 3]
+      # 
+      # host <- positive_experiments[grep(study,positive_experiments[,1]),2]
+      # parasite <- positive_experiments[grep(study,positive_experiments[,1]),3]
+      # 
+      # count_file <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
+      # if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse='')))
+      # {
+      #   inputReadLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=6)[6]
+      #   mapPercentLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=10)[10]
+      #   
+      #   multipleReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=26)[c(24,26)]
+      #   
+      #   unmappedReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=31)[c(29,30,31)]
+      # 
+      #   inputReads <- as.numeric(strsplit(inputReadLine, split="\t")[[1]][2])
+      #   map_percent <- as.numeric(strsplit(strsplit(mapPercentLine, split="%")[[1]][2], split="\t")[[1]][2])
+      #   multipleReads <- sum(sapply(multipleReadsLine, function(x) as.numeric(strsplit(x, split="\t")[[1]][2])))
+      #   unmappedReads <- sum(sapply(unmappedReadsLine, function(x) (as.numeric(strsplit(strsplit(x, split="%")[[1]][2], split="\t")[[1]][2])/100) * inputReads))
+      # }else
+      # {
+      #   inputReads <- "NA"
+      #   map_percent <- "NA"
+      #   multipleReads <- "NA"
+      #   unmappedReads <- "NA"
+      # }
+      # 
+      # parasite_rows <- as.numeric(grep("P+", count_file[,1]))
+      # host_count <- count_file[-c(parasite_rows),]
+      # parasite_count <- count_file[parasite_rows,]
+      #   
+      # host_sum <- sum(host_count[,6])
+      # parasite_sum <- sum(parasite_count[,6])
+      # 
+      protein_coding <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study, "/", study, "_coding_genes.txt", collapse = '')) %>%
+        # take the current run
+        select(contains(runID)) %>% 
+        tibble::rownames_to_column("Gene")
       
-      unmappedReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=31)[c(29,30,31)]
-  
-      inputReads <- as.numeric(strsplit(inputReadLine, split="\t")[[1]][2])
-      map_percent <- as.numeric(strsplit(strsplit(mapPercentLine, split="%")[[1]][2], split="\t")[[1]][2])
-      multipleReads <- sum(sapply(multipleReadsLine, function(x) as.numeric(strsplit(x, split="\t")[[1]][2])))
-      unmappedReads <- sum(sapply(unmappedReadsLine, function(x) (as.numeric(strsplit(strsplit(x, split="%")[[1]][2], split="\t")[[1]][2])/100) * inputReads))
-    }else
-    {
-      inputReads <- "NA"
-      map_percent <- "NA"
-      multipleReads <- "NA"
-      unmappedReads <- "NA"
+      if(ncol(protein_coding) == 2)
+      {
+        parasite_rows_prot_cod <- as.numeric(grep("P+", protein_coding[,"Gene"]))
+        host_prot_cod <- protein_coding[-c(parasite_rows_prot_cod),]
+        parasite_prot_cod <- protein_coding[parasite_rows_prot_cod,]
+        
+        # host_count_prot_cod <- sum(host_prot_cod[,2]) #(total number of reads)
+        # parasite_count_prot_cod <- sum(parasite_prot_cod[,2])
+        # 
+        host_gene_prot_cod <- length(which(host_prot_cod[,2]>0)) # Total number of gene with count > 0
+        parasite_gene_prot_cod <- length(which(parasite_prot_cod[,2]>0))
+        
+        # actual_host <- hp_percent_study[grep(runID, hp_percent_study[,1]),5]
+        # actual_para <- hp_percent_study[grep(runID, hp_percent_study[,1]),6]
+        # 
+        study_df[i,1] <- runID
+        study_df[i,2] <- study
+        # study_df[i,3] <- host
+        # study_df[i,4] <- host_percent
+        # study_df[i,5] <- parasite
+        # study_df[i,6] <- parasite_percent
+        # study_df[i,7] <- sum(count_file[,6]) # sum(counts)
+        # study_df[i,8] <- inputReads # number of input reads
+        # study_df[i,9] <- map_percent # map_percent
+        # study_df[i,10] <- paste0(host,parasite, collapse='')
+        # study_df[i,11] <- host_sum
+        # study_df[i,12] <- parasite_sum
+        # study_df[i,13] <- multipleReads
+        # study_df[i,14] <- unmappedReads
+        # study_df[i,15] <- actual_para # actual proportion of parasites, taking into account unique map%
+        # study_df[i,16] <- actual_host
+        # study_df[i,17] <- host_count_prot_cod
+        # study_df[i,18] <- parasite_count_prot_cod
+        study_df[i,3] <- host_gene_prot_cod
+        study_df[i,4] <- parasite_gene_prot_cod
+      }
     }
-    
-    parasite_rows <- as.numeric(grep("P+", count_file[,1]))
-    host_count <- count_file[-c(parasite_rows),]
-    parasite_count <- count_file[parasite_rows,]
-      
-    host_sum <- sum(host_count[,6])
-    parasite_sum <- sum(parasite_count[,6])
-    
-    actual_host <- hp_percent_study[grep(runID, hp_percent_study[,1]),5]
-    actual_para <- hp_percent_study[grep(runID, hp_percent_study[,1]),6]
-  
-    study_df[i,1] <- runID
-    study_df[i,2] <- study
-    study_df[i,3] <- host
-    study_df[i,4] <- host_percent
-    study_df[i,5] <- parasite
-    study_df[i,6] <- parasite_percent
-    study_df[i,7] <- sum(count_file[,6]) # sum(counts)
-    study_df[i,8] <- inputReads # number of input reads
-    study_df[i,9] <- map_percent # map_percent
-    study_df[i,10] <- paste0(host,parasite, collapse='')
-    study_df[i,11] <- host_sum
-    study_df[i,12] <- parasite_sum
-    study_df[i,13] <- multipleReads
-    study_df[i,14] <- unmappedReads
-    study_df[i,15] <- actual_para # actual proportion of parasites, taking into account unique map%
-    study_df[i,16] <- actual_host
-    
-  }
   return (study_df)
 }
 
@@ -126,7 +151,7 @@ for(j in 1:length(studyIDs))
 {
   allHPexpression <- rbind(allHPexpression, getAllHPexpression(studyIDs[j]))
 }
-colnames(allHPexpression) <- c("RunID", "Study", "Host", "Host_percent", "Parasite", "Parasite_percent", "CountSum", "InputReads",  "MapPercent" ,"HostParasite", "HostSum", "ParasiteSum", "MultipleMapReads", "UnmappedReads", "ActualParasite", "ActualHost")
+colnames(allHPexpression) <- c("RunID", "Study", "NumberProtCodGenesHost", "NumberProtCodGenesPara") #  "Host", "Host_percent", "Parasite", "Parasite_percent", "CountSum", "InputReads",  "MapPercent" ,"HostParasite", "HostSum", "ParasiteSum", "MultipleMapReads", "UnmappedReads", "ActualParasite", "ActualHost","ProteinCodHost", "ProteinCodPara"
 ```
 
 ```{r, echo = F}
@@ -136,7 +161,7 @@ colnames(allHPexpression) <- c("RunID", "Study", "Host", "Host_percent", "Parasi
 require(ggplot2)
 #load("/SAN/Plasmo_compare/SRAdb/allHPexpression.RData")
 
-allHPexpression <- read.delim("/SAN/Plasmo_compare/SRAdb/allHPexpression.txt")
+allHPexpression <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/allHPexp.txt")
 
 # col=c("mousePyoelii"="red", "monkeyPcynomolgi"="blue", "humanPfalciparum"="green")
 # shape=c("mousePyoelii"=0, "monkeyPcynomolgi"=1)
@@ -302,7 +327,7 @@ ggtexttable(Summary_table, rows = NULL, theme = ttheme("mBlue"))
 write.table(Summary_table, "Summary_table.txt", sep='\t', row.names = F)
 ```
 \newpage
-Plot 9. Correlation between CountSum (total count given by countOverlaps() for a run) and InputReads (total number of input reads for a run)
+Plot 9. Correlation between CountSum (total count given by countOverlaps() for a run == sum of genes in a run) and InputReads (total number of input reads for a run)
 
 ```{r, echo = F, eval = T}
 cor(allHPexpression[,"InputReads"], allHPexpression[,"CountSum"])
@@ -362,3 +387,10 @@ write.table(hostparasiteReads, "NumberOfReadsMappedOntoEachHostParasite.txt", se
 
 ```
 
+```{r}
+require(ggplot2)
+
+gg_h <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), y = log10(NumberProtCodGenesHost)))
+readsvsgenes <- gg_h + geom_point(alpha = 0.7, fill = allHPexp$colours) + xlab("log10 (Number of reads in a run mapping onto host genome)") + ylab("log10 (Number of genes represented by reads in a run)") + ggtitle("Number of reads mapping onto host genes")
+readsvsgenes
+```

@@ -125,7 +125,7 @@ moPcyn_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/mo
 ########## do it for every study #########
 
 studyIDs <- as.character(read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", sep = '\t', header = F)[,1])
-allHPexp <- read.csv2("/SAN/Plasmo_compare/SRAdb/allHPexp.txt", sep = ',', header = T)
+allHPexp <- read.csv2("/SAN/Plasmo_compare/SRAdb/Output/allHPexp.txt", sep = ',', header = T)
 
 for(i in 1:length(studyIDs))
 {

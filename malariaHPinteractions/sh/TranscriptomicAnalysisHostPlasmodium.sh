@@ -13,8 +13,8 @@
 
 default_path="/SAN/Plasmo_compare/SRAdb"
 #getHPstudies=$default_path/Scripts/getHPstudies.sh
-#getRuns=$default_path/Scripts/getRuns.sh
-doall=$default_path/Scripts/doall.sh
+getRuns=$default_path/Scripts/malariaHPinteractions/sh/getRuns.sh
+doall=$default_path/Scripts/malariaHPinteractions/sh/doall.sh
 
 #for i in $(cat $default_path/Input/positive_experiments.txt); do
  # host=$(echo $i | cut -d, -f 2)
@@ -38,10 +38,10 @@ doall=$default_path/Scripts/doall.sh
   #tail -n +2 hp.txt > hp.txt.tmp && mv hp.txt.tmp hp.txt # remove first hp pair
 
 
-  # source $getRuns ${current_studies[@]}
+  #source $getRuns SRP108356 #${current_studies[@]}
 
   # cut -d, -f 1 current_runs.txt | parallel --eta -j 12 --link bash $doall {1}
-  parallel --eta -j 3 --link bash --verbose $default_path/Scripts/doall.sh ::: $(cut -d, -f 1 $default_path/Input/current_runs.txt)
+  parallel --eta -j 3 --link bash --verbose $default_path/Scripts/malariaHPinteractions/sh/doall.sh ::: $(cut -d, -f 1 $default_path/Input/current_runs.txt)
 
   # Step 6: Final count tables and analysis
 

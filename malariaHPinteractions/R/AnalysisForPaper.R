@@ -154,7 +154,7 @@ parasiteProportion_gg
 ggsave("ParasiteProportion.png")
 ##
 
-parasiteProportionCluster_ggplot <- ggplot(allHPexpression, aes(x=Parasite_percent, y=log10(CountSum), col=HostParasite, shape=HostParasite))
+parasiteProportionCluster_ggplot <- ggplot(allHPexp, aes(x=Parasite_percent, y=log10(CountSum), col=HostParasite, shape=HostParasite))
 
 parasiteProportionCluster_gg <- parasiteProportionCluster_ggplot + geom_point() + xlim(0,100) +
   labs(color='Host-parasite\npairs') + labs(shape='Host-parasite\npairs') + 
@@ -163,7 +163,7 @@ parasiteProportionCluster_gg <- parasiteProportionCluster_ggplot + geom_point() 
 parasiteProportionCluster_gg
 
 require(ggplot2)
-hp_parasiteProportion_ggplot <- ggplot(allHPexpression, aes(log10(InputReads), ActualParasite, shape=HostParasite, color=Study))
+hp_parasiteProportion_ggplot <- ggplot(allHPexp, aes(log10(InputReads), ActualParasite, shape=HostParasite, color=Study))
 
 hp_parasiteProportion_gg <- hp_parasiteProportion_ggplot + geom_point(alpha=0.7) + ylim(0,100) +
   ylab("Parasite proportion uniquely mapped") + xlab("Number of input reads in a sample (run)") + 
@@ -172,7 +172,7 @@ hp_parasiteProportion_gg <- hp_parasiteProportion_ggplot + geom_point(alpha=0.7)
 
 hp_parasiteProportion_gg
 
-hp_parasiteProportion_parasite_ggplot <- ggplot(allHPexpression, aes(log10(InputReads), ActualParasite, shape=Parasite, color=Parasite))
+hp_parasiteProportion_parasite_ggplot <- ggplot(allHPexp, aes(log10(InputReads), ActualParasite, shape=Parasite, color=Parasite))
 
 hp_parasiteProportion_parasite_gg <- hp_parasiteProportion_parasite_ggplot + 
   geom_point(alpha=0.7) + ylim(0,100) + ylab("Parasite proportion uniquely mapped") + xlab("Number of input reads in a sample (run)") + 
@@ -335,15 +335,15 @@ allHPexp_mapthreshold <- allHPexp
 col <- as.character(allHPexp_mapthreshold$colours)
 names(col) <- as.character(allHPexp_mapthreshold$HostParasite)
 
-paragenes_ggplot <- ggplot(allHPexp_mapthreshold, aes(x = log10(ParasiteSum), y = log10(NumberOfParaGenes), colour = HostParasite, fill = HostParasite))
-paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) + ggtitle("Number of parasite genes vs parasite reads in each run") + xlab("(Log10) Number of reads mapping onto parasite genome") + ylab("(Log10) Number of genes represented by mapped reads") + theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + theme(axis.text=element_text(size=14), axis.title=element_text(size=16), plot.title = element_text(size=20))
+paragenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodPara), y = log10(NumberProtCodGenesPara), colour = HostParasite, fill = HostParasite))
+paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) + geom_jitter() + ggtitle("Number of reads mapping onto parasite genes") + xlab("(Log10) Number of reads mapping onto parasite genome") + ylab("(Log10) Number of genes represented by mapped reads") + theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + theme(axis.text=element_text(size=14), axis.title=element_text(size=16), plot.title = element_text(size=20))
 paragenes_gg
 ggsave("paragenes.png")
 
 #### host genes vs host reads ####
 
-hostgenes_ggplot <- ggplot(allHPexp_mapthreshold, aes(x = log10(HostSum), y = log10(NumberOfHostGenes), colour = HostParasite, fill = HostParasite))
-hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + ggtitle("Number of host genes vs host reads in each run") + xlab("(Log10) Number of reads mapping onto host genome") + ylab("(Log10) Number of genes represented by mapped reads") + theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) + theme(axis.text=element_text(size=14), axis.title=element_text(size=16), plot.title = element_text(size=20))
+hostgenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), y = log10(NumberProtCodGenesHost), colour = HostParasite, fill = HostParasite))
+hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + ggtitle("Number of reads mapping onto host genes") + xlab("(Log10) Number of reads mapping onto host genome") + ylab("(Log10) Number of genes represented by mapped reads") + theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) + theme(axis.text=element_text(size=14), axis.title=element_text(size=16), plot.title = element_text(size=20))
 hostgenes_gg
 ggsave("hostgenes.png")
 
@@ -396,7 +396,7 @@ allHPexp_mapthreshold <- allHPexp[allHPexp$MapPercent>=65,]
 col <- as.character(allHPexp_mapthreshold$colours)
 names(col) <- as.character(allHPexp_mapthreshold$HostParasite)
 
-ipparagenes_ggplot <- ggplot(allHPexp_mapthreshold, aes(x = log10(CountSum), y = log10(NumberOfParaGenes), colour = HostParasite, fill = HostParasite))
+ipparagenes_ggplot <- ggplot(allHPexp, aes(x = log10(CountSum), y = log10(NumberOfParaGenes), colour = HostParasite, fill = HostParasite))
 ipparagenes_gg <- ipparagenes_ggplot + geom_point(alpha = 0.7) + ggtitle("Number of parasite genes vs total input reads in each run") + xlab("(Log10) Number of input reads in the sequenced sample") + ylab("(Log10) Number of parasite genes in the run") + theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + theme(axis.text=element_text(size=14), axis.title=element_text(size=16), plot.title = element_text(size=20))
 ipparagenes_gg
 ggsave("inputreads_paragenes.png")

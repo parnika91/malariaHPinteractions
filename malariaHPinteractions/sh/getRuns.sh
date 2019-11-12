@@ -1,15 +1,15 @@
 #!/bin/bash
 
 default_path="/SAN/Plasmo_compare/SRAdb"
-RgetRuns="$default_path/Scripts/GetRuns.R"
+#RgetRuns="$default_path/Scripts/GetRuns.R"
 
-declare -a current_studies
+#declare -a current_studies
 
 current_studies=$1
 
 cd /SAN/Plasmo_compare/SRAdb/
 
-Rscript $default_path/Scripts/GetRuns.R $current_studies
+Rscript $default_path/Scripts/malariaHPinteractions/R/GetRuns.R $current_studies
 
 #for i in ${current_studies[@]}; do
 #  Rscript --vanilla $RgetRuns $i --save
