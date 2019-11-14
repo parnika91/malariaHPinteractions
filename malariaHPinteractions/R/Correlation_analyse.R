@@ -25,10 +25,8 @@ for(i in 1:length(file.names))
   }
 }
 
-all_genes2 <- rownames(sum)
-
-load("/SAN/Plasmo_compare/SRAdb/Output/ERP106451/cor/ERP106451.ortho.data.allruns.RData")
-study <- t(ERP106451.ortho.data.allruns)
+load("/SAN/Plasmo_compare/SRAdb/Output/SRP118996/cor/SRP118996.ortho.data.RData")
+study <- t(SRP118996.ortho.data)
 ori_cor <- cor(study, use = "pairwise.complete.obs")
 ori_cor[lower.tri(ori_cor, diag = T)] <- NA
 cor_melt <- melt(ori_cor)
@@ -486,4 +484,247 @@ com.node.plot <- ggplot(com.nodes.df, aes(x = Perms, y = log10(count), colour = 
  
 
 ggsave(plot = com.node.plot, filename = "com.node.plot.png")
+
+#######################
+### ERP106451_nor ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+ERP106451_nor <- sum
+ERP106451_nor[lower.tri(ERP106451_nor, diag = T)] <- NA
+ERP106451_nor_melt <- melt(ERP106451_nor)
+colnames(ERP106451_nor_melt) <- c("gene1", "gene2", "permute_score")
+ERP106451_nor_na.omit <- na.omit(ERP106451_nor_melt)
+
+###
+
+### ERP106451_str ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+ERP106451_str <- sum
+ERP106451_str[lower.tri(ERP106451_str, diag = T)] <- NA
+ERP106451_str_melt <- melt(ERP106451_str)
+colnames(ERP106451_str_melt) <- c("gene1", "gene2", "permute_score")
+ERP106451_str_na.omit <- na.omit(ERP106451_str_melt)
+
+###
+
+### ERP106451_all ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+ERP106451_all <- sum
+ERP106451_all[lower.tri(ERP106451_all, diag = T)] <- NA
+ERP106451_all_melt <- melt(ERP106451_all)
+colnames(ERP106451_all_melt) <- c("gene1", "gene2", "permute_score")
+ERP106451_all_na.omit <- na.omit(ERP106451_all_melt)
+
+###
+
+### SRP118996_nor ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+SRP118996_nor <- sum
+SRP118996_nor[lower.tri(SRP118996_nor, diag = T)] <- NA
+SRP118996_nor_melt <- melt(SRP118996_nor)
+colnames(SRP118996_nor_melt) <- c("gene1", "gene2", "permute_score")
+SRP118996_nor_na.omit <- na.omit(SRP118996_nor_melt)
+
+###
+
+### SRP118996_str ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+SRP118996_str <- sum
+SRP118996_str[lower.tri(SRP118996_str, diag = T)] <- NA
+SRP118996_str_melt <- melt(SRP118996_str)
+colnames(SRP118996_str_melt) <- c("gene1", "gene2", "permute_score")
+SRP118996_str_na.omit <- na.omit(SRP118996_str_melt)
+
+###
+
+### SRP118996_all ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+SRP118996_all <- sum
+SRP118996_all[lower.tri(SRP118996_all, diag = T)] <- NA
+SRP118996_all_melt <- melt(SRP118996_all)
+colnames(SRP118996_all_melt) <- c("gene1", "gene2", "permute_score")
+SRP118996_all_na.omit <- na.omit(SRP118996_all_melt)
+
+save(SRP118996_nor_na.omit, file = "SRP118996_nor_na.omit.RData")
+save(SRP118996_str_na.omit, file = "SRP118996_str_na.omit.RData")
+save(SRP118996_all_na.omit, file = "SRP118996_all_na.omit.RData")
+###
+
+load("Output/ERP106451/cor/ERP106451_nor_na_omit.RData")
+load("Output/ERP106451/cor/ERP106451_all_na_omit.RData")
+load("Output/ERP106451/cor/ERP106451_str_na_omit.RData")
+
+load("Output/SRP118996/cor/SRP118996_nor_na.omit.RData")
+load("Output/SRP118996/cor/SRP118996_all_na.omit.RData")
+load("Output/SRP118996/cor/SRP118996_str_na.omit.RData")
+
+ERP106451_all <- data.frame(ERP106451_nor_na.omit$gene1, ERP106451_nor_na.omit$gene2, ERP106451_nor_na.omit$permute_score, ERP106451_str_na.omit$permute_score, ERP106451_all_na.omit$permute_score)
+colnames(ERP106451_all) <- c("gene1", "gene2", "ERP106451_nor", "ERP106451_str", "ERP106451_all")
+SRP118996_all <- data.frame(SRP118996_nor_na.omit$gene1, SRP118996_nor_na.omit$gene2, SRP118996_nor_na.omit$permute_score, SRP118996_str_na.omit$permute_score, SRP118996_all_na.omit$permute_score)
+colnames(SRP118996_all) <- c("gene1", "gene2", "SRP118996_nor", "SRP118996_str", "SRP118996_all")
+all_ERP106451_SRP118996 <- data.frame(ERP106451_all, SRP118996_all[,3:5])
+
+v <- which(all_ERP106451_SRP118996$ERP106451_nor == 100000 | all_ERP106451_SRP118996$ERP106451_str == 100000 | all_ERP106451_SRP118996$ERP106451_all == 100000 | all_ERP106451_SRP118996$SRP118996_nor == 100000 | all_ERP106451_SRP118996$SRP118996_str == 100000 | all_ERP106451_SRP118996$SRP118996_all == 100000)
+new_all <- all_ERP106451_SRP118996[-v,]
+sampled <- new_all[sample(nrow(new_all), size = nrow(new_all)/1000),]
+
+ERP_str <- -log10(1/(all_ERP106451_SRP118996$ERP106451_str + 5e-06))
+ERP_all <- -log10(1/(all_ERP106451_SRP118996$ERP106451_all + 5e-06))
+SRP_nor <- -log10(1/(all_ERP106451_SRP118996$SRP118996_nor + 5e-06))
+SRP_str <- -log10(1/(all_ERP106451_SRP118996$SRP118996_str + 5e-06))
+SRP_all <- -log10(1/(all_ERP106451_SRP118996$SRP118996_all + 5e-06))
+
+lt <- data.frame(gene1 = all_ERP106451_SRP118996$gene1, gene2 = all_ERP106451_SRP118996$gene2, ERP106451_nor = ERP_nor, ERP106451_str = ERP_str, ERP106451_all = ERP_all, SRP118996_nor = SRP_nor, SRP118996_str = SRP_str, SRP118996_all = SRP_all)
+
+# comparisons
+
+cor(lt$ERP106451_nor, lt$ERP106451_all)
+[1] 0.9610061
+cor(all_ERP106451_SRP118996$ERP106451_nor, all_ERP106451_SRP118996$ERP106451_all)
+[1] 0.9255858
+ 
+cor(all_ERP106451_SRP118996$ERP106451_str, all_ERP106451_SRP118996$ERP106451_all)
+[1] 0.3917892
+cor(lt$ERP106451_str, lt$ERP106451_all)
+[1] 0.6049347
+
+cor(all_ERP106451_SRP118996$ERP106451_str, all_ERP106451_SRP118996$ERP106451_nor)
+[1] 0.3786159
+cor(lt$ERP106451_str, lt$ERP106451_nor)
+[1] 0.6287179
+
+cor(all_ERP106451_SRP118996$SRP118996_str, all_ERP106451_SRP118996$SRP118996_all)
+[1] 0.7048141
+cor(lt$SRP118996_str, lt$SRP118996_all)
+[1] 0.69346
+
+cor(all_ERP106451_SRP118996$SRP118996_nor, all_ERP106451_SRP118996$SRP118996_all)
+[1] 0.9005743
+cor(lt$SRP118996_nor, lt$SRP118996_all)
+[1] 0.9197856
+
+cor(all_ERP106451_SRP118996$SRP118996_nor, all_ERP106451_SRP118996$SRP118996_str)
+[1] 0.7452191
+cor(lt$SRP118996_nor, lt$SRP118996_str)
+
+
+### UpSetR plots ###
+
+ERP106451_all <- apply(ERP106451_allruns_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+ERP106451_str <- apply(ERP106451_stringent15_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+ERP106451_nor <- apply(ERP106451_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+
+SRP118996_all <- apply(SRP118996_allruns_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+SRP118996_str <- apply(SRP118996_stringent22_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+SRP118996_nor <- apply(SRP118996_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+
+library(grid)
+all6datasets_upset = list(ERP106451_all = ERP106451_all, ERP106451_str = ERP106451_str, ERP106451_nor = ERP106451_nor, SRP118996_all = SRP118996_all, SRP118996_str = SRP118996_str, SRP118996_nor = SRP118996_nor)
+
+png(file="All6datasets_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
+upset(fromList(all6datasets_upset), sets = names(all6datasets_upset), order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.75))
+# empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", )
+grid.text("SRP118996 and ERP106451 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+dev.off()
 
