@@ -8,10 +8,10 @@
 
 # input files
 
-#host=monkey
-#parasite=Pcynomolgi
+host=human
+parasite=Pberghei
 
-default_path="/SAN/Plasmo_compare/SRAdb"
+default_path="/SAN/Plasmo_compare/"
 #getHPstudies=$default_path/Scripts/getHPstudies.sh
 getRuns=$default_path/Scripts/malariaHPinteractions/sh/getRuns.sh
 doall=$default_path/Scripts/malariaHPinteractions/sh/doall.sh
@@ -41,12 +41,14 @@ doall=$default_path/Scripts/malariaHPinteractions/sh/doall.sh
   #source $getRuns SRP108356 #${current_studies[@]}
 
   # cut -d, -f 1 current_runs.txt | parallel --eta -j 12 --link bash $doall {1}
-  parallel --eta -j 3 --link bash --verbose $default_path/Scripts/malariaHPinteractions/sh/doall.sh ::: $(cut -d, -f 1 $default_path/Input/current_runs.txt)
+
+  ls /SAN/Plasmo_compare/fastq_download_tmp/ | grep fastq | rev | cut -d '_' -f3- | rev | uniq > /SAN/Plasmo_compare/Kai/macrophage_runs.txt
+  parallel --eta -j 3 --link bash --verbose /SAN/Plasmo_compare/SRAdb/Scripts/malariaHPinteractions/sh/doall.sh ::: $(cut -d, -f 1 /SAN/Plasmo_compare/Kai/macrophage_runs.txt)
 
   # Step 6: Final count tables and analysis
 
   #for i in ${current_studies[@]}; do
-  #  Rscript --vanilla $default_path/Scripts/count_analysis.R $host $parasite $i
+  # Rscript --vanilla $default_path/SRAdb/Scripts/malariaHPinteractions/R/count_analysis.R $host $parasite $i
   #  cp Distribution_$i.pdf -t $default_path/Output/$i
   #  cp Histogram_host_$i.pdf -t $default_path/Output/$i
   #  cp Histogram_parasite_$i.pdf -t $default_path/Output/$i

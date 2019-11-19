@@ -3,7 +3,7 @@
 # get the input run from outside
 
 run=$1
-default_path="/SAN/Plasmo_compare/SRAdb"
+default_path="/SAN/Plasmo_compare/"
 
 #if grep -q $run $default_path/Input/blacklist.txt; then exit; fi
 
@@ -16,23 +16,23 @@ ulimit -v 130000000000
 ##
 # Step 1: download fastq file with runID
 
-#studyID=$(grep $run $default_path/Input/current_runs.txt | cut -d, -f 2)
+studyID=Macrophage_Kai
 host=human
-parasite=Pfalciparum
+parasite=Pberghei
 
 
-bash --verbose $default_path/Scripts/malariaHPinteractions/sh/DownloadSRAtoolkit.sh $run # download run or pair of runs, based on layout=Paired or Single
+# bash --verbose $default_path/Scripts/malariaHPinteractions/sh/DownloadSRAtoolkit.sh $run # download run or pair of runs, based on layout=Paired or Single
 
 # Step 2: map
 
 cd /SAN/Plasmo_compare/fastq_download_tmp/
 
-if [ -e $run\_1.fastq ]; then
-  # put .gz
-  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPfalciparum --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run\_1.fastq /SAN/Plasmo_compare/fastq_download_tmp/$run\_2.fastq --outSAMtype SAM --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run #--readFilesCommand zcat
+if [ -e $run\_R1_001.fastq ]; then
+  # put .gz; then add --readFilesCommand zcat
+  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run\_R1_001.fastq /SAN/Plasmo_compare/fastq_download_tmp/$run\_R1_001.fastq --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run
 
 else
-  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPfalciparum --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run --outSAMtype SAM #--readFilesCommand zcat
+  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run --outSAMtype BAM SortedByCoordinate
 
 fi
 cd ..
@@ -47,12 +47,12 @@ cd ..
 
 #samtools view -S -b $run.aln.sam > $run.bam
 #cat /SAN/Plasmo_compare/fastq_download_tmp/$run*.final.out > /SAN/Plasmo_compare/fastq_download_tmp/$run\_$studyID.final.out
-#cp /SAN/Plasmo_compare/fastq_download_tmp/$run\_$studyID.final.out -t /SAN/Plasmo_compare/SRAdb/Output/$studyID
-#cp /SAN/Plasmo_compare/fastq_download_tmp/$run*.out.tab -t /SAN/Plasmo_compare/SRAdb/Output/$studyID
+mv /SAN/Plasmo_compare/fastq_download_tmp/*.final.out /SAN/Plasmo_compare/Kai/Mapping/
+mv /SAN/Plasmo_compare/fastq_download_tmp/$run*.out.tab -t /SAN/Plasmo_compare/Kai/Mapping/
 
 # Step 3: gene expression quantification
 
-#Rscript --vanilla $default_path/Scripts/countOverlaps.R $host $parasite $run $studyID --save
+Rscript --vanilla $default_path/SRAdb/Scripts/malariaHPinteractions/R/countOverlaps.R $host $parasite $run $studyID --save
 
 # Step 4: Enter used runs in blacklist
 
@@ -60,11 +60,11 @@ cd ..
  #cat $default_path/Input/current_runs.txt | grep $run >> $default_path/Input/blacklist.txt # also study
  # Step 5: remove fastq and bam files
 rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.fastq
-rm /SAN/Plasmo_compare/ncbi/sra/$run.sra
+#rm /SAN/Plasmo_compare/ncbi/sra/$run.sra
 rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.out
-rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.tab
+#rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.tab
 #fi
-#rm $run*.fastq
+rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.bam
 
 
 

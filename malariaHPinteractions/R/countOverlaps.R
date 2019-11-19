@@ -27,12 +27,12 @@
 
 
 # take host and parasite names as arguements from cmd
-# options(echo=TRUE)
-# args <- commandArgs(TRUE)
-# host <- args[1]
-# para <- args[2]
-# run <- args[3]
-# study <- args[4]
+options(echo=TRUE)
+args <- commandArgs(TRUE)
+host <- args[1]
+para <- args[2]
+run <- args[3]
+study <- args[4]
 
 # # read gene annotation files for host and parasite
 # host <- readGFF(file=paste0(host, ".gff3", collapse=''))
@@ -95,7 +95,7 @@
 
 #setwd("/SAN/Plasmo_compare/SRAdb/Genomes/annotation")
 
-gff3 <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/mousePchabaudi.gtf",collapse=''), format = "gtf")
+gff3 <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/humanPberghei.gtf",collapse=''), format = "gtf")
 gff3<- gff3[gff3$type%in%"exon",]
 gff3 <- GenomicRanges::makeGRangesFromDataFrame(gff3)
 
@@ -108,27 +108,33 @@ setMethod("seqinfo", "BamFile", function (x) {
  Seqinfo(names(h), h)
 })
 
-studyIDs <- c("ERP017479")
+bamFile <- readGAlignments(paste0("/SAN/Plasmo_compare/fastq_download_tmp/",run,"Aligned.sortedByCoord.out.bam", collapse=''))
+counts <- countOverlaps(gff3, bamFile)
+counts_df <- data.frame(gff3, counts)
 
-try(for(study in studyIDs)
-{
-  run <- read.csv2(paste0("Output/",study,"/runs_",study,".txt", collapse = ''), sep = ',', header = F)[,1]
-  for(i in 1:length(run))
-  {
-    print(run[i])
-    if(file.exists(paste0("/SAN/Plasmo_compare/fastq_download_tmp/",run[i],"Aligned.out.bam", collapse='')) & !file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",run[i],".txt", collapse='')))
-      {
-        bamFile <- readGAlignments(paste0("/SAN/Plasmo_compare/fastq_download_tmp/",run[i],"Aligned.out.bam", collapse=''))
-        counts <- countOverlaps(gff3, bamFile)
-        counts_df <- data.frame(gff3, counts)
-          
-          #setwd(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study, collapse=''))
-        write.table(counts_df, file=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",run[i],".txt"), sep='\t', row.names = FALSE)
-        write.table(counts, paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/count_",run[i],".txt"), sep='\t', row.names = FALSE, col.names = FALSE)
-    }
-  }
-}
-)
+#studyIDs <- "Macrophage_Kai"
+
+#try(for(study in studyIDs)
+#{
+#  run <- read.csv2(paste0("Output/",study,"/runs_",study,".txt", collapse = ''), sep = ',', header = F)[,1]
+#  for(i in 1:length(run))
+#  {
+#    print(run[i])
+#    if(file.exists(paste0("/SAN/Plasmo_compare/fastq_download_tmp/",run[i],"Aligned.out.bam", collapse='')) & !file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",run[i],".txt", collapse='')))
+#      {
+#        bamFile <- readGAlignments(paste0("/SAN/Plasmo_compare/fastq_download_tmp/",run[i],"Aligned.out.bam", collapse=''))
+#        counts <- countOverlaps(gff3, bamFile)
+#        counts_df <- data.frame(gff3, counts)
+#          
+#          #setwd(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study, collapse=''))
+#        write.table(counts_df, file=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",run[i],".txt"), sep='\t', row.names = FALSE)
+#        write.table(counts, paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/count_",run[i],".txt"), sep='\t', row.names = FALSE, col.names = FALSE)
+#    }
+#  }
+#}
+#)
+
+write.table(counts_df, file=paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3_",run,".txt"), sep='\t', row.names = FALSE)
 
 #file.copy(from=paste0("/SAN/Plasmo_compare/SRAdb/countWithGFF3_",run,".txt",collapse=''), to=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",run,".txt",collapse=''))
 #file.copy(from=paste0("/SAN/Plasmo_compare/SRAdb/count_",run,".txt",collapse=''), to=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/count_",run,".txt",collapse=''))
