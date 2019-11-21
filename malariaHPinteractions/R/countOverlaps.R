@@ -95,7 +95,7 @@ study <- args[4]
 
 #setwd("/SAN/Plasmo_compare/SRAdb/Genomes/annotation")
 
-gff3 <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/humanPberghei.gtf",collapse=''), format = "gtf")
+gff3 <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/mousePberghei.gtf",collapse=''), format = "gtf")
 gff3<- gff3[gff3$type%in%"exon",]
 gff3 <- GenomicRanges::makeGRangesFromDataFrame(gff3)
 

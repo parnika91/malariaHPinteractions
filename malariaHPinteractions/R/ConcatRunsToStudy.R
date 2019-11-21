@@ -18,38 +18,42 @@ library(S4Vectors)
 positive_experiments <- read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F)
 
 ConcatRunsToStudy <- data.frame()
-studyIDs <- c("SRP066796", "SRP018945", "SRP164767", "SRP164768", "SRP150689", "SRP112213", "ERP000634")
+studyIDs <- c("Macrophage")
 
 for(j in 1:length(studyIDs))
 {
   print(studyIDs[j])
-  runIDs <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[j],"/runs_",studyIDs[j],".txt",collapse=''), header = F, sep = ',')
+  runIDs <- read.table("/SAN/Plasmo_compare/Kai/macrophage_runs.txt", header = F, sep = ',')
   number_of_runs <- nrow(runIDs)
   if(number_of_runs == 1)
   {
     firstRun <- runIDs[1,1]
-    FirstCountfile <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[j], "/countWithGFF3_", firstRun,".txt",collapse=''), header = T, sep = '\t')
-    write.table(FirstCountfile, paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[j], "/ConcatRunsToStudy_", studyIDs[j],".txt",collapse=''), sep = '\t', row.names=F)
+    FirstCountfile <- read.table(paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3_", firstRun,".txt",collapse=''), header = T, sep = '\t')
+    write.table(FirstCountfile, paste0("/SAN/Plasmo_compare/Kai/Mapping/ConcatRunsToStudy_", studyIDs[j],".txt",collapse=''), sep = '\t', row.names=F)
   }
 
   if(number_of_runs > 1)
     {
     firstRun <- runIDs[1,1]
-    FirstCountfile <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[j],"/countWithGFF3_",firstRun,".txt",collapse=''), header = T, sep = '\t')
+    FirstCountfile <- read.table(paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3_",firstRun,".txt",collapse=''), header = T, sep = '\t')
     ConcatRunsToStudy <- FirstCountfile
     colnames(ConcatRunsToStudy)[6] <- paste0(as.character(firstRun), "_",as.character(studyIDs[j]),collapse='')
- 
+    a = 2
    for(i in 2:number_of_runs)
     {
       # get runID
       runID <- runIDs[i,1]
-      countfile <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[j],"/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
+      if(any(grepl(pattern = paste0("countWithGFF3_",runID,".txt",collapse=''), list.files())))
+      {
+      countfile <- read.table(paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
   
-      ConcatRunsToStudy[1:nrow(FirstCountfile),(i+5)] <- countfile[,6]
+      ConcatRunsToStudy[1:nrow(FirstCountfile),(a+5)] <- countfile[,6]
       #ConcatRunsToStudy <- merge(ConcatRunsToStudy, countfile, by = c("seqnames", "start", "end", "width", "strand"))
-      colnames(ConcatRunsToStudy)[(i+5)] <- paste0(as.character(runID), "_",as.character(studyIDs[j]),collapse='')
+      colnames(ConcatRunsToStudy)[(a+5)] <- paste0(as.character(runID), "_",as.character(studyIDs[j]),collapse='')
+      a = a+1
+      }
    }
-   write.table(ConcatRunsToStudy, paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[j], "/ConcatRunsToStudy_", studyIDs[j],".txt", collapse=''), sep = '\t', row.names=F)
+   write.table(ConcatRunsToStudy, paste0("/SAN/Plasmo_compare/Kai/Mapping/ConcatRunsToStudy_", studyIDs[j],".txt", collapse=''), sep = '\t', row.names=F)
   }
 }
 
@@ -104,16 +108,16 @@ for(j in 1:length(studyIDs))
 for( i in 1:length(studyIDs))
 {
   print(studyIDs[i])
-  study <- read.csv2(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[i], "/ConcatRunsToStudy_", studyIDs[i],".txt", collapse=''), sep = '\t', header=T)
+  study <- read.csv2(paste0("/SAN/Plasmo_compare/Kai/Mapping/ConcatRunsToStudy_", studyIDs[i],".txt", collapse=''), sep = '\t', header=T)
   
   library(rtracklayer, quietly = TRUE)
   
   #get host and parasite
   
-  host <- positive_experiments[grep(studyIDs[i],positive_experiments[,1]),2]
-  para <- positive_experiments[grep(studyIDs[i],positive_experiments[,1]),3]
+  #host <- as.character(positive_experiments[grep(studyIDs[i],positive_experiments[,1]),2])
+  #para <- as.character(positive_experiments[grep(studyIDs[i],positive_experiments[,1]),3])
   
-  genes <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/mousePyoelii.gtf", collapse=''), format = "gtf")
+  genes <- import(paste0("/SAN/Plasmo_compare/Genomes/annotation/",host,para,".gtf", collapse=''), format = "gtf")
   genes <- genes[genes$type%in%"exon"]
   #genes <- genes[which(genes[,"type"] == "exon"),]
   genes.df <- as.data.frame(genes)
@@ -140,7 +144,7 @@ for( i in 1:length(studyIDs))
   colnames(t.study) <- mergeStudy.genes.df.gene_name.combineGenes$gene_id
   t.study <- t.study[-1,]
   class(t.study) <- "numeric"
-  write.table(t.study, paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[i],"/",studyIDs[i],".txt", collapse = ''), sep = '\t', row.names=T)
+  write.table(t.study, paste0("/SAN/Plasmo_compare/Kai/Mapping/",studyIDs[i],".txt", collapse = ''), sep = '\t', row.names=T)
 }
 
 

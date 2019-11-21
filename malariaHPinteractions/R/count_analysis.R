@@ -19,14 +19,14 @@ suppressMessages(library(gridExtra))
 
 # check for runs in the study that already have count_run.txt files
 positive_experiments <- read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F)
-study <- c("ERP109367")
+study <- c("Macrophage")
 for(i in 1:length(study))
 {
   print(study[i])
   #host <- positive_experiments[grep(study[i],positive_experiments[,1]),2]
   #para <- positive_experiments[grep(study[i],positive_experiments[,1]),3]
   host <- "mouse"
-  para <- "Pchabaudi"
+  para <- "Pberghei"
   current_runs <- read.csv2(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/runs_",study[i],".Pvn.txt", collapse=''), header = FALSE, sep = ',')
   runs_in_study <- current_runs[grep(study[i], current_runs[,2]),1]
   
@@ -40,6 +40,10 @@ for(i in 1:length(study))
   # }
   # runs_counted_number <- sum(runs_counted_number)/2
   
+  files <- grep(pattern = "countWithGFF3_", list.files())
+  file.names <- list.files()[files]
+  runs_in_study <- file.names
+  runs_in_study <- sapply(file.names, function(x) strsplit(strsplit(x, split = "countWithGFF3")[[1]][2], split = "\\.")[[1]][1])
   runs_counted_number <- length(runs_in_study)
   runs_counted_ID <- runs_in_study
   
@@ -49,10 +53,10 @@ for(i in 1:length(study))
   {
     for( j in 1:length(runs))
     {
-      if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/countWithGFF3_",runs[j],".txt",collapse='')))
+      if(file.exists(paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3",runs[j],".txt",collapse='')))
       {
         print(j)
-        count_df <- read.csv2(file=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/countWithGFF3_",runs[j],".txt",collapse=''), sep='\t', header=TRUE)
+        count_df <- read.csv2(file=paste0("/SAN/Plasmo_compare/Kai/Mapping/countWithGFF3",runs[j],".txt",collapse=''), sep='\t', header=TRUE)
       
         parasite_rows <- grep(paste0(substr(para,1,3),"_chr",collapse=''), count_df[,1])
         #parasite_rows <- grep("Pvn_chr", count_df[,1])
@@ -113,14 +117,15 @@ for(i in 1:length(study))
   hp_percent <- na.omit(hp_percent)
   
   ## add map%
-  
+  runs <- gsub("^\\_","",runs)
   distribution <- hp_percent[,c(1:3)]
   for(m in 1:nrow(distribution))
   {
     runID <- distribution[m,1]
-    if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse='')))
+    if(grep(pattern = paste0(runs[m],"Log.final.out",collapse=''), list.files()))
     {
-      line <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse=''), n=10)[10]
+      file <- list.files()[grep(pattern = paste0(runs[m],"Log.final.out",collapse=''), list.files())]
+      line <- readLines(paste0(runs[m],"Log.final.out",collapse=''), n=10)[10]
 
       map_percent <- as.numeric(strsplit(strsplit(line, split="%")[[1]][2], split="\t")[[1]][2])
       distribution[m,4] <- map_percent
@@ -195,14 +200,14 @@ for(i in 1:length(study))
   histogram_h_ggplot <- ggplot(h, aes(Percentage))+geom_histogram(binwidth = 0.5)+ scale_x_continuous(breaks=seq(0,100,10), labels=seq(0,100,10), position="bottom")+ labs(x="Host gene expression", y = "Count", title = "Histogram: Host gene expression") + theme_classic() + scale_y_continuous(breaks=seq(0,runs_counted_number,ceiling(runs_counted_number/10)), labels=seq(0,runs_counted_number,ceiling(runs_counted_number/10)),position="left") + theme(plot.margin = unit(c(1,1,1,1), "cm")) + theme(axis.title.y=element_text(size=12)) + theme(axis.title.x = element_text(size=12)) +  theme(plot.title=element_text(size=15)) + theme(axis.text.x = element_text(face="bold",size=10),axis.text.y = element_text(face="bold",size=10)) + coord_cartesian(xlim=c(0,100), ylim=c(0,nrow(hp_percent)))
   # #histogram_h_ggplot <- hist(hp_percent[,2], breaks=50, xlim=c(0,100), ylim=c(1,(nrow(hp_percent))), xlab="Host gene expression", main=paste0("Host gene expression in ",study,collapse = '')
   #
-  ggsave(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study[i],"/Histogram_host_",study[i],".Pvn.pdf",collapse=''))
+  ggsave(paste0("/SAN/Plasmo_compare/Kai/Mapping/Histogram_host_",study,".png",collapse=''))
   #
   #
   p<- as.data.frame(hp_percent[,3])
   colnames(p) <- "Percentage"
   histogram_p_ggplot <- ggplot(p, aes(Percentage))+geom_histogram(binwidth = 0.5)+ scale_x_continuous(breaks=seq(0,100,10), labels=seq(0,100,10), position="bottom")+ labs(x="Parasite gene expression", y = "Count", title = "Histogram: Parasite gene expression") + theme_classic() + scale_y_continuous(breaks=seq(0,runs_counted_number,ceiling(runs_counted_number/10)), labels=seq(0,runs_counted_number,ceiling(runs_counted_number/10)),position="left") + theme(plot.margin = unit(c(1,1,1,1), "cm")) + theme(axis.title.y=element_text(size=12)) + theme(axis.title.x = element_text(size=12)) +  theme(plot.title=element_text(size=15)) + theme(axis.text.x = element_text(face="bold",size=10),axis.text.y = element_text(face="bold",size=10)) + coord_cartesian(xlim=c(0,100), ylim=c(0,nrow(hp_percent)))
   #
-  ggsave(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study[i],"/Histogram_parasite_",study[i],".Pvn.pdf",collapse=''))
+  ggsave(paste0("/SAN/Plasmo_compare/SRAdb/Output/Histogram_parasite_",study,".png",collapse=''))
   #
   # histogram_p_ggplot <- hist(hp_percent[,3], breaks=50, xlim=c(0,100), ylim=c(1,(nrow(hp_percent))), xlab="Parasite gene expression", main=paste0("Parasite gene expression in ",study,collapse = ''))
 
@@ -220,13 +225,15 @@ for(i in 1:length(study))
   #
   hp_percent_melt <- melt(hp_percent, id=c("Run", "Label"))
   col=c("Host_percent"="salmon", "Parasite_percent"="skyblue")
+
   hp_bar_gg <- ggplot(hp_percent_melt, aes(x = Run, y=value, fill=variable))
-  p =  hp_bar_gg + geom_bar(stat='identity', width=0.2) + scale_fill_manual(values=col) + xlab(paste0("Runs in the study ",study[i], collapse='')) + ylab("Host% and Parasite% distribution") + ggtitle("Distribution of host% and parasite%")  + theme_classic() + theme(legend.title=element_blank(), legend.key.size = unit(0.2, "in"), legend.text = element_text(size=4),legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.2, "cm")) + theme(strip.text.x = element_text(margin = margin(.05, 0, .05, 0, "cm"))) + theme(plot.margin = unit(c(1,0.35,1,0.35), "cm"))  + theme(axis.title.y=element_text(size=6)) + theme(axis.title.x = element_text(size=6))  +  theme(plot.title=element_text(size=7))  + theme(axis.text.x = element_text(size=3),axis.text.y = element_text(size=5))  + facet_wrap(~Label,scale="free_x", nrow=ceiling(l^0.5))
+
+  p =  hp_bar_gg + geom_bar(stat='identity', width=0.3) + scale_fill_manual(values=col) + xlab("Runs in the study") + ylab("Host% and Parasite% distribution") + ggtitle("Distribution of host% and parasite%")  + theme_classic() + theme(legend.title=element_blank(), legend.key.size = unit(0.2, "in"), legend.text = element_text(size=4),legend.key.height = unit(0.2, "cm"), legend.key.width = unit(0.2, "cm")) + theme(strip.text.x = element_text(margin = margin(.05, 0, .05, 0, "cm"))) + theme(plot.margin = unit(c(1,0.35,1,0.35), "cm"))  + theme(axis.title.y=element_text(size=6)) + theme(axis.title.x = element_text(size=6))  +  theme(plot.title=element_text(size=7))  + theme(axis.text.x = element_text(size=3),axis.text.y = element_text(size=5))  + facet_wrap(~Label,scale="free_x", nrow=ceiling(l^0.5))
   #
   #
   plots = dlply(hp_percent_melt , "Label", `%+%`, e1 = p)
   ml = do.call(marrangeGrob, list(plots, nrow=2, ncol=2))
-  ggsave(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study[i],"/Distribution_",study[i],".Pvn.pdf", collapse=''), ml)
+  ggsave(paste0("/SAN/Plasmo_compare/Kai/Mapping/Distribution_",study,".pdf", collapse=''), ml)
   #
   # print o/p out on pdf
   #setwd(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,collapse=''))
@@ -238,8 +245,8 @@ for(i in 1:length(study))
   #pdf(paste0("Distribution_",study,".pdf", collapse=''))
   #ggexport(hp_bar_ggplot, filename = paste0("Distribution_",study,".pdf", collapse=''))
 
-  write.table(table_output, paste0("/SAN/Plasmo_compare/SRAdb/Output/", study[i],"/table_",study[i],".Pvn.txt", collapse=''), row.names=TRUE, sep="\t")
-  write.table(distribution, paste0("/SAN/Plasmo_compare/SRAdb/Output/", study[i],"/hp_percent_",study[i],".Pvn.txt", collapse=''), row.names=FALSE, sep="\t")
+  write.table(table_output, paste0("/SAN/Plasmo_compare/Kai/Mapping/table_",study,".txt", collapse=''), row.names=TRUE, sep="\t")
+  write.table(distribution, paste0("/SAN/Plasmo_compare/Kai/Mapping/hp_percent_",study,".txt", collapse=''), row.names=FALSE, sep="\t")
   
   #file.copy(from=paste0("/SAN/Plasmo_compare/SRAdb/", "Histogram_",study,".pdf", collapse=''), to=paste0("/SAN/Plasmo_compare/SRAdb/",study, "/Analysis_",study,".pdf", collapse=''))
   #file.copy(from=paste0("/SAN/Plasmo_compare/SRAdb/", "Distribution_",study,".pdf", collapse=''), to=paste0("/SAN/Plasmo_compare/SRAdb/",study, "/Analysis_",study,".pdf", collapse=''))

@@ -17,7 +17,7 @@ ulimit -v 130000000000
 # Step 1: download fastq file with runID
 
 studyID=Macrophage_Kai
-host=human
+host=mouse
 parasite=Pberghei
 
 
@@ -27,12 +27,12 @@ parasite=Pberghei
 
 cd /SAN/Plasmo_compare/fastq_download_tmp/
 
-if [ -e $run\_R1_001.fastq ]; then
+if [ -e $run\_R1_001.fastq.gz ]; then
   # put .gz; then add --readFilesCommand zcat
-  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run\_R1_001.fastq /SAN/Plasmo_compare/fastq_download_tmp/$run\_R1_001.fastq --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run
+  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/mousePberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run\_R1_001.fastq /SAN/Plasmo_compare/fastq_download_tmp/$run\_R2_001.fastq --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run --readFilesCommand zcat
 
 else
-  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/humanPberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run --outSAMtype BAM SortedByCoordinate
+  STAR --runThreadN 4 --genomeDir /SAN/Plasmo_compare/Genomes/indices/mousePberghei --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$run.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$run --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
 
 fi
 cd ..
@@ -57,7 +57,7 @@ Rscript --vanilla $default_path/SRAdb/Scripts/malariaHPinteractions/R/countOverl
 # Step 4: Enter used runs in blacklist
 
 #if [ -e $default_path/Output/$studyID/countWithGFF3_$run.txt ]; then
- #cat $default_path/Input/current_runs.txt | grep $run >> $default_path/Input/blacklist.txt # also study
+cat $default_path/Kai/macrophage_runs.txt | grep $run >> $default_path/Kai/blacklist.txt # also study
  # Step 5: remove fastq and bam files
 rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.fastq
 #rm /SAN/Plasmo_compare/ncbi/sra/$run.sra

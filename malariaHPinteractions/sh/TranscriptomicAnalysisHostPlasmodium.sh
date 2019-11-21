@@ -8,7 +8,7 @@
 
 # input files
 
-host=human
+host=mouse
 parasite=Pberghei
 
 default_path="/SAN/Plasmo_compare/"
