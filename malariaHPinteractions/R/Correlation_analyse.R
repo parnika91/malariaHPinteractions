@@ -16,7 +16,7 @@ loadRData <- function(fileName){
 }
 
 studyID <- "SRP116593"
-type <- "all"
+type <- "str"
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -86,9 +86,13 @@ b_unique_pg <- unique(c(b_unique_pg_col1), c(b_unique_pg_col2))
 # bip[] <- lapply(bip, as.character)
 # bip_dupl <- unique(bip[(duplicated(bip) | duplicated(bip, fromLast = TRUE)),])
 
-load("ERP106451_bipartite.RData")
-load("ERP106451_allruns_bipartite.RData")
-load("ERP106451_stringent15_bipartite.RData")
+# load("ERP106451_bipartite.RData")
+# load("ERP106451_allruns_bipartite.RData")
+# load("ERP106451_stringent15_bipartite.RData")
+
+all_b <- loadRData("SRP116593_all_bipartite.RData")
+int_b <- loadRData("SRP116593_int_bipartite.RData")
+str_b <- loadRData("SRP116593_str_bipartite.RData")
 
 all_b_concat <- apply(all_b[,c(1,2)] , 1 , paste , collapse = "_" )
 str_b_concat <- apply(str_b[,c(1,2)] , 1 , paste , collapse = "_" )
@@ -98,12 +102,12 @@ intersection_all_datasets <- list(all = all_b_concat, stringent = str_b_concat, 
 
 library(VennDiagram)
 library(RColorBrewer)
-png("SRP118827_intersection_3_datasets.png", width = 50, height = 50, units = "cm", res = 450)
+png("SRP116593_intersection_3_datasets.png", width = 50, height = 50, units = "cm", res = 450)
 myCol <- brewer.pal(3, "Pastel2")
 venn.diagram(
         x = intersection_all_datasets,
-        category.names = c("SRP118827_all" , "SRP118827_stringent" , "SRP118827_intermediate"),
-        filename = 'SRP118827_venn_diagram.png',
+        category.names = c("SRP116593_all" , "SRP116593_stringent" , "SRP116593_intermediate"),
+        filename = 'SRP116593_venn_diagram.png',
         output=TRUE,
         
         # Output features
@@ -499,6 +503,34 @@ com.node.plot <- ggplot(com.nodes.df, aes(x = Perms, y = log10(count), colour = 
 ggsave(plot = com.node.plot, filename = "com.node.plot.png")
 
 #######################
+
+### all ###
+
+sum <- matrix(rep(0, 17991*17991), nrow = 17991)
+
+files <- grep(pattern = "outer_", list.files())
+file.names <- list.files()[files]
+
+for(i in 1:length(file.names))
+{
+  print(i)
+  #setwd("/short/uv67/pm4655/cor/")
+  if(grepl(pattern = ".RData", file.names[i]))
+  {
+    load(file.names[i])
+    sum <- sum + outer 
+  }
+}
+
+sum[is.na(sum)] <- 100000
+all <- sum
+all[lower.tri(all, diag = T)] <- NA
+all_melt <- melt(all)
+colnames(all_melt) <- c("gene1", "gene2", "permute_score")
+all_na.omit <- na.omit(all_melt)
+save(all_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
+###
+
 ### int ###
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
@@ -523,7 +555,7 @@ int[lower.tri(int, diag = T)] <- NA
 int_melt <- melt(int)
 colnames(int_melt) <- c("gene1", "gene2", "permute_score")
 int_na.omit <- na.omit(int_melt)
-save(int_na.omit, file = "SRP118827_int_na.omit.RData")
+save(int_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 
 ###
 
@@ -551,42 +583,18 @@ str[lower.tri(str, diag = T)] <- NA
 str_melt <- melt(str)
 colnames(str_melt) <- c("gene1", "gene2", "permute_score")
 str_na.omit <- na.omit(str_melt)
-save(str_na.omit, file = "SRP118827_str_na.omit.RData")
+save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 
 ###
 
-### all ###
-
-sum <- matrix(rep(0, 17991*17991), nrow = 17991)
-
-files <- grep(pattern = "outer_", list.files())
-file.names <- list.files()[files]
-
-for(i in 1:length(file.names))
-{
-  print(i)
-  #setwd("/short/uv67/pm4655/cor/")
-  if(grepl(pattern = ".RData", file.names[i]))
-  {
-    load(file.names[i])
-    sum <- sum + outer 
-  }
-}
-
-sum[is.na(sum)] <- 100000
-all <- sum
-all[lower.tri(all, diag = T)] <- NA
-all_melt <- melt(all)
-colnames(all_melt) <- c("gene1", "gene2", "permute_score")
-all_na.omit <- na.omit(all_melt)
-save(all_na.omit, file = "SRP118827_all_na.omit.RData")
-
-###
+load("SRP116593_all_na.omit.RData")
+load("SRP116593_int_na.omit.RData")
+load("SRP116593_str_na.omit.RData")
 
 study_all_datasets <- data.frame(int_na.omit[,1], int_na.omit[,2], int_na.omit$permute_score, str_na.omit$permute_score, all_na.omit$permute_score)
-colnames(study_all_datasets) <- c("gene1", "gene2", "SRP118827_int", "SRP118827_str", "SRP118827_all")
+colnames(study_all_datasets) <- c("gene1", "gene2", "SRP116593_int", "SRP116593_str", "SRP116593_all")
 
-v <- which(study_all_datasets$SRP118827_int == 100000 | study_all_datasets$SRP118827_str == 100000 | study_all_datasets$SRP118827_all == 100000)
+v <- which(study_all_datasets$SRP116593_int == 100000 | study_all_datasets$SRP116593_str == 100000 | study_all_datasets$SRP116593_all == 100000)
 
 new_all <- study_all_datasets[-v,]
 sampled <- new_all[sample(nrow(new_all), size = nrow(new_all)/1000),]
@@ -601,35 +609,13 @@ sampled <- new_all[sample(nrow(new_all), size = nrow(new_all)/1000),]
 
 # comparisons
 
-cor(lt$ERP106451_nor, lt$ERP106451_all)
-[1] 0.9610061
-cor(study_all_datasets$SRP118827_int, study_all_datasets$SRP118827_str)
-[1] 0.9255858
- 
-cor(study_all_datasets$SRP118827_int, study_all_datasets$SRP118827_all)
-[1] 0.3917892
-cor(lt$ERP106451_str, lt$ERP106451_all)
-[1] 0.6049347
+cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str)
+cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all)
+cor(study_all_datasets$SRP116593_str, study_all_datasets$SRP116593_all)
 
-cor(study_all_datasets$SRP118827_str, study_all_datasets$SRP118827_all)
-[1] 0.3786159
-cor(lt$ERP106451_str, lt$ERP106451_nor)
-[1] 0.6287179
-
-cor(all_ERP106451_SRP118996$SRP118996_str, all_ERP106451_SRP118996$SRP118996_all)
-[1] 0.7048141
-cor(lt$SRP118996_str, lt$SRP118996_all)
-[1] 0.69346
-
-cor(all_ERP106451_SRP118996$SRP118996_nor, all_ERP106451_SRP118996$SRP118996_all)
-[1] 0.9005743
-cor(lt$SRP118996_nor, lt$SRP118996_all)
-[1] 0.9197856
-
-cor(all_ERP106451_SRP118996$SRP118996_nor, all_ERP106451_SRP118996$SRP118996_str)
-[1] 0.7452191
-cor(lt$SRP118996_nor, lt$SRP118996_str)
-
+cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str, method = "spearman")
+cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all, method = "spearman")
+cor(study_all_datasets$SRP116593_str, study_all_datasets$SRP116593_all, method = "spearman")
 
 ### UpSetR plots ###
 
