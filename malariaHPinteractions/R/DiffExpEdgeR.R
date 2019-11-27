@@ -10,10 +10,14 @@ install.packages("gridExtra")
 install.packages("plotly")
 suppressPackageStartupMessages(library("plotly"))
 
-setwd("Data/")
+setwd("Documents/Data/Kai/")
 x <- read.delim("Macrophage_coding_genes.txt")
 
 y <- DGEList(counts=x)
+Conditions <- read.csv("~/Documents/Data/Kai/Conditions.csv", stringsAsFactors=FALSE)
+Conditions$Trt_time <- paste(Conditions$treatment, Conditions$time)
+
+
 group <- c(rep(1, 94), rep(2, 48), rep(3, 5))
 y <- DGEList(counts=x, group=group)
 
