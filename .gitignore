@@ -1,28 +1,27 @@
 .RData
-	.Rhistory
-	malariaHPinteractions/R/CorSRP108632_job.sh
-	malariaHPinteractions/R/Correlation_SRP108632.R
-	malariaHPinteractions/R/Correlation_prep.R
-	malariaHPinteractions/R/MDS_allstudies.R
-	malariaHPinteractions/R/MDS_allstudies_liver.R
-	malariaHPinteractions/R/MDS_allstudies_wBCV_blood.R
-	malariaHPinteractions/R/MDS_allstudies_wBCV_liver.R
-	malariaHPinteractions/R/MDS_wBCV.R
-	malariaHPinteractions/R/MDS_wBCV_blood.R
-	malariaHPinteractions/R/MDS_wBCV_liver.R
-	malariaHPinteractions/R/MixedEffect.R
-	malariaHPinteractions/R/NetRecon.R
-	malariaHPinteractions/R/ParaPropOfSubset.R
-	malariaHPinteractions/R/Profiler.R
-	malariaHPinteractions/R/QualityControlReads.R
-	malariaHPinteractions/R/Similar_genes_varying.nb.html
-	malariaHPinteractions/R/analysisForPaper.nb.html
-	malariaHPinteractions/R/featureCount.R
-	malariaHPinteractions/R/nw.R.save
-	malariaHPinteractions/R/plotMDS_tmm.R
-	malariaHPinteractions/R/wmr.R
-	malariaHPinteractions/sh/Cor_job.sh
-	malariaHPinteractions/sh/MDSscripts.sh
-	malariaHPinteractions/sh/maptrial.sh
-
+.Rhistory
+malariaHPinteractions/R/CorSRP108632_job.sh
+malariaHPinteractions/R/Correlation_SRP108632.R
+malariaHPinteractions/R/Correlation_prep.R
+malariaHPinteractions/R/MDS_allstudies.R
+malariaHPinteractions/R/MDS_allstudies_liver.R
+malariaHPinteractions/R/MDS_allstudies_wBCV_blood.R
+malariaHPinteractions/R/MDS_allstudies_wBCV_liver.R
+malariaHPinteractions/R/MDS_wBCV.R
+malariaHPinteractions/R/MDS_wBCV_blood.R
+malariaHPinteractions/R/MDS_wBCV_liver.R
+malariaHPinteractions/R/MixedEffect.R
+malariaHPinteractions/R/NetRecon.R
+malariaHPinteractions/R/ParaPropOfSubset.R
+malariaHPinteractions/R/Profiler.R
+malariaHPinteractions/R/QualityControlReads.R
+malariaHPinteractions/R/Similar_genes_varying.nb.html
+malariaHPinteractions/R/analysisForPaper.nb.html
+malariaHPinteractions/R/featureCount.R
+malariaHPinteractions/R/nw.R.save
+malariaHPinteractions/R/plotMDS_tmm.R
+malariaHPinteractions/R/wmr.R
+malariaHPinteractions/sh/Cor_job.sh
+malariaHPinteractions/sh/MDSscripts.sh
+malariaHPinteractions/sh/maptrial.sh
 malariaHPinteractions/R/.Rhistory
