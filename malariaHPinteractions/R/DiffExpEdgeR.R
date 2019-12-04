@@ -53,10 +53,13 @@ library(org.Mm.eg.db)
 library(pheatmap)
 library(rtracklayer)
 library(dplyr)
-setwd("Documents/Data/Kai/")
+library(ggplot2)
+library(ggrepel)
+setwd("~/Documents/Data/Kai/")
 
 SampleCond <- read.csv("~/Documents/Data/Kai/SampleCond.txt", sep="", stringsAsFactors=FALSE)
 countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE)
+countfile <- countfile[-grep(rownames(countfile), pattern = "PB"),]
 
 group <- SampleCond[,3]
 
@@ -257,11 +260,13 @@ my.contrasts.4 <- makeContrasts(
   untr_4h_vs_SPZlo_4h = SPZlo_4h - untr_4h,
   untr_4h_vs_LPS_4h = LPS_4h - untr_4h,
   untr_4h_vs_PBS_4h = PBS_4h - untr_4h,
+  
   LPS_4h_vs_SPZhi_4h =  SPZhi_4h - LPS_4h,
   LPS_4h_vs_SPZlo_4h = SPZlo_4h - LPS_4h,
   LPS_4h_vs_iRBChi_4h = iRBChi_4h - LPS_4h,
   LPS_4h_vs_iRBClo_4h = iRBClo_4h - LPS_4h,
   LPS_4h_vs_PBS_4h = PBS_4h - LPS_4h,
+  
   PBS_4h_vs_SPZhi_4h = SPZhi_4h - PBS_4h,
   PBS_4h_vs_SPZlo_4h = SPZlo_4h - PBS_4h,
   PBS_4h_vs_iRBChi_4h = iRBChi_4h - PBS_4h,
@@ -286,11 +291,13 @@ my.contrasts.24 <- makeContrasts(
   untr_24h_vs_SPZlo_24h = SPZlo_24h - untr_24h,
   untr_24h_vs_LPS_24h = LPS_24h - untr_24h,
   untr_24h_vs_PBS_24h = PBS_24h - untr_24h,
+  
   LPS_24h_vs_SPZhi_24h = LPS_24h - SPZhi_24h,
   LPS_24h_vs_SPZlo_24h = LPS_24h - SPZlo_24h,
   LPS_24h_vs_iRBChi_24h = iRBChi_24h - LPS_24h,
   LPS_24h_vs_iRBClo_24h = iRBClo_24h - LPS_24h,
   LPS_24h_vs_PBS_24h = PBS_24h - LPS_24h,
+  
   PBS_24h_vs_SPZhi_24h = SPZhi_24h - PBS_24h,
   PBS_24h_vs_SPZlo_24h = SPZlo_24h - PBS_24h,
   PBS_24h_vs_iRBChi_24h = iRBChi_24h - PBS_24h,
@@ -340,86 +347,96 @@ topGO(go, sort="up")
 keg <- kegga(qlf, species="Mm")
 topKEGG(keg, sort="up")
 
-## diff_df between conditions 1 and 2 ##
+############ diff_df between conditions 1 and 2 #############
 
-diff_df <- DGE_macro[c("gene", "logFC", "FDR")]
+untr4_vs_conditions4 <- c("untr_4h_vs_SPZhi_4h",
+                  "untr_4h_vs_iRBChi_4h",
+                  "untr_4h_vs_iRBClo_4h",
+                  "untr_4h_vs_RBC_4h",
+                  "untr_4h_vs_SPZlo_4h",
+                  "untr_4h_vs_LPS_4h",
+                  "untr_4h_vs_PBS_4h",
+                  "LPS_4h_vs_SPZhi_4h",
+                  "LPS_4h_vs_SPZlo_4h",
+                  "LPS_4h_vs_iRBChi_4h",
+                  "LPS_4h_vs_iRBClo_4h",
+                  "LPS_4h_vs_PBS_4h",
+                  "PBS_4h_vs_SPZhi_4h",
+                  "PBS_4h_vs_SPZlo_4h",
+                  "PBS_4h_vs_iRBChi_4h",
+                  "PBS_4h_vs_iRBClo_4h",
+                  "PBS_4h_vs_LPS_4h")
 
-# preview the dataset; data required for the plot
-head(diff_df)
-# add a grouping column; default value is "not significant"
-diff_df["group"] <- "NotSignificant"
+untr24_vs_conditions24 <- c("untr_24h_vs_SPZhi_24h",
+                   "untr_24h_vs_iRBChi_24h",
+                   "untr_24h_vs_iRBClo_24h",
+                   "untr_24h_vs_RBC_24h",
+                   "untr_24h_vs_SPZlo_24h",
+                   "untr_24h_vs_LPS_24h",
+                   "untr_24h_vs_PBS_24h",
+                   "LPS_24h_vs_SPZhi_24h",
+                   "LPS_24h_vs_SPZlo_24h",
+                   "LPS_24h_vs_iRBChi_24h",
+                   "LPS_24h_vs_iRBClo_24h",
+                   "LPS_24h_vs_PBS_24h",
+                   "PBS_24h_vs_SPZhi_24h",
+                   "PBS_24h_vs_SPZlo_24h",
+                   "PBS_24h_vs_iRBChi_24h",
+                   "PBS_24h_vs_iRBClo_24h",
+                   "PBS_24h_vs_LPS_24h")
 
-# for our plot, we want to highlight 
-# FDR < 0.05 (significance level)
-# Fold Change > 1.5
+condition4_vs_condition24 <- c("untr_4h_vs_untr_24h",
+                     "SPZhi_4h_vs_SPZhi_24h",
+                     "iRBChi_4h_vs_iRBChi_24h",
+                     "iRBClo_4h_vs_iRBClo_24h",
+                     "RBC_4h_vs_RBC_24h",
+                     "SPZlo_4h_vs_SPZlo_24h",
+                     "LPS_4h_vs_LPS_24h",
+                     "PBS_4h_vs_PBS_24h") 
 
-# change the grouping for the entries with significance but not a large enough Fold change
-diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) < 1.5 ),"group"] <- "Significant"
+volcano_plots <- function(conditions)
+{
+  if(conditions == "untr4_vs_conditions4")
+    conds = untr4_vs_conditions4
+  if(conditions == "untr24_vs_conditions24")
+    conds = untr24_vs_conditions24
+  if(conditions == "condition4_vs_condition24")
+    conds = condition4_vs_condition24
+  
+  for(cond in conds)
+  {
+    DGE <- read.csv(paste0(conditions,"/", cond, ".txt"), sep="", stringsAsFactors=FALSE)
+    diff_df <- DGE[c("Gene_name", "logFC", "FDR")]
+    # diff_df <- diff_df[-grep(diff_df$Gene_name, pattern = "PB"),]
+    
+    # add a grouping column; default value is "not significant"
+    diff_df["group"] <- "NotSignificant"
+    
+    # change the grouping for the entries with significance but not a large enough Fold change
+    diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) < 1.5 ),"group"] <- "Significant"
+    
+    # change the grouping for the entries a large enough Fold change but not a low enough p value
+    diff_df[which(diff_df['FDR'] > 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "logFC"
+    
+    # change the grouping for the entries with both significance and large enough logFC change
+    diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "Significant&logFC"
+    
+    diff_df <- as.data.frame(diff_df)
+    diff_df <-  diff_df[order(-abs(diff_df$logFC), diff_df$FDR),]
+    
+    p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) + 
+    geom_point() + 
+    ggtitle(cond) + 
+    geom_text_repel(
+      data = head(diff_df, 100),
+      aes(label = Gene_name),
+      size = 2,
+      colour = "black",
+      #box.padding = unit(0.35, "lines"),
+      #point.padding = unit(0.3, "lines")
+    )
+    ggsave(paste0(conditions,"/", cond,".png"), plot = p)
+  }
+}
 
-# change the grouping for the entries a large enough Fold change but not a low enough p value
-diff_df[which(diff_df['FDR'] > 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "logFC"
-
-# change the grouping for the entries with both significance and large enough logFC change
-diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "Significant&logFC"
-
-
-# # Find and label the top peaks..
-# top_peaks <- diff_df[with(diff_df, order(logFC, FDR)),][1:5,]
-# top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(-logFC, FDR)),][1:5,])
-
-
-# Add gene labels to the plot
-# Single Gene Annotation example
-# m <- diff_df[with(diff_df, order(logFC, FDR)),][1,]
-# a <- list(
-#   x = m[["logFC"]],
-#   y = -log10(m[["FDR"]]),
-#   text = m[["external_gene_name"]],
-#   xref = "x",
-#   yref = "y",
-#   showarrow = TRUE,
-#   arrowhead = 7,
-#   ax = 20,
-#   ay = -40
-# )
-
-# Add gene labels for all of the top genes we found
-# here we are creating an empty list, and filling it with entries for each row in the dataframe
-# each list entry is another list with named items that will be used by Plot.ly
-# a <- list()
-# for (i in seq_len(nrow(top_peaks))) {
-#   m <- top_peaks[i, ]
-#   a[[i]] <- list(
-#     x = m[["logFC"]],
-#     y = -log10(m[["FDR"]]),
-#     text = m[["gene"]],
-#     xref = "x",
-#     yref = "y",
-#     showarrow = TRUE,
-#     arrowhead = 0.5,
-#     ax = 20,
-#     ay = -40
-#   )
-# }
-
-
-# make the Plot.ly plot
-# p <- plot_ly(data = diff_df, x = logFC, y = -log10(FDR), text = external_gene_name, mode = "markers", color = group) %>% 
-#   layout(title ="Condition 1 vs 2") %>%
-#   layout(annotations = a)
-# p
-diff_df <- as.data.frame(diff_df)
-diff_df <-  diff_df[order(-abs(diff_df$logFC), diff_df$FDR),]
-
-p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) + 
-  geom_point() + 
-  ggtitle("Condition 1 vs 2") + 
-  geom_text_repel(
-    data = head(diff_df, 10),
-    aes(label = gene),
-    size = 2,
-    colour = "black",
-    box.padding = unit(0.35, "lines"),
-    point.padding = unit(0.3, "lines")
-  )
-ggsave("macrophage1vs2.png", plot = p)
+volcano_plots(conditions = "condition4_vs_condition24")
