@@ -4,16 +4,17 @@
 # third, get gene pairs with p-values == 0
 # fourth, get this from the other study and finc common pairs
 
-library(WGCNA)
-library(reshape2)
-library(ggplot2)
-library(dplyr)
-
 loadRData <- function(fileName){
   #loads an RData file, and returns it
   load(fileName)
   get(ls()[ls() != "fileName"])
 }
+
+########### Main operations ###########
+library(WGCNA)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
 
 studyID <- "SRP116593"
 type <- "str"
@@ -26,7 +27,6 @@ file.names <- list.files()[files]
 for(i in 1:length(file.names))
 {
   print(i)
-  #setwd("/short/uv67/pm4655/cor/")
   if(grepl(pattern = ".RData", file.names[i]))
   {
     load(file.names[i])
@@ -49,7 +49,6 @@ colnames(pval_melt) <- c("gene1", "gene2", "permute_score")
 pval_cor <- cbind(cor_melt, pval_melt$permute_score)
 colnames(pval_cor)[4] <- "permute_score"
 
-#Do this step in next analysis:
 pval_cor_na.omit <- na.omit(pval_cor)
 pval0 <- pval_cor_na.omit[pval_cor_na.omit$permute_score==0,]
 
@@ -65,7 +64,8 @@ pg_col2 <- as.character(pval0[grep(pattern = "p_OG", pval0$gene2),2])
 unique_pg_col2 <- unique(pg_col2)
 unique_pg <- unique(c(unique_pg_col1), c(unique_pg_col2))
 
-bipartite <- pval0[(grepl(pattern = "h_OG", pval0$gene1) & grepl(pattern = "p_OG", pval0$gene2)) | (grepl(pattern = "p_OG", pval0$gene1) & grepl(pattern = "h_OG", pval0$gene2)),]
+bipartite <- pval0[(grepl(pattern = "h_OG", pval0$gene1) & grepl(pattern = "p_OG", pval0$gene2)) |
+                     (grepl(pattern = "p_OG", pval0$gene1) & grepl(pattern = "h_OG", pval0$gene2)),]
 colnames(bipartite) <- sapply(colnames(bipartite), function(x) paste0(studyID,"_",type,"_",x, collapse = ''))
 
 save(bipartite, file = paste0(studyID,"_", type, "_bipartite.RData", collapse = ''))
@@ -82,13 +82,7 @@ b_pg_col2 <- as.character(bipartite[grep(pattern = "p_OG", bipartite[,2]),2])
 b_unique_pg_col2 <- unique(b_pg_col2)
 b_unique_pg <- unique(c(b_unique_pg_col1), c(b_unique_pg_col2))
 
-# bip <- rbind(ERP106451_bipartite[,1:2], SRP118996_bipartite[,1:2])
-# bip[] <- lapply(bip, as.character)
-# bip_dupl <- unique(bip[(duplicated(bip) | duplicated(bip, fromLast = TRUE)),])
-
-# load("ERP106451_bipartite.RData")
-# load("ERP106451_allruns_bipartite.RData")
-# load("ERP106451_stringent15_bipartite.RData")
+########### Venn diagram of 3 datasets for 1 study #########
 
 all_b <- loadRData("SRP116593_all_bipartite.RData")
 int_b <- loadRData("SRP116593_int_bipartite.RData")
@@ -136,16 +130,10 @@ venn.diagram(
 )
 dev.off()
 
-#library(grid)
-#png(file="SRP118996_intersect.png", width = 15, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
-#upset(fromList(SRP118996_upset), sets = names(SRP118996_upset), order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", sets.x.label = "Genes pairs per dataset", empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", text.scale = c(1.2, 1, 1, 1, 0.8, 0.8))
-#grid.text("SRP118996 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
-#dev.off()
+########### join two studies correlation values ############
 
 hg_common <- unique(bip_dupl$gene1)
 pg_common <- unique(bip_dupl$gene2)
-
-# join two studies correlation values #
 
 bip_cor1 <- inner_join(bip_dupl, SRP032775_bipartite, by = c("gene1", "gene2"))
 bip_cor12 <- inner_join(bip_cor1, SRP118996_bipartite, by = c("gene1", "gene2"))
@@ -155,13 +143,7 @@ common_all <- inner_join(SRP032775_pval0, SRP118996_pval0, by = c("gene1", "gene
 common_hh <- common_all[which(grepl(pattern= "h_OG", common_all$gene1) & grepl(pattern = "h_OG", common_all$gene2)),]
 common_pp <- common_all[which(grepl(pattern= "p_OG", common_all$gene1) & grepl(pattern = "p_OG", common_all$gene2)),]
 
-png("SRP118996_SRP032775_permsc_vs_cor_paraprop.png")
-plot(x = pval_cor_na.omit$cor, y = pval_cor_na.omit$permute_score, 
-     main = "SRP032775 and SRP118996: Distribution of permutation score and corr coef", 
-     xlab = "Correlation coefficient [-1, 1]", ylab = "Permutation score of gene pair",
-     colour = "#E7B800", cex = 0.2)
-#plot(density(pval_cor_na.omit$cor))
-dev.off()
+########### perm_score vs cor plot #########
 
 pv = pval_cor_na.omit[sample(nrow(pval_cor_na.omit), size = nrow(pval_cor_na.omit)/1000),]
 
@@ -171,58 +153,59 @@ gg_pvsc <- ggplot(pval_cor_na.omit, aes(x = cor, y = permute_score)) + geom_poin
 
 ggsave(plot = gg_pvsc, filename = "ERP106451_allruns.png")
 
-### to plot perm_sc == 0 vs number of perms
+########### (commented out; improved version below) to plot perm_sc == 0 vs number of perms ###########
 
-sum2 <- matrix(rep(0, 17991*17991), nrow = 17991)
-sum2[lower.tri(sum2, diag = T)] <- NA
-df <- data.frame(Perms = seq(10000, 100000, 10000))
-a = 1
-for(i in 1:length(file.names))
-{
-  print(i)
-  if(grepl(pattern = ".RData", file.names[i]))
-  {
-  load(file.names[i])
-  #outer[lower.tri(outer, diag = T)] <- NA
-  sum2 <- outer + sum2
-  #sum2[lower.tri(sum2, diag = T)] <- NA
-  sum2_melt <- melt(sum2)
-  
-  colnames(sum2_melt) <- c("gene1", "gene2", "permute_score")
+# sum2 <- matrix(rep(0, 17991*17991), nrow = 17991)
+# sum2[lower.tri(sum2, diag = T)] <- NA
+# df <- data.frame(Perms = seq(10000, 100000, 10000))
+# a = 1
+# for(i in 1:length(file.names))
+# {
+#   print(i)
+#   if(grepl(pattern = ".RData", file.names[i]))
+#   {
+#   load(file.names[i])
+#   #outer[lower.tri(outer, diag = T)] <- NA
+#   sum2 <- outer + sum2
+#   #sum2[lower.tri(sum2, diag = T)] <- NA
+#   sum2_melt <- melt(sum2)
+#   
+#   colnames(sum2_melt) <- c("gene1", "gene2", "permute_score")
+# 
+#   pval_cor <- cbind(cor_melt, sum2_melt$permute_score)
+#   colnames(pval_cor)[4] <- "permute_score"
+# 
+#   pval_cor_na.omit <- na.omit(pval_cor)
+#   pval0 <- pval_cor_na.omit[pval_cor_na.omit$permute_score==0,]
+# 
+#   cor0.9 <- nrow(pval0[abs(pval0$cor) >= 0.9,])
+#   cor0.8 <- nrow(pval0[(abs(pval0$cor) >= 0.8 & abs(pval0$cor) < 0.9),])
+#   cor0.7 <- nrow(pval0[(abs(pval0$cor) >= 0.7 & abs(pval0$cor) < 0.8),])
+#   cor0.6 <- nrow(pval0[(abs(pval0$cor) >= 0.6 & abs(pval0$cor) < 0.7),])
+#   cor0.5 <- nrow(pval0[(abs(pval0$cor) >= 0.5 & abs(pval0$cor) < 0.6),])
+# 
+#   df[a,2] <- cor0.9
+#   df[a,3] <- cor0.8
+#   df[a,4] <- cor0.7
+#   df[a,5] <- cor0.6
+#   df[a,6] <- cor0.5
+#   
+#   a = a + 1}
+# }
+# 
+# save(df, file = "SRP118996_hp_12Sep2019df.RData")
+# 
+# colnames(df) <- c("Permutations", "Cor0.9", "Cor0.8", "Cor0.7", "Cor0.6", "Cor0.5")
+# df_melt <- melt(df, id.vars = "Permutations")
+# 
+# png("SRP032775_hp_100k_12Sep2019.png")
+# ggplot(df_melt, aes(x = Permutations, y = log10(value), colour = variable)) + geom_line() +
+#        scale_x_continuous(breaks = seq(10000, 100000, 20000), limits = c(10000, 100000)) + 
+#        ggtitle("SRP032775: #edges with perm_score zero; para read prop >5%") + 
+#        ylab("log10 of number of edges with perm_score == 0")
+# dev.off()
 
-  pval_cor <- cbind(cor_melt, sum2_melt$permute_score)
-  colnames(pval_cor)[4] <- "permute_score"
-
-  pval_cor_na.omit <- na.omit(pval_cor)
-  pval0 <- pval_cor_na.omit[pval_cor_na.omit$permute_score==0,]
-
-  cor0.9 <- nrow(pval0[abs(pval0$cor) >= 0.9,])
-  cor0.8 <- nrow(pval0[(abs(pval0$cor) >= 0.8 & abs(pval0$cor) < 0.9),])
-  cor0.7 <- nrow(pval0[(abs(pval0$cor) >= 0.7 & abs(pval0$cor) < 0.8),])
-  cor0.6 <- nrow(pval0[(abs(pval0$cor) >= 0.6 & abs(pval0$cor) < 0.7),])
-  cor0.5 <- nrow(pval0[(abs(pval0$cor) >= 0.5 & abs(pval0$cor) < 0.6),])
-
-  df[a,2] <- cor0.9
-  df[a,3] <- cor0.8
-  df[a,4] <- cor0.7
-  df[a,5] <- cor0.6
-  df[a,6] <- cor0.5
-  
-  a = a + 1}
-}
-
-save(df, file = "SRP118996_hp_12Sep2019df.RData")
-
-colnames(df) <- c("Permutations", "Cor0.9", "Cor0.8", "Cor0.7", "Cor0.6", "Cor0.5")
-df_melt <- melt(df, id.vars = "Permutations")
-
-png("SRP032775_hp_100k_12Sep2019.png")
-ggplot(df_melt, aes(x = Permutations, y = log10(value), colour = variable)) + geom_line() +
-       scale_x_continuous(breaks = seq(10000, 100000, 20000), limits = c(10000, 100000)) + 
-       ggtitle("SRP032775: #edges with perm_score zero; para read prop >5%") + 
-       ylab("log10 of number of edges with perm_score == 0")
-dev.off()
-
+########### Number of nodes and edges with permute score 0 at every 100000 step + plots ###########
 
 # For every study, read the outer files, melt them, read the different kinds of edges and nodes
 # count these and put then in the table
@@ -354,17 +337,7 @@ node.plot <- ggplot(nodes.df, aes(x = Perms, y = log10(count), colour = factor(c
 ggsave(plot = node.plot, filename = "ERP106451_allruns_no_para_prop_node.plot.png")
 
 
-
-
-
-
-
-
-
-
-
-
-# find common edges and nodes between the two studies at every 10000 step
+########### find common edges and nodes between the two studies at every 10000 step + plots ###########
 
 # https://stackoverflow.com/questions/5577221/how-can-i-load-an-object-into-a-variable-name-that-i-specify-from-an-r-data-file
 loadRData <- function(fileName){
@@ -502,7 +475,7 @@ com.node.plot <- ggplot(com.nodes.df, aes(x = Perms, y = log10(count), colour = 
 
 ggsave(plot = com.node.plot, filename = "com.node.plot.png")
 
-#######################
+########### make na.omit datasets: all edges with their permute scores ############
 
 ### all ###
 
@@ -531,7 +504,7 @@ all_na.omit <- na.omit(all_melt)
 save(all_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 ###
 
-### int ###
+### intermwdiate (int) ###
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -559,7 +532,7 @@ save(int_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse =
 
 ###
 
-### str ###
+### stringent (str) ###
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -585,29 +558,40 @@ colnames(str_melt) <- c("gene1", "gene2", "permute_score")
 str_na.omit <- na.omit(str_melt)
 save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 
-###
+########### single study comparisons ###########
 
 load("SRP116593_all_na.omit.RData")
 load("SRP116593_int_na.omit.RData")
 load("SRP116593_str_na.omit.RData")
 
-study_all_datasets <- data.frame(int_na.omit[,1], int_na.omit[,2], int_na.omit$permute_score, str_na.omit$permute_score, all_na.omit$permute_score)
+study_all_datasets <- data.frame(int_na.omit[,1], int_na.omit[,2], 
+                                 int_na.omit$permute_score, 
+                                 str_na.omit$permute_score, 
+                                 all_na.omit$permute_score)
 colnames(study_all_datasets) <- c("gene1", "gene2", "SRP116593_int", "SRP116593_str", "SRP116593_all")
 
-v <- which(study_all_datasets$SRP116593_int == 100000 | study_all_datasets$SRP116593_str == 100000 | study_all_datasets$SRP116593_all == 100000)
+v <- which(study_all_datasets$SRP116593_int == 100000 | 
+             study_all_datasets$SRP116593_str == 100000 | 
+             study_all_datasets$SRP116593_all == 100000)
 
 new_all <- study_all_datasets[-v,]
 sampled <- new_all[sample(nrow(new_all), size = nrow(new_all)/1000),]
 
-#ERP_str <- -log10(1/(all_ERP106451_SRP118996$ERP106451_str + 5e-06))
-#ERP_all <- -log10(1/(all_ERP106451_SRP118996$ERP106451_all + 5e-06))
-#SRP_nor <- -log10(1/(all_ERP106451_SRP118996$SRP118996_nor + 5e-06))
-#SRP_str <- -log10(1/(all_ERP106451_SRP118996$SRP118996_str + 5e-06))
-#SRP_all <- -log10(1/(all_ERP106451_SRP118996$SRP118996_all + 5e-06))
+ERP_int <- -log10(1/(all_ERP106451_SRP118996$ERP106451_int + 5e-06))
+ERP_str <- -log10(1/(all_ERP106451_SRP118996$ERP106451_str + 5e-06))
+ERP_all <- -log10(1/(all_ERP106451_SRP118996$ERP106451_all + 5e-06))
+SRP_int <- -log10(1/(all_ERP106451_SRP118996$SRP118996_int + 5e-06))
+SRP_str <- -log10(1/(all_ERP106451_SRP118996$SRP118996_str + 5e-06))
+SRP_all <- -log10(1/(all_ERP106451_SRP118996$SRP118996_all + 5e-06))
 
-#lt <- data.frame(gene1 = all_ERP106451_SRP118996$gene1, gene2 = all_ERP106451_SRP118996$gene2, ERP106451_nor = ERP_nor, ERP106451_str = ERP_str, ERP106451_all = ERP_all, SRP118996_nor = SRP_nor, SRP118996_str = SRP_str, SRP118996_all = SRP_all)
-
-# comparisons
+lt <- data.frame(gene1 = all_ERP106451_SRP118996$gene1, 
+                 gene2 = all_ERP106451_SRP118996$gene2, 
+                 ERP106451_nor = ERP_int, 
+                 ERP106451_str = ERP_str, 
+                 ERP106451_all = ERP_all, 
+                 SRP118996_nor = SRP_int, 
+                 SRP118996_str = SRP_str, 
+                 SRP118996_all = SRP_all)
 
 cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str)
 cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all)
@@ -617,7 +601,7 @@ cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str, method =
 cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all, method = "spearman")
 cor(study_all_datasets$SRP116593_str, study_all_datasets$SRP116593_all, method = "spearman")
 
-### UpSetR plots ###
+########### UpSetR plots ######
 
 ERP106451_all <- apply(ERP106451_allruns_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
 ERP106451_str <- apply(ERP106451_stringent15_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
@@ -636,3 +620,186 @@ upset(fromList(all6datasets_upset), sets = names(all6datasets_upset), order.by =
 grid.text("SRP118996 and ERP106451 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
+########### Function to produce comparison matrices #########
+
+studyID <- c("ERP106451", "SRP118996", "SRP118827", "SRP116793", "SRP116593")
+Cross_study_comparison <- function(feature, op)
+{
+  datasets <- c()
+  v <- c("_str", "_int", "_all")
+  datasets <- sapply(studyID, function(x) c(datasets, paste0(x, v))) # gives a matrix
+  # feature:
+  # a_edges == all edges; b_edges == bipartite edges; h_genes; p_genes
+  # op:
+  # cor (Pearson's and Spearman); overlap
+  if(feature == "a_edges")
+  {
+    list_ds <- list()
+    l <- 0
+    for(i in 1:length(studyID))
+    {
+      for(j in 1:3)
+      {
+        study <- colnames(datasets)[i]
+        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                               "_na.omit.RData"))
+        # ds$edge <- apply(ds[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
+        # ds$edge <- paste0(ds$gene1, ds$gene2)
+        # ds <- data.frame(edge = ds$edge, permute_score = ds$permute_score)
+        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_",x))
+        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+        l <- length(list_ds)
+      }
+    }
+  }
+  if(feature == "b_edges")
+  {
+    list_ds <- list()
+    l <- 0
+    for(i in 1:length(studyID))
+    {
+      for(j in 1:3)
+      {
+        study <- colnames(datasets)[i]
+        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                               "_na.omit.RData"))
+        # keep only bipartite edges
+        ds <- ds[(grepl(pattern = "h_OG", ds$gene1) & grepl(pattern = "p_OG", ds$gene2)) |
+                             (grepl(pattern = "p_OG", ds$gene1) & grepl(pattern = "h_OG", ds$gene2)),]
+        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+        
+        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+        l <- length(list_ds)
+      }
+    }
+  }
+  if(feature == "h_genes")
+  {
+    op = "overlap"
+    find = "h_OG"
+    
+    list_ds <- list()
+    l <- 0
+    for(i in 1:length(studyID))
+    {
+      for(j in 1:3)
+      {
+        study <- colnames(datasets)[i]
+        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                               "_na.omit.RData"))
+        # keep only unique genes where the permute score was 0
+        f <- which(ds$permute_score == 0)
+        ds <- ds[f,]
+        # pick up rows with h_genes
+        col1 <- as.character(ds[grep(pattern = find, ds$gene1),1])
+        unique_col1 <- unique(col1)          
+        col2 <- as.character(ds[grep(pattern = find, ds$gene2),2])
+        unique_col2 <- unique(col2)
+        ds <- as.data.frame(unique(c(unique_col1), c(unique_col2)))
+        
+        colnames(ds) <- paste0(datasets[j,study],"_", feature)
+        
+        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+        l <- length(list_ds)
+      }
+    }
+  }
+  if(feature == "p_genes")
+  {
+    op = "overlap"
+   find = "p_OG"
+    
+    list_ds <- list()
+    l <- 0
+    for(i in 1:length(studyID))
+    {
+      for(j in 1:3)
+      {
+        study <- colnames(datasets)[i]
+        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                               "_na.omit.RData"))
+        # keep only unique genes where the permute score was 0
+        f <- which(ds$permute_score == 0)
+        ds <- ds[f,]
+        # pick up rows with h_genes
+        col1 <- as.character(ds[grep(pattern = find, ds$gene1),1])
+        unique_col1 <- unique(col1)          
+        col2 <- as.character(ds[grep(pattern = find, ds$gene2),2])
+        unique_col2 <- unique(col2)
+        ds <- as.data.frame(unique(c(unique_col1), c(unique_col2)))
+        
+        colnames(ds) <- paste0(datasets[j,study],"_", feature)
+        
+        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+        l <- length(list_ds)
+      }
+    }
+  }
+  operations(data = list_ds, op = op)
+}
+
+# function doing the operations, to be called by Cross_study_comparison function 
+
+operations <- function(data, op)
+{
+  # takes 2 columns per study: edge and permute score for cor
+  # takes 1 column of gene per study for overlap
+  if(op == "cor")
+  {
+    df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
+    for(i in 1:length(data))
+      df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
+    
+    remove.rows <- which(100000 %in% df[,3:17])
+    rr <- subset(df, df[,3:17] != 100000)
+    rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
+    
+    df <- df[-remove.rows,]
+    sampled <- df[sample(nrow(df), size = nrow(df)/1000),]
+    
+    logt_df <- data.frame(gene1 = sampled[,1], gene2 = sampled[,2])
+    
+    for(j in 1:ncol(df))
+      logt_df[(1:nrow(logt_df)),(j+2)] <- -log10(1/(sampled[,(j+2)] + 5e-06))
+    
+    colnames(logt_df) <- sapply(colnames(logt_df), function(x) paste0("_logt_",x))
+    
+    p_cor <- cor(df[,(3:ncol(df))])
+    s_cor <- cor(df[,(3:ncol(df))], method = "spearman")
+    
+    res <- list(p_cor, s_cor)
+  }
+  
+  if(op == "overlap")
+  {
+    m <- length(data)
+    n <- ncol(data[[1]])
+    
+    upset <- list()
+    mat <- matrix(rep(0, (length(data)^2), nrow = length(data)))
+    
+    if(n==3)
+    {
+      for(i in 1:length(data))
+      {
+        upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2]
+        for(j in 1:length(data))
+        {
+          x <- intersect
+        }
+      }
+    }
+    
+    if(n==1)
+    {
+      upset <- data
+      for(i in 1:length(data))
+        for(j in 1:length(data))
+          mat[i,j] <- intersect(data[[i]], data[[j]])/(nrow(data[[i]]) + nrow(data[[j]]))
+    }
+    
+    res <- list(upset, mat)
+  }
+  
+  return(res)
+}
