@@ -179,10 +179,10 @@ colnames(logcpm) <- y$samples$group
 # dev.off()
 
 # get gene names from ensembl gene IDs
-# gtf <- import("mousePberghei.gtf", format = "gtf")
-# gtf <- gtf[gtf$type%in%"exon"]
-# gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
-# gtf.df <- as.data.frame(gtf)
+gtf <- import("mousePberghei.gtf", format = "gtf")
+gtf <- gtf[gtf$type%in%"exon"]
+gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
+gtf.df <- as.data.frame(gtf)
 # gtf.h <- gtf[grep(pattern = "ENS", gtf$gene_id),]
 
 ############ many contrasts #############
@@ -196,12 +196,17 @@ Diff_gene_condition <- function(ref, trt, time)
     qlf <- glmQLFTest(fit, contrast=my.contrasts.4[,paste0(ref, "_vs_", trt, collapse = '')])
   if(time == "inter")
     qlf <- glmQLFTest(fit, contrast=my.contrasts.inter[,paste0(ref, "_vs_", trt, collapse = '')])
+  if(time == "overall")
+    qlf <- glmQLFTest(fit, contrast=my.contrasts.single[,paste0(ref, "_vs_", trt, collapse = '')])
   
   diff <- topTags(qlf, n = 50)$table
   res_genes <- rownames(diff)
   
   res_logcpm <- data.frame()
   gene_name <- c()
+  
+  if(time == "overall")
+    logcpm = logcpm2
   
   for(i in 1:length(res_genes))
   {
@@ -292,8 +297,8 @@ my.contrasts.24 <- makeContrasts(
   untr_24h_vs_LPS_24h = LPS_24h - untr_24h,
   untr_24h_vs_PBS_24h = PBS_24h - untr_24h,
   
-  LPS_24h_vs_SPZhi_24h = LPS_24h - SPZhi_24h,
-  LPS_24h_vs_SPZlo_24h = LPS_24h - SPZlo_24h,
+  LPS_24h_vs_SPZhi_24h = SPZhi_24h - LPS_24h,
+  LPS_24h_vs_SPZlo_24h = SPZlo_24h - LPS_24h,
   LPS_24h_vs_iRBChi_24h = iRBChi_24h - LPS_24h,
   LPS_24h_vs_iRBClo_24h = iRBClo_24h - LPS_24h,
   LPS_24h_vs_PBS_24h = PBS_24h - LPS_24h,
@@ -306,7 +311,7 @@ my.contrasts.24 <- makeContrasts(
   levels=design1
 )
 
-Diff_gene_condition(ref = "PBS_24h", trt = "LPS_24h", time = 24)
+Diff_gene_condition(ref = "LPS_24h", trt = "SPZlo_24h", time = 24)
 
 # 4vs24 hours: 4 vs 24
 
@@ -328,6 +333,42 @@ my.contrasts.inter <- makeContrasts(
 )
 
 Diff_gene_condition(ref = "PBS_4h", trt = "PBS_24h", time = "inter")
+
+# overall contrasts
+
+y2$samples$group <- relevel(y2$samples$group, ref="untr")
+design2 <- model.matrix(~0+group2)
+colnames(design2) <- substring(colnames(design2), 7)
+fit <- glmQLFit(y2, design2)
+
+my.contrasts.overall <- makeContrasts(
+  untr_vs_SPZhi = SPZhi - untr,
+  untr_vs_iRBChi = iRBChi - untr,
+  untr_vs_iRBClo = iRBClo - untr,
+  untr_vs_RBC = RBC - untr,
+  untr_vs_SPZlo = SPZlo - untr,
+  untr_vs_LPS = LPS - untr,
+  untr_vs_PBS = PBS - untr,
+  
+  LPS_vs_SPZhi = SPZhi - LPS,
+  LPS_vs_SPZlo = SPZlo - LPS,
+  LPS_vs_iRBChi = iRBChi - LPS,
+  LPS_vs_iRBClo = iRBClo - LPS,
+  LPS_vs_PBS = PBS - LPS,
+  
+  PBS_vs_SPZhi = SPZhi - PBS,
+  PBS_vs_SPZlo = SPZlo - PBS,
+  PBS_vs_iRBChi = iRBChi - PBS,
+  PBS_vs_iRBClo = iRBClo - PBS,
+  PBS_vs_LPS = LPS - PBS,
+  levels=design2
+)
+
+my.contrasts.single <- makeContrasts(
+  LPS_vs_SPZhi = (SPZhi_24h - SPZhi_4h) - (LPS_24h - LPS_4h),
+  levels=design1
+)
+Diff_gene_condition(ref = "LPS", trt = "SPZhi", time = "single")
 
 ############ Convert IDs using biomaRt #############
 
@@ -424,17 +465,42 @@ volcano_plots <- function(conditions)
     diff_df <- as.data.frame(diff_df)
     diff_df <-  diff_df[order(-abs(diff_df$logFC), diff_df$FDR),]
     
-    p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) + 
-    geom_point() + 
-    ggtitle(cond) + 
+    # top_peaks <- diff_df[with(diff_df, order(logFC, FDR)),][1:5,]
+    # top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(-logFC, FDR)),][1:5,])
+
+    p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) +
+    geom_point() +
+    ggtitle(cond) +
     geom_text_repel(
       data = head(diff_df, 100),
       aes(label = Gene_name),
       size = 2,
       colour = "black",
-      #box.padding = unit(0.35, "lines"),
-      #point.padding = unit(0.3, "lines")
-    )
+      box.padding = unit(0.35, "lines"),
+      point.padding = unit(0.3, "lines"))
+      
+      # a <- list()
+      # for (i in seq_len(nrow(top_peaks))) {
+      #   m <- top_peaks[i, ]
+      #   a[[i]] <- list(
+      #     x = m[["logFC"]],
+      #     y = -log10(m[["FDR"]]),
+      #     text = m[["Ensembl_geneID"]],
+      #     xref = "x",
+      #     yref = "y",
+      #     showarrow = TRUE,
+      #     arrowhead = 0.5,
+      #     ax = 20,
+      #     ay = -40
+      #   )
+      # }
+      # 
+      # 
+      # # make the Plot.ly plot
+      # p <- plot_ly(data = diff_df, x = diff_df[,2], y = -log10(diff_df[,3]), text = diff_df[,1], mode = "markers", color = group) %>% 
+      #   layout(title ="Volcano Plot") %>%
+      #   layout(annotations = a)
+      # p
     ggsave(paste0(conditions,"/", cond,".png"), plot = p)
   }
 }
