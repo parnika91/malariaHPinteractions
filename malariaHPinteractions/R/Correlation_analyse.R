@@ -748,18 +748,21 @@ operations <- function(data, op)
   {
     df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
     for(i in 1:length(data))
+    {
       df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
+      colnames(df)[(i+2)] <- names(data)[[i]]
+    }
     
-    remove.rows <- which(100000 %in% df[,3:17])
-    rr <- subset(df, df[,3:17] != 100000)
+    # remove.rows <- which(100000 %in% df[,3:17])
+    # rr <- subset(df, df[,3:17] != 100000)
     rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
     
-    df <- df[-remove.rows,]
+    # df <- df[-remove.rows,]
     sampled <- df[sample(nrow(df), size = nrow(df)/1000),]
     
     logt_df <- data.frame(gene1 = sampled[,1], gene2 = sampled[,2])
     
-    for(j in 1:ncol(df))
+    for(j in 1:15)
       logt_df[(1:nrow(logt_df)),(j+2)] <- -log10(1/(sampled[,(j+2)] + 5e-06))
     
     colnames(logt_df) <- sapply(colnames(logt_df), function(x) paste0("_logt_",x))
@@ -767,39 +770,43 @@ operations <- function(data, op)
     p_cor <- cor(df[,(3:ncol(df))])
     s_cor <- cor(df[,(3:ncol(df))], method = "spearman")
     
-    res <- list(p_cor, s_cor)
+    res <- list(p_cor, s_cor, logt_df)
   }
   
   if(op == "overlap")
   {
+    feature = feature
     m <- length(data)
     n <- ncol(data[[1]])
     
     upset <- list()
-    mat <- matrix(rep(0, (length(data)^2), nrow = length(data)))
+    mat <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
     
     if(n==3)
     {
+      # finding intersecting edges
       for(i in 1:length(data))
       {
         upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2]
-        for(j in 1:length(data))
-        {
-          x <- intersect
-        }
+        upset[[i]] <- paste(upset[[i]][,1], upset[[i]][,2], sep = '_')
       }
+      names(upset) <- names(data)
+      for(i in 1:length(upset))
+        for(j in 1:length(upset))
+          mat[i,j] <- 2*length(intersect(upset[[i]], upset[[j]]))/(length(upset[[i]]) + length(upset[[j]]))
+      rownames(mat) <- colnames(mat) <- names(upset)
     }
     
     if(n==1)
     {
+      # finding intersecting genes
       upset <- data
       for(i in 1:length(data))
         for(j in 1:length(data))
-          mat[i,j] <- intersect(data[[i]], data[[j]])/(nrow(data[[i]]) + nrow(data[[j]]))
+          mat[i,j] <- 2*length(intersect(data[[i]], data[[j]]))/(length(data[[i]]) + length(data[[j]]))
+      rownames(mat) <- colnames(mat) <- names(upset)
     }
-    
     res <- list(upset, mat)
   }
-  
   return(res)
 }
