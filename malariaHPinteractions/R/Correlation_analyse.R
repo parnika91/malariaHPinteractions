@@ -735,12 +735,12 @@ Cross_study_comparison <- function(feature, op)
       }
     }
   }
-  operations(data = list_ds, op = op)
+  operations(data = list_ds, op = op, feature = feature)
 }
 
 # function doing the operations, to be called by Cross_study_comparison function 
 
-operations <- function(data, op)
+operations <- function(data, op, feature)
 {
   # takes 2 columns per study: edge and permute score for cor
   # takes 1 column of gene per study for overlap
@@ -795,18 +795,28 @@ operations <- function(data, op)
         for(j in 1:length(upset))
           mat[i,j] <- 2*length(intersect(upset[[i]], upset[[j]]))/(length(upset[[i]]) + length(upset[[j]]))
       rownames(mat) <- colnames(mat) <- names(upset)
+      save(mat, file = paste0(feature, "_overlap_matrix_all_datasets.RData"))
+      save(upset, file =  paste0(feature,"_overlap_upset_all_datasets.RData"))
+      write.table(mat,  paste0(feature, "_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
     }
     
     if(n==1)
     {
       # finding intersecting genes
       upset <- data
+      names(upset) <- names(data)
       for(i in 1:length(data))
         for(j in 1:length(data))
-          mat[i,j] <- 2*length(intersect(data[[i]], data[[j]]))/(length(data[[i]]) + length(data[[j]]))
+          mat[i,j] <- 2*length(intersect(data[[i]][,1], data[[j]][,1]))/(nrow(data[[i]]) + nrow(data[[j]]))
+      
       rownames(mat) <- colnames(mat) <- names(upset)
-    }
+      save(mat, file = paste0(feature, "_overlap_matrix_all_datasets.RData"))
+      save(upset, file =  paste0(feature,"_overlap_upset_all_datasets.RData"))
+      write.table(mat,  paste0(feature, "_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
+     }
     res <- list(upset, mat)
   }
   return(res)
 }
+
+Cross_study_comparison(feature = "b_edges", op = "cor")
