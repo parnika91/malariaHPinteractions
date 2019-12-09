@@ -654,24 +654,24 @@ Cross_study_comparison <- function(feature, op)
   }
   if(feature == "b_edges")
   {
-    list_ds <- list()
-    l <- 0
-    for(i in 1:length(studyID))
-    {
-      for(j in 1:3)
+      list_ds <- list()
+      l <- 0
+      for(i in 1:length(studyID))
       {
-        study <- colnames(datasets)[i]
-        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
-                               "_na.omit.RData"))
-        # keep only bipartite edges
-        ds <- ds[(grepl(pattern = "h_OG", ds$gene1) & grepl(pattern = "p_OG", ds$gene2)) |
-                             (grepl(pattern = "p_OG", ds$gene1) & grepl(pattern = "h_OG", ds$gene2)),]
-        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
-        
-        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
-        l <- length(list_ds)
+        for(j in 1:3)
+        {
+          study <- colnames(datasets)[i]
+          ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                                 "_na.omit.RData"))
+          # keep only bipartite edges
+          ds <- ds[(grepl(pattern = "h_OG", ds$gene1) & grepl(pattern = "p_OG", ds$gene2)) |
+                               (grepl(pattern = "p_OG", ds$gene1) & grepl(pattern = "h_OG", ds$gene2)),]
+          colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+          
+          list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+          l <- length(list_ds)
+        }
       }
-    }
   }
   if(feature == "h_genes")
   {
@@ -746,19 +746,19 @@ operations <- function(data, op, feature)
   # takes 1 column of gene per study for overlap
   if(op == "cor")
   {
-    df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
-    for(i in 1:length(data))
-    {
-      df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
-      colnames(df)[(i+2)] <- names(data)[[i]]
-    }
-    
-    # remove.rows <- which(100000 %in% df[,3:17])
-    # rr <- subset(df, df[,3:17] != 100000)
-    rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
-    
+          df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
+          for(i in 1:length(data))
+          {
+            df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
+            colnames(df)[(i+2)] <- names(data)[[i]]
+          }
+          
+          # remove.rows <- which(100000 %in% df[,3:17])
+          # rr <- subset(df, df[,3:17] != 100000)
+          rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
+          
     # df <- df[-remove.rows,]
-    sampled <- df[sample(nrow(df), size = nrow(df)/1000),]
+    sampled <- rr[sample(nrow(rr), size = nrow(rr)/1000),]
     
     logt_df <- data.frame(gene1 = sampled[,1], gene2 = sampled[,2])
     
@@ -767,8 +767,14 @@ operations <- function(data, op, feature)
     
     colnames(logt_df) <- sapply(colnames(logt_df), function(x) paste0("_logt_",x))
     
-    p_cor <- cor(df[,(3:ncol(df))])
-    s_cor <- cor(df[,(3:ncol(df))], method = "spearman")
+    p_cor <- cor(rr[,(3:ncol(rr))])
+    s_cor <- cor(rr[,(3:ncol(rr))], method = "spearman")
+    save(p_cor, file = paste0(feature, "_all_edges_p_cor_all_datasets_for_vis.RData"))
+    save(s_cor, file = paste0(feature, "_all_edges_s_cor_all_datasets_for_vis.RData"))
+    save(logt_df, file = paste0(feature, "_all_edges_logt_all_datasets_for_vis.RData"))
+    write.table(p_cor,  paste0(feature, "_all_edges_p_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
+    write.table(s_cor,  paste0(feature, "_all_edges_s_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
+    write.table(logt_df,  paste0(feature, "_all_edges_logt_df_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     
     res <- list(p_cor, s_cor, logt_df)
   }
@@ -781,7 +787,7 @@ operations <- function(data, op, feature)
     
     upset <- list()
     mat <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
-    
+     
     if(n==3)
     {
       # finding intersecting edges
@@ -798,6 +804,15 @@ operations <- function(data, op, feature)
       save(mat, file = paste0(feature, "_overlap_matrix_all_datasets.RData"))
       save(upset, file =  paste0(feature,"_overlap_upset_all_datasets.RData"))
       write.table(mat,  paste0(feature, "_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
+      
+        mat1 <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
+        
+        for(i in 1:length(upset))
+          for(j in 1:length(upset))
+            mat1[i,j] <- length(intersect(upset[[i]], upset[[j]]))
+        rownames(mat1) <- colnames(mat1) <- names(upset)
+        save(mat1, file = paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.RData"))
+        write.table(mat1,  paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.txt"), sep = '\t', row.names = T)
     }
     
     if(n==1)
