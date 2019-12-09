@@ -805,14 +805,14 @@ operations <- function(data, op, feature)
       save(upset, file =  paste0(feature,"_overlap_upset_all_datasets.RData"))
       write.table(mat,  paste0(feature, "_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
       
-        mat1 <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
-        
-        for(i in 1:length(upset))
-          for(j in 1:length(upset))
-            mat1[i,j] <- length(intersect(upset[[i]], upset[[j]]))
-        rownames(mat1) <- colnames(mat1) <- names(upset)
-        save(mat1, file = paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.RData"))
-        write.table(mat1,  paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.txt"), sep = '\t', row.names = T)
+      mat1 <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
+      
+      for(i in 1:length(upset))
+        for(j in 1:length(upset))
+          mat1[i,j] <- length(intersect(upset[[i]], upset[[j]]))
+      rownames(mat1) <- colnames(mat1) <- names(upset)
+      save(mat1, file = paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.RData"))
+      write.table(mat1,  paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.txt"), sep = '\t', row.names = T)
     }
     
     if(n==1)
@@ -835,3 +835,8 @@ operations <- function(data, op, feature)
 }
 
 Cross_study_comparison(feature = "b_edges", op = "cor")
+
+###### plot overlap matrices #####
+
+
+###### upset plots #####
