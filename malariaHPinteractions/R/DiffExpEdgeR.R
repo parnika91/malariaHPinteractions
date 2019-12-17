@@ -304,12 +304,12 @@ my.contrasts.24 <- makeContrasts(
   LPS_24h_vs_PBS_24h = PBS_24h - LPS_24h,
   
   PBS_24h_vs_SPZhi_24h = SPZhi_24h - PBS_24h,
-  PBS_24h_vs_SPZlo_24h = SPZlo_24h - PBS_24h,
-  PBS_24h_vs_iRBChi_24h = iRBChi_24h - PBS_24h,
-  PBS_24h_vs_iRBClo_24h = iRBClo_24h - PBS_24h,
-  PBS_24h_vs_LPS_24h = LPS_24h - PBS_24h,
-  levels=design1
-)
+    PBS_24h_vs_SPZlo_24h = SPZlo_24h - PBS_24h,
+    PBS_24h_vs_iRBChi_24h = iRBChi_24h - PBS_24h,
+    PBS_24h_vs_iRBClo_24h = iRBClo_24h - PBS_24h,
+    PBS_24h_vs_LPS_24h = LPS_24h - PBS_24h,
+    levels=design1
+  )
 
 Diff_gene_condition(ref = "LPS_24h", trt = "SPZlo_24h", time = 24)
 
@@ -482,7 +482,7 @@ volcano_plots <- function(conditions)
       # a <- list()
       # for (i in seq_len(nrow(top_peaks))) {
       #   m <- top_peaks[i, ]
-      #   a[[i]] <- list(
+      #   a[[i]] <- list(   
       #     x = m[["logFC"]],
       #     y = -log10(m[["FDR"]]),
       #     text = m[["Ensembl_geneID"]],
