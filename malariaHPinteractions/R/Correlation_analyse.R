@@ -15,8 +15,8 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-studyID <- "SRP116593"
-type <- "str"
+studyID <- "SRP116793"
+type <- "all"
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -90,9 +90,9 @@ b_unique_pg <- unique(c(b_unique_pg_col1), c(b_unique_pg_col2))
 # load("ERP106451_allruns_bipartite.RData")
 # load("ERP106451_stringent15_bipartite.RData")
 
-all_b <- loadRData("SRP116593_all_bipartite.RData")
-int_b <- loadRData("SRP116593_int_bipartite.RData")
-str_b <- loadRData("SRP116593_str_bipartite.RData")
+all_b <- loadRData("SRP116793_all_bipartite.RData")
+int_b <- loadRData("SRP116793_int_bipartite.RData")
+str_b <- loadRData("SRP116793_str_bipartite.RData")
 
 all_b_concat <- apply(all_b[,c(1,2)] , 1 , paste , collapse = "_" )
 str_b_concat <- apply(str_b[,c(1,2)] , 1 , paste , collapse = "_" )
@@ -102,12 +102,12 @@ intersection_all_datasets <- list(all = all_b_concat, stringent = str_b_concat, 
 
 library(VennDiagram)
 library(RColorBrewer)
-png("SRP116593_intersection_3_datasets.png", width = 50, height = 50, units = "cm", res = 450)
+png("SRP116793_intersection_3_datasets.png", width = 50, height = 50, units = "cm", res = 450)
 myCol <- brewer.pal(3, "Pastel2")
 venn.diagram(
         x = intersection_all_datasets,
-        category.names = c("SRP116593_all" , "SRP116593_stringent" , "SRP116593_intermediate"),
-        filename = 'SRP116593_venn_diagram.png',
+        category.names = c("SRP116793_all" , "SRP116793_stringent" , "SRP116793_intermediate"),
+        filename = 'SRP116793_venn_diagram.png',
         output=TRUE,
         
         # Output features
@@ -609,13 +609,13 @@ sampled <- new_all[sample(nrow(new_all), size = nrow(new_all)/1000),]
 
 # comparisons
 
-cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str)
-cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all)
-cor(study_all_datasets$SRP116593_str, study_all_datasets$SRP116593_all)
+cor(study_all_datasets$SRP116793_int, study_all_datasets$SRP116793_str)
+cor(study_all_datasets$SRP116793_int, study_all_datasets$SRP116793_all)
+cor(study_all_datasets$SRP116793_str, study_all_datasets$SRP116793_all)
 
-cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_str, method = "spearman")
-cor(study_all_datasets$SRP116593_int, study_all_datasets$SRP116593_all, method = "spearman")
-cor(study_all_datasets$SRP116593_str, study_all_datasets$SRP116593_all, method = "spearman")
+cor(study_all_datasets$SRP116793_int, study_all_datasets$SRP116793_str, method = "spearman")
+cor(study_all_datasets$SRP116793_int, study_all_datasets$SRP116793_all, method = "spearman")
+cor(study_all_datasets$SRP116793_str, study_all_datasets$SRP116793_all, method = "spearman")
 
 ### UpSetR plots ###
 
