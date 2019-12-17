@@ -846,9 +846,11 @@ Cross_study_comparison(feature = "b_edges", op = "cor")
 all_datasets_upset = upset
 
 png(file="All15datasets_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
-upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), 
+upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.angles = 90, number.angles = 90, 
+      scale.intersections = "log10",
+      scale.sets = "log10",
       order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", 
-      sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.75), set_size.angles = 90)
+      sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.75))
 # empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", )
 grid.text("15 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
