@@ -624,7 +624,7 @@ dev.off()
 
 ########### Function to produce comparison matrices #########
 
-studyID <- c("ERP106451", "SRP118996", "SRP118827", "SRP116793", "SRP116593")
+studyID <- c("ERP106451", "SRP118996", "SRP118827", "SRP116793", "SRP116593", "DRP000987", "ERP023982", "ERP004598", "ERP110375")
 Cross_study_comparison <- function(feature, op)
 {
   datasets <- c()
