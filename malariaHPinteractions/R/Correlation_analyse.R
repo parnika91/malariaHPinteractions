@@ -850,7 +850,7 @@ upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.a
       scale.intersections = "log10",
       scale.sets = "log10",
       order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", 
-      sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.75))
+      sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.6))
 # empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", )
 grid.text("27 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
