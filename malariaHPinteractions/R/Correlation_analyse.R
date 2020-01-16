@@ -918,3 +918,7 @@ colnames(anno) <- c("Host", "Parasite", "Median_parasite_percent")
 write.table(anno, "anno.txt", sep = '\t', row.names = T)
 save(anno, file = "anno.RData")
 saveRDS(anno, file = "anno.rds")
+
+# pdf("pheatmap_b_edges_raw_numbers.pdf")
+# pheatmap::pheatmap(log10(mat1+1), annotation_row = anno, fontsize = 8, main = "Log10 of intersection of bipartite edges")
+# dev.off()
