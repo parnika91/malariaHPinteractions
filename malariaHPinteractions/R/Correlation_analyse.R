@@ -631,7 +631,7 @@ Cross_study_comparison <- function(feature, op)
   v <- c("_str", "_int", "_all")
   datasets <- sapply(studyID, function(x) c(datasets, paste0(x, v))) # gives a matrix
   # feature:
-  # a_edges == all edges; b_edges == bipartite edges; h_genes; p_genes
+  # a_edges == all edges; b_edges == bipartite edges; h_edges; p_edges
   # op:
   # cor (Pearson's and Spearman); overlap
   if(feature == "a_edges")
@@ -675,9 +675,8 @@ Cross_study_comparison <- function(feature, op)
         }
       }
   }
-  if(feature == "h_genes")
+  if(feature == "h_edges")
   {
-    op = "overlap"
     find = "h_OG"
     
     list_ds <- list()
@@ -689,27 +688,18 @@ Cross_study_comparison <- function(feature, op)
         study <- colnames(datasets)[i]
         ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
                                "_na.omit.RData"))
-        # keep only unique genes where the permute score was 0
-        f <- which(ds$permute_score == 0)
-        ds <- ds[f,]
-        # pick up rows with h_genes
-        col1 <- as.character(ds[grep(pattern = find, ds$gene1),1])
-        unique_col1 <- unique(col1)          
-        col2 <- as.character(ds[grep(pattern = find, ds$gene2),2])
-        unique_col2 <- unique(col2)
-        ds <- as.data.frame(unique(c(unique_col1), c(unique_col2)))
-        
-        colnames(ds) <- paste0(datasets[j,study],"_", feature)
+        # keep only bipartite edges
+        ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
+        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
         
         list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
         l <- length(list_ds)
       }
     }
   }
-  if(feature == "p_genes")
+  if(feature == "p_edges")
   {
-    op = "overlap"
-   find = "p_OG"
+    find = "p_OG"
     
     list_ds <- list()
     l <- 0
@@ -720,17 +710,9 @@ Cross_study_comparison <- function(feature, op)
         study <- colnames(datasets)[i]
         ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
                                "_na.omit.RData"))
-        # keep only unique genes where the permute score was 0
-        f <- which(ds$permute_score == 0)
-        ds <- ds[f,]
-        # pick up rows with h_genes
-        col1 <- as.character(ds[grep(pattern = find, ds$gene1),1])
-        unique_col1 <- unique(col1)          
-        col2 <- as.character(ds[grep(pattern = find, ds$gene2),2])
-        unique_col2 <- unique(col2)
-        ds <- as.data.frame(unique(c(unique_col1), c(unique_col2)))
-        
-        colnames(ds) <- paste0(datasets[j,study],"_", feature)
+        # keep only bipartite edges
+        ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
+        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
         
         list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
         l <- length(list_ds)
@@ -771,12 +753,12 @@ operations <- function(data, op, feature)
     
     p_cor <- cor(rr[,(3:ncol(rr))])
     s_cor <- cor(rr[,(3:ncol(rr))], method = "spearman")
-    save(p_cor, file = paste0(feature, "_all_edges_p_cor_all_datasets_for_vis.RData"))
-    save(s_cor, file = paste0(feature, "_all_edges_s_cor_all_datasets_for_vis.RData"))
-    save(logt_df, file = paste0(feature, "_all_edges_logt_all_datasets_for_vis.RData"))
-    write.table(p_cor,  paste0(feature, "_all_edges_p_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
-    write.table(s_cor,  paste0(feature, "_all_edges_s_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
-    write.table(logt_df,  paste0(feature, "_all_edges_logt_df_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
+    save(p_cor, file = paste0(feature, "_p_cor_all_datasets_for_vis.RData"))
+    save(s_cor, file = paste0(feature, "_s_cor_all_datasets_for_vis.RData"))
+    save(logt_df, file = paste0(feature, "_logt_all_datasets_for_vis.RData"))
+    write.table(p_cor,  paste0(feature, "_p_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
+    write.table(s_cor,  paste0(feature, "_s_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
+    write.table(logt_df,  paste0(feature, "_logt_df_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     
     res <- list(p_cor, s_cor, logt_df)
   }
@@ -919,6 +901,7 @@ write.table(anno, "anno.txt", sep = '\t', row.names = T)
 save(anno, file = "anno.RData")
 saveRDS(anno, file = "anno.rds")
 
-# pdf("pheatmap_b_edges_raw_numbers.pdf")
-# pheatmap::pheatmap(log10(mat1+1), annotation_row = anno, fontsize = 8, main = "Log10 of intersection of bipartite edges")
+# colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
+# pdf("pheatmap_a_edges_overlap_proportion.pdf")
+# pheatmap::pheatmap((mat), annotation_row = anno, fontsize = 8, main = "Proportion of intersection of all edges")
 # dev.off()
