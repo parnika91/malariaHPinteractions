@@ -16,7 +16,7 @@ SRP118827 <- allHPexp[which(allHPexp$Study=="SRP118827"),]
 SRP116793 <- allHPexp[which(allHPexp$Study=="SRP116793"),]
 SRP116593 <- allHPexp[which(allHPexp$Study=="SRP116593"),] # 13 rins in intermed and 8 runs in stringent
 # DRP001953 <- allHPexp[which(allHPexp$Study=="DRP001953"),]
-# ERP023982 <- allHPexp[which(allHPexp$Study=="ERP023982"),]
+ERP023982 <- allHPexp[which(allHPexp$Study=="ERP023982"),]
 # SRP108632 <- allHPexp[which(allHPexp$Study=="SRP108632"),]
 ERP004598 <- allHPexp[which(allHPexp$Study=="ERP004598"),]
 ERP110375 <- allHPexp[which(allHPexp$Study=="ERP110375"),]
@@ -179,7 +179,7 @@ ERP004598.screen.runs <- as.character(ERP004598.screen[,"RunID"])
 # ERP110375 #
 
 # Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5
-ERP110375.screen <- ERP110375[which(ERP110375$ProteinCodHost >= 1e6 & ERP110375$ProteinCodPara >= 1e5),]
+ERP110375.screen <- ERP110375[which(ERP110375$ProteinCodHost >= 1e7 & ERP110375$ProteinCodPara >= 1e6),]
 # Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
 ERP110375.screen <- ERP110375.screen[which(ERP110375.screen$NumberProtCodGenesHost >= 10000 & ERP110375.screen$NumberProtCodGenesPara > 3000),]
 # Unique map percent: >= 70%
@@ -329,8 +329,8 @@ for(i in 1:length(ERP004598.screen.runs))
     col.num[i] <- id
 }
 
-ERP004598.ortho.data.all <- ortho_data[,col.num]
-save(ERP004598.ortho.data.all, file = "Data/ERP004598.ortho.data.all.RData")
+ERP004598.ortho.data.str <- ortho_data[,col.num]
+save(ERP004598.ortho.data.str, file = "Data/ERP004598.ortho.data.str.RData")
 
 ## ERP110375  ##
 col.num <- c()
@@ -341,8 +341,8 @@ for(i in 1:length(ERP110375.screen.runs))
     col.num[i] <- id
 }
 
-ERP110375.ortho.data.all <- ortho_data[,col.num]
-save(ERP110375.ortho.data.all, file = "Data/ERP110375.ortho.data.all.RData")
+ERP110375.ortho.data.str <- ortho_data[,col.num]
+save(ERP110375.ortho.data.str, file = "Data/ERP110375.ortho.data.str.RData")
 
 ## ERP002273  ##
 col.num <- c()
