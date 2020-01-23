@@ -622,6 +622,72 @@ upset(fromList(all6datasets_upset), sets = names(all6datasets_upset), order.by =
 grid.text("SRP118996 and ERP106451 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
+
+########### script to get annotation table for heatmaps #########
+# can do this on the local computer or on the server 
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+setwd("/home/parnika/Documents/Data/")
+library(dplyr)
+allHPexp <- read.delim("allHPexp.txt", sep = ',', stringsAsFactors = F)
+colnames(allHPexp)
+
+# vector of datasets
+datasets <- c("DRP000987.ortho.data.all", "DRP000987.ortho.data.int", "DRP000987.ortho.data.str", 
+              "ERP106451.ortho.data.all", "ERP106451.ortho.data.int", "ERP106451.ortho.data.str",
+              "ERP023982.ortho.data.all", "ERP023982.ortho.data.int", "ERP023982.ortho.data.str",
+              "ERP004598.ortho.data.all", "ERP004598.ortho.data.int", "ERP004598.ortho.data.str",
+              "ERP110375.ortho.data.all", "ERP110375.ortho.data.int", "ERP110375.ortho.data.str",
+              "SRP118996.ortho.data.all", "SRP118996.ortho.data.int", "SRP118996.ortho.data.str",
+              "SRP118827.ortho.data.all", "SRP118827.ortho.data.int", "SRP118827.ortho.data.str",
+              "SRP116593.ortho.data.all", "SRP116593.ortho.data.int", "SRP116593.ortho.data.str",
+              "SRP116793.ortho.data.all", "SRP116793.ortho.data.int", "SRP116793.ortho.data.str"
+)
+
+rn <- c("DRP000987_all", "DRP000987_int", "DRP000987_str", 
+        "ERP106451_all", "ERP106451_int", "ERP106451_str",
+        "ERP023982_all", "ERP023982_int", "ERP023982_str",
+        "ERP004598_all", "ERP004598_int", "ERP004598_str",
+        "ERP110375_all", "ERP110375_int", "ERP110375_str",
+        "SRP118996_all", "SRP118996_int", "SRP118996_str",
+        "SRP118827_all", "SRP118827_int", "SRP118827_str",
+        "SRP116593_all", "SRP116593_int", "SRP116593_str",
+        "SRP116793_all", "SRP116793_int", "SRP116793_str"
+)
+
+anno <- data.frame()
+
+for(i in 1:length(datasets))
+{
+  ds <- loadRData(paste0("DataSubsets/",datasets[i],".RData"))
+  runs <- sapply(colnames(ds), function(x) strsplit(x, split = "_")[[1]][1])
+  
+  pp <- sapply(runs, function(x) allHPexp[which(allHPexp$RunID==x),"Parasite_percent"])
+  pp_median <- median(pp)
+  
+  host <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Host"])
+  parasite <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Parasite"])
+  
+  anno[i,1] <- datasets[i]
+  anno[i,2] <- host
+  anno[i,3] <- parasite
+  anno[i,4] <- pp_median
+  anno[i,5] <- rn[i]
+}
+
+rownames(anno) <- anno[,5]
+anno <- anno[,c(2,3,4)]
+colnames(anno) <- c("Host", "Parasite", "Median_parasite_percent")
+write.table(anno, "anno.txt", sep = '\t', row.names = T)
+save(anno, file = "anno.RData")
+saveRDS(anno, file = "anno.rds")
+
+
 ########### Function to produce comparison matrices #########
 
 studyID <- c("ERP106451", "SRP118996", "SRP118827", "SRP116793", "SRP116593", "DRP000987", "ERP023982", "ERP004598", "ERP110375")
@@ -677,25 +743,25 @@ Cross_study_comparison <- function(feature, op)
   }
   if(feature == "h_edges")
   {
-    find = "h_OG"
-    
-    list_ds <- list()
-    l <- 0
-    for(i in 1:length(studyID))
-    {
-      for(j in 1:3)
+      find = "h_OG"
+      
+      list_ds <- list()
+      l <- 0
+      for(i in 1:length(studyID))
       {
-        study <- colnames(datasets)[i]
-        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
-                               "_na.omit.RData"))
-        # keep only bipartite edges
-        ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
-        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
-        
-        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
-        l <- length(list_ds)
+        for(j in 1:3)
+        {
+          study <- colnames(datasets)[i]
+          ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                                 "_na.omit.RData"))
+          # keep only bipartite edges
+          ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
+          colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+          
+          list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+          l <- length(list_ds)
+        }
       }
-    }
   }
   if(feature == "p_edges")
   {
@@ -730,16 +796,16 @@ operations <- function(data, op, feature)
   # takes 1 column of gene per study for overlap
   if(op == "cor")
   {
-          df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
-          for(i in 1:length(data))
-          {
-            df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
-            colnames(df)[(i+2)] <- names(data)[[i]]
-          }
-          
-          # remove.rows <- which(100000 %in% df[,3:17])
-          # rr <- subset(df, df[,3:17] != 100000)
-          rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
+    df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
+    for(i in 1:length(data))
+    {
+      df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
+      colnames(df)[(i+2)] <- names(data)[[i]]
+    }
+    
+    # remove.rows <- which(100000 %in% df[,3:17])
+    # rr <- subset(df, df[,3:17] != 100000)
+    rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
           
     # df <- df[-remove.rows,]
     sampled <- rr[sample(nrow(rr), size = nrow(rr)/1000),]
@@ -748,8 +814,10 @@ operations <- function(data, op, feature)
     
     for(j in 1:length(data))
       logt_df[(1:nrow(logt_df)),(j+2)] <- -log10(1/(sampled[,(j+2)] + 5e-06))
-    
-    colnames(logt_df) <- sapply(colnames(logt_df), function(x) paste0("_logt_",x))
+        
+    colnames(logt_df) <- names(sampled)
+    colnames(logt_df)[3:ncol(logt_df)] <- sapply(colnames(logt_df)[3:ncol(logt_df)], function(x) paste0("_logt_",x))
+    colnames(logt_df)[3:ncol(logt_df)] <- substring(colnames(logt_df)[3:ncol(logt_df)], 1 , 27)
     
     p_cor <- cor(rr[,(3:ncol(rr))])
     s_cor <- cor(rr[,(3:ncol(rr))], method = "spearman")
@@ -759,7 +827,7 @@ operations <- function(data, op, feature)
     write.table(p_cor,  paste0(feature, "_p_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     write.table(s_cor,  paste0(feature, "_s_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     write.table(logt_df,  paste0(feature, "_logt_df_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
-    
+      
     res <- list(p_cor, s_cor, logt_df)
   }
   
@@ -837,69 +905,6 @@ upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.a
 grid.text("27 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
-######### script to get annotation table for heatmaps #########
-# can do this on the local computer or on the server 
-
-loadRData <- function(fileName){
-  #loads an RData file, and returns it
-  load(fileName)
-  get(ls()[ls() != "fileName"])
-}
-
-setwd("/home/parnika/Documents/Data/")
-library(dplyr)
-allHPexp <- read.delim("allHPexp.txt", sep = ',', stringsAsFactors = F)
-colnames(allHPexp)
-
-# vector of datasets
-datasets <- c("DRP000987.ortho.data.all", "DRP000987.ortho.data.int", "DRP000987.ortho.data.str", 
-              "ERP106451.ortho.data.all", "ERP106451.ortho.data.int", "ERP106451.ortho.data.str",
-              "ERP023982.ortho.data.all", "ERP023982.ortho.data.int", "ERP023982.ortho.data.str",
-              "ERP004598.ortho.data.all", "ERP004598.ortho.data.int", "ERP004598.ortho.data.str",
-              "ERP110375.ortho.data.all", "ERP110375.ortho.data.int", "ERP110375.ortho.data.str",
-              "SRP118996.ortho.data.all", "SRP118996.ortho.data.int", "SRP118996.ortho.data.str",
-              "SRP118827.ortho.data.all", "SRP118827.ortho.data.int", "SRP118827.ortho.data.str",
-              "SRP116593.ortho.data.all", "SRP116593.ortho.data.int", "SRP116593.ortho.data.str",
-              "SRP116793.ortho.data.all", "SRP116793.ortho.data.int", "SRP116793.ortho.data.str"
-              )
-
-rn <- c("DRP000987_all", "DRP000987_int", "DRP000987_str", 
-        "ERP106451_all", "ERP106451_int", "ERP106451_str",
-        "ERP023982_all", "ERP023982_int", "ERP023982_str",
-        "ERP004598_all", "ERP004598_int", "ERP004598_str",
-        "ERP110375_all", "ERP110375_int", "ERP110375_str",
-        "SRP118996_all", "SRP118996_int", "SRP118996_str",
-        "SRP118827_all", "SRP118827_int", "SRP118827_str",
-        "SRP116593_all", "SRP116593_int", "SRP116593_str",
-        "SRP116793_all", "SRP116793_int", "SRP116793_str"
-        )
-
-anno <- data.frame()
-
-for(i in 1:length(datasets))
-{
-  ds <- loadRData(paste0("DataSubsets/",datasets[i],".RData"))
-  runs <- sapply(colnames(ds), function(x) strsplit(x, split = "_")[[1]][1])
-  
-  pp <- sapply(runs, function(x) allHPexp[which(allHPexp$RunID==x),"Parasite_percent"])
-  pp_median <- median(pp)
-  
-  host <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Host"])
-  parasite <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Parasite"])
-  
-  anno[i,1] <- datasets[i]
-  anno[i,2] <- host
-  anno[i,3] <- parasite
-  anno[i,4] <- pp_median
-  anno[i,5] <- rn[i]
-}
-
-rownames(anno) <- anno[,5]
-anno <- anno[,c(2,3,4)]
-colnames(anno) <- c("Host", "Parasite", "Median_parasite_percent")
-write.table(anno, "anno.txt", sep = '\t', row.names = T)
-save(anno, file = "anno.RData")
-saveRDS(anno, file = "anno.rds")
 
 # colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
 # pdf("pheatmap_a_edges_overlap_proportion.pdf")
