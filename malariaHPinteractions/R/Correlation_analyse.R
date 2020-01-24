@@ -10,7 +10,6 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-########### Main operations ###########
 library(WGCNA)
 library(reshape2)
 library(ggplot2)
@@ -18,7 +17,8 @@ library(dplyr)
 library(UpSetR)
 library(grid)
 
-studyID <- "SRP116593"
+########### Main operations ###########
+studyID <- "ERP110375"
 type <- "str"
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
@@ -552,13 +552,13 @@ for(i in 1:length(file.names))
   }
 }
 
-sum[is.na(sum)] <- 100000
-str <- sum
-str[lower.tri(str, diag = T)] <- NA
-str_melt <- melt(str)
-colnames(str_melt) <- c("gene1", "gene2", "permute_score")
-str_na.omit <- na.omit(str_melt)
-save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
+  sum[is.na(sum)] <- 100000
+  str <- sum
+  str[lower.tri(str, diag = T)] <- NA
+  str_melt <- melt(str)
+  colnames(str_melt) <- c("gene1", "gene2", "permute_score")
+  str_na.omit <- na.omit(str_melt)
+  save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 
 ########### single study comparisons ###########
 
@@ -699,7 +699,7 @@ Cross_study_comparison <- function(feature, op)
   # feature:
   # a_edges == all edges; b_edges == bipartite edges; h_edges; p_edges
   # op:
-  # cor (Pearson's and Spearman); overlap
+  # cor (Pearson's and Spearman); overlap; sig
   if(feature == "a_edges")
   {
     list_ds <- list()
@@ -883,15 +883,100 @@ operations <- function(data, op, feature)
      }
     res <- list(upset, mat)
   }
+  
+  if(op == "sig")
+  {
+    feature = feature
+    m <- length(data)
+    n <- ncol(data[[1]])
+    
+    sig <- data.frame()
+    a = 1
+    upset <- list()
+    
+    # finding intersecting edges
+    for(i in 1:length(data))
+    {
+      upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2] # edges with ISIGEM score 0
+      upset[[i]] <- paste(upset[[i]][,1], upset[[i]][,2], sep = '_')
+    }
+    names(upset) <- names(data)
+    system.time(
+    for(i in 1:length(upset))
+    {
+      U1 = nrow(data[[i]][which(data[[i]][,3] != 100000),])
+      for(j in 1:length(upset))
+      {
+        U2 = nrow(data[[j]][which(data[[j]][,3] != 100000),])
+        U = U1 + U2
+        X = length(union(upset[[i]], upset[[j]]))
+        Y = length(setdiff(upset[[i]],upset[[j]]))
+        W = length(setdiff(upset[[j]],upset[[i]]))
+        Z = length(intersect(upset[[i]], upset[[j]]))
+        
+        significance <- fisher.test(matrix(c(U-X, Y, W, Z), nrow=2), alternative = "greater")
+        
+        sig[a,1] <- names(upset)[i]
+        sig[a,2] <- length(upset[[i]])
+        sig[a,3] <- names(upset)[j]
+        sig[a,4] <- length(upset[[j]])
+        sig[a,5] <- U
+        sig[a,6] <- Z
+        sig[a,7] <- significance$p.value
+        
+        a = a+1
+      }
+        
+    })
+    
+    colnames(sig) <- c("Set1","Set1_edges#", "Set2", "Set2_edges#", "Universe_size", "Intersection_size", "pvalue")
+    padj <- p.adjust(sig[,7], method = "BH")
+    sig$p.adj <- padj
+    
+    #cast the df into a matrix
+    sig.mat <- reshape(sig[,c(1,3,8)], timevar = "Set1", idvar = "Set2", direction = "wide")
+    rownames(sig.mat) <- sig.mat[,1]
+    sig.mat <- sig.mat[,-1]
+    colnames(sig.mat) <- substring(colnames(sig.mat),7, 19)
+    rownames(sig.mat) <- substring(rownames(sig.mat), 1, 13)
+    logt.sig.mat <- log10(1/(sig.mat + 1e-5))
+    
+    save(sig, file = paste0(feature, "_overlap_signif_all_datasets.RData"))
+    write.table(sig,  paste0(feature, "_overlap_signif_all_datasets.txt"), sep = '\t', row.names = T)
+    save(sig.mat, file = paste0(feature, "_overlap_signif_all_datasets_matrix.RData"))
+    write.table(sig,  paste0(feature, "_overlap_signif_all_datasets_matrix.txt"), sep = '\t', row.names = T)
+    
+  }
   return(res)
 }
 
 Cross_study_comparison(feature = "b_edges", op = "cor")
 
-###### plot overlap matrices #####
+########### plot overlap matrices #####
 
+colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
+pdf("pheatmap_b_edges_overlap_significance.pdf")
+pheatmap::pheatmap(logt.sig.mat, annotation_row = anno, fontsize = 8, main = "significance of intersection (bipartite edges)") #-log10(1/(sig.mat + 1e-06))
+dev.off()
 
-###### upset plots #####
+# test = matrix(rnorm(200), 20, 10)
+# test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
+# test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
+# test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
+# colnames(test) = paste("Test", 1:10, sep = "")
+# rownames(test) = paste("Name", 1:20, sep = "")
+# 
+# paletteLength <- 50
+# myColor <- colorRampPalette(c("yellow", "white", "blue"))(paletteLength)
+# # length(breaks) == length(paletteLength) + 1
+# # use floor and ceiling to deal with even/odd length pallettelengths
+# myBreaks <- c(seq(min(logt.sig.mat), 0, length.out=ceiling(paletteLength/2) + 1), 
+#               seq(max(logt.sig.mat)/paletteLength, max(logt.sig.mat), length.out=floor(paletteLength/2)))
+
+# Plot the heatmap
+pheatmap::pheatmap(logt.sig.mat, color=myColor, breaks=myBreaks)
+
+########### upset plots #####
 
 all_datasets_upset = upset
 
@@ -905,8 +990,7 @@ upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.a
 grid.text("27 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
+########### Statistical test for intersection sise - if intersection size is bigger than expected #########
 
-# colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
-# pdf("pheatmap_a_edges_overlap_proportion.pdf")
-# pheatmap::pheatmap((mat), annotation_row = anno, fontsize = 8, main = "Proportion of intersection of all edges")
-# dev.off()
+
+
