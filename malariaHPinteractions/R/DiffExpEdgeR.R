@@ -53,10 +53,14 @@ library(org.Mm.eg.db)
 library(pheatmap)
 library(rtracklayer)
 library(dplyr)
-setwd("Documents/Data/Kai/")
+library(ggplot2)
+library(ggrepel)
+setwd("~/Documents/Data/Kai/")
 
 SampleCond <- read.csv("~/Documents/Data/Kai/SampleCond.txt", sep="", stringsAsFactors=FALSE)
-countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE)
+countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE, header = T) %>%
+  tibble::column_to_rownames("ID")
+countfile <- countfile[-grep(rownames(countfile), pattern = "PB"),]
 
 group <- SampleCond[,3]
 
@@ -176,12 +180,33 @@ colnames(logcpm) <- y$samples$group
 # dev.off()
 
 # get gene names from ensembl gene IDs
-# gtf <- import("mousePberghei.gtf", format = "gtf")
-# gtf <- gtf[gtf$type%in%"exon"]
-# gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
-# gtf.df <- as.data.frame(gtf)
+gtf <- import("mousePberghei.gtf", format = "gtf")
+gtf <- gtf[gtf$type%in%"exon"]
+gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
+gtf.df <- as.data.frame(gtf)
+gtf.df.gene.names <- gtf.df[,c("gene_id", "gene_name")]
 # gtf.h <- gtf[grep(pattern = "ENS", gtf$gene_id),]
 
+# substitute ensembl names with gene names
+count_matrix <- y[["counts"]]
+g <- c()
+for(i in 1:nrow(count_matrix))
+{
+  u <- rownames(count_matrix)[i]
+  if(length(grep(pattern = u, gtf.df$gene_id)) >= 1)
+  {
+    a <- grep(pattern = u, gtf.df$gene_id)[1]
+    g[i] <- gtf.df$gene_name[a]
+  }
+}
+save(g, file = "gene_names_for_count_matrix.RData")
+write.table(g,"gene_names_for_count_matrix.txt" )
+
+count_matrix_ <- count_matrix
+rownames(count_matrix_) <- g
+
+save(count_matrix_, file = "gene_names_with_norm_count_matrix.RData")
+write.csv(count_matrix_,"gene_names_with_norm_count_matrix.csv", row.names = T)
 ############ many contrasts #############
 
 # plot heatmap for each condition and save table
@@ -193,12 +218,17 @@ Diff_gene_condition <- function(ref, trt, time)
     qlf <- glmQLFTest(fit, contrast=my.contrasts.4[,paste0(ref, "_vs_", trt, collapse = '')])
   if(time == "inter")
     qlf <- glmQLFTest(fit, contrast=my.contrasts.inter[,paste0(ref, "_vs_", trt, collapse = '')])
+  if(time == "overall")
+    qlf <- glmQLFTest(fit, contrast=my.contrasts.single[,paste0(ref, "_vs_", trt, collapse = '')])
   
   diff <- topTags(qlf, n = 50)$table
   res_genes <- rownames(diff)
   
   res_logcpm <- data.frame()
   gene_name <- c()
+  
+  if(time == "overall")
+    logcpm = logcpm2
   
   for(i in 1:length(res_genes))
   {
@@ -257,11 +287,13 @@ my.contrasts.4 <- makeContrasts(
   untr_4h_vs_SPZlo_4h = SPZlo_4h - untr_4h,
   untr_4h_vs_LPS_4h = LPS_4h - untr_4h,
   untr_4h_vs_PBS_4h = PBS_4h - untr_4h,
+  
   LPS_4h_vs_SPZhi_4h =  SPZhi_4h - LPS_4h,
   LPS_4h_vs_SPZlo_4h = SPZlo_4h - LPS_4h,
   LPS_4h_vs_iRBChi_4h = iRBChi_4h - LPS_4h,
   LPS_4h_vs_iRBClo_4h = iRBClo_4h - LPS_4h,
   LPS_4h_vs_PBS_4h = PBS_4h - LPS_4h,
+  
   PBS_4h_vs_SPZhi_4h = SPZhi_4h - PBS_4h,
   PBS_4h_vs_SPZlo_4h = SPZlo_4h - PBS_4h,
   PBS_4h_vs_iRBChi_4h = iRBChi_4h - PBS_4h,
@@ -286,20 +318,22 @@ my.contrasts.24 <- makeContrasts(
   untr_24h_vs_SPZlo_24h = SPZlo_24h - untr_24h,
   untr_24h_vs_LPS_24h = LPS_24h - untr_24h,
   untr_24h_vs_PBS_24h = PBS_24h - untr_24h,
-  LPS_24h_vs_SPZhi_24h = LPS_24h - SPZhi_24h,
-  LPS_24h_vs_SPZlo_24h = LPS_24h - SPZlo_24h,
+  
+  LPS_24h_vs_SPZhi_24h = SPZhi_24h - LPS_24h,
+  LPS_24h_vs_SPZlo_24h = SPZlo_24h - LPS_24h,
   LPS_24h_vs_iRBChi_24h = iRBChi_24h - LPS_24h,
   LPS_24h_vs_iRBClo_24h = iRBClo_24h - LPS_24h,
   LPS_24h_vs_PBS_24h = PBS_24h - LPS_24h,
+  
   PBS_24h_vs_SPZhi_24h = SPZhi_24h - PBS_24h,
-  PBS_24h_vs_SPZlo_24h = SPZlo_24h - PBS_24h,
-  PBS_24h_vs_iRBChi_24h = iRBChi_24h - PBS_24h,
-  PBS_24h_vs_iRBClo_24h = iRBClo_24h - PBS_24h,
-  PBS_24h_vs_LPS_24h = LPS_24h - PBS_24h,
-  levels=design1
-)
+    PBS_24h_vs_SPZlo_24h = SPZlo_24h - PBS_24h,
+    PBS_24h_vs_iRBChi_24h = iRBChi_24h - PBS_24h,
+    PBS_24h_vs_iRBClo_24h = iRBClo_24h - PBS_24h,
+    PBS_24h_vs_LPS_24h = LPS_24h - PBS_24h,
+    levels=design1
+  )
 
-Diff_gene_condition(ref = "PBS_24h", trt = "LPS_24h", time = 24)
+Diff_gene_condition(ref = "LPS_24h", trt = "SPZlo_24h", time = 24)
 
 # 4vs24 hours: 4 vs 24
 
@@ -322,6 +356,42 @@ my.contrasts.inter <- makeContrasts(
 
 Diff_gene_condition(ref = "PBS_4h", trt = "PBS_24h", time = "inter")
 
+# overall contrasts
+
+y2$samples$group <- relevel(y2$samples$group, ref="untr")
+design2 <- model.matrix(~0+group2)
+colnames(design2) <- substring(colnames(design2), 7)
+fit <- glmQLFit(y2, design2)
+
+my.contrasts.overall <- makeContrasts(
+  untr_vs_SPZhi = SPZhi - untr,
+  untr_vs_iRBChi = iRBChi - untr,
+  untr_vs_iRBClo = iRBClo - untr,
+  untr_vs_RBC = RBC - untr,
+  untr_vs_SPZlo = SPZlo - untr,
+  untr_vs_LPS = LPS - untr,
+  untr_vs_PBS = PBS - untr,
+  
+  LPS_vs_SPZhi = SPZhi - LPS,
+  LPS_vs_SPZlo = SPZlo - LPS,
+  LPS_vs_iRBChi = iRBChi - LPS,
+  LPS_vs_iRBClo = iRBClo - LPS,
+  LPS_vs_PBS = PBS - LPS,
+  
+  PBS_vs_SPZhi = SPZhi - PBS,
+  PBS_vs_SPZlo = SPZlo - PBS,
+  PBS_vs_iRBChi = iRBChi - PBS,
+  PBS_vs_iRBClo = iRBClo - PBS,
+  PBS_vs_LPS = LPS - PBS,
+  levels=design2
+)
+
+my.contrasts.single <- makeContrasts(
+  LPS_vs_SPZhi = (SPZhi_24h - SPZhi_4h) - (LPS_24h - LPS_4h),
+  levels=design1
+)
+Diff_gene_condition(ref = "LPS", trt = "SPZhi", time = "single")
+
 ############ Convert IDs using biomaRt #############
 
 library(biomaRt)
@@ -340,86 +410,121 @@ topGO(go, sort="up")
 keg <- kegga(qlf, species="Mm")
 topKEGG(keg, sort="up")
 
-## diff_df between conditions 1 and 2 ##
+############ diff_df between conditions 1 and 2 #############
 
-diff_df <- DGE_macro[c("gene", "logFC", "FDR")]
+untr4_vs_conditions4 <- c("untr_4h_vs_SPZhi_4h",
+                  "untr_4h_vs_iRBChi_4h",
+                  "untr_4h_vs_iRBClo_4h",
+                  "untr_4h_vs_RBC_4h",
+                  "untr_4h_vs_SPZlo_4h",
+                  "untr_4h_vs_LPS_4h",
+                  "untr_4h_vs_PBS_4h",
+                  "LPS_4h_vs_SPZhi_4h",
+                  "LPS_4h_vs_SPZlo_4h",
+                  "LPS_4h_vs_iRBChi_4h",
+                  "LPS_4h_vs_iRBClo_4h",
+                  "LPS_4h_vs_PBS_4h",
+                  "PBS_4h_vs_SPZhi_4h",
+                  "PBS_4h_vs_SPZlo_4h",
+                  "PBS_4h_vs_iRBChi_4h",
+                  "PBS_4h_vs_iRBClo_4h",
+                  "PBS_4h_vs_LPS_4h")
 
-# preview the dataset; data required for the plot
-head(diff_df)
-# add a grouping column; default value is "not significant"
-diff_df["group"] <- "NotSignificant"
+untr24_vs_conditions24 <- c("untr_24h_vs_SPZhi_24h",
+                   "untr_24h_vs_iRBChi_24h",
+                   "untr_24h_vs_iRBClo_24h",
+                   "untr_24h_vs_RBC_24h",
+                   "untr_24h_vs_SPZlo_24h",
+                   "untr_24h_vs_LPS_24h",
+                   "untr_24h_vs_PBS_24h",
+                   "LPS_24h_vs_SPZhi_24h",
+                   "LPS_24h_vs_SPZlo_24h",
+                   "LPS_24h_vs_iRBChi_24h",
+                   "LPS_24h_vs_iRBClo_24h",
+                   "LPS_24h_vs_PBS_24h",
+                   "PBS_24h_vs_SPZhi_24h",
+                   "PBS_24h_vs_SPZlo_24h",
+                   "PBS_24h_vs_iRBChi_24h",
+                   "PBS_24h_vs_iRBClo_24h",
+                   "PBS_24h_vs_LPS_24h")
 
-# for our plot, we want to highlight 
-# FDR < 0.05 (significance level)
-# Fold Change > 1.5
+condition4_vs_condition24 <- c("untr_4h_vs_untr_24h",
+                     "SPZhi_4h_vs_SPZhi_24h",
+                     "iRBChi_4h_vs_iRBChi_24h",
+                     "iRBClo_4h_vs_iRBClo_24h",
+                     "RBC_4h_vs_RBC_24h",
+                     "SPZlo_4h_vs_SPZlo_24h",
+                     "LPS_4h_vs_LPS_24h",
+                     "PBS_4h_vs_PBS_24h") 
 
-# change the grouping for the entries with significance but not a large enough Fold change
-diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) < 1.5 ),"group"] <- "Significant"
+volcano_plots <- function(conditions)
+{
+  if(conditions == "untr4_vs_conditions4")
+    conds = untr4_vs_conditions4
+  if(conditions == "untr24_vs_conditions24")
+    conds = untr24_vs_conditions24
+  if(conditions == "condition4_vs_condition24")
+    conds = condition4_vs_condition24
+  
+  for(cond in conds)
+  {
+    DGE <- read.csv(paste0(conditions,"/", cond, ".txt"), sep="", stringsAsFactors=FALSE)
+    diff_df <- DGE[c("Gene_name", "logFC", "FDR")]
+    # diff_df <- diff_df[-grep(diff_df$Gene_name, pattern = "PB"),]
+    
+    # add a grouping column; default value is "not significant"
+    diff_df["group"] <- "NotSignificant"
+    
+    # change the grouping for the entries with significance but not a large enough Fold change
+    diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) < 1.5 ),"group"] <- "Significant"
+    
+    # change the grouping for the entries a large enough Fold change but not a low enough p value
+    diff_df[which(diff_df['FDR'] > 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "logFC"
+    
+    # change the grouping for the entries with both significance and large enough logFC change
+    diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "Significant&logFC"
+    
+    diff_df <- as.data.frame(diff_df)
+    diff_df <-  diff_df[order(-abs(diff_df$logFC), diff_df$FDR),]
+    
+    # top_peaks <- diff_df[with(diff_df, order(logFC, FDR)),][1:5,]
+    # top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(-logFC, FDR)),][1:5,])
 
-# change the grouping for the entries a large enough Fold change but not a low enough p value
-diff_df[which(diff_df['FDR'] > 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "logFC"
+    p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) +
+    geom_point() +
+    ggtitle(cond) +
+    geom_text_repel(
+      data = head(diff_df, 100),
+      aes(label = Gene_name),
+      size = 2,
+      colour = "black",
+      box.padding = unit(0.35, "lines"),
+      point.padding = unit(0.3, "lines"))
+      
+      # a <- list()
+      # for (i in seq_len(nrow(top_peaks))) {
+      #   m <- top_peaks[i, ]
+      #   a[[i]] <- list(   
+      #     x = m[["logFC"]],
+      #     y = -log10(m[["FDR"]]),
+      #     text = m[["Ensembl_geneID"]],
+      #     xref = "x",
+      #     yref = "y",
+      #     showarrow = TRUE,
+      #     arrowhead = 0.5,
+      #     ax = 20,
+      #     ay = -40
+      #   )
+      # }
+      # 
+      # 
+      # # make the Plot.ly plot
+      # p <- plot_ly(data = diff_df, x = diff_df[,2], y = -log10(diff_df[,3]), text = diff_df[,1], mode = "markers", color = group) %>% 
+      #   layout(title ="Volcano Plot") %>%
+      #   layout(annotations = a)
+      # p
+    ggsave(paste0(conditions,"/", cond,".png"), plot = p)
+  }
+}
 
-# change the grouping for the entries with both significance and large enough logFC change
-diff_df[which(diff_df['FDR'] < 0.05 & abs(diff_df['logFC']) > 1.5 ),"group"] <- "Significant&logFC"
-
-
-# # Find and label the top peaks..
-# top_peaks <- diff_df[with(diff_df, order(logFC, FDR)),][1:5,]
-# top_peaks <- rbind(top_peaks, diff_df[with(diff_df, order(-logFC, FDR)),][1:5,])
-
-
-# Add gene labels to the plot
-# Single Gene Annotation example
-# m <- diff_df[with(diff_df, order(logFC, FDR)),][1,]
-# a <- list(
-#   x = m[["logFC"]],
-#   y = -log10(m[["FDR"]]),
-#   text = m[["external_gene_name"]],
-#   xref = "x",
-#   yref = "y",
-#   showarrow = TRUE,
-#   arrowhead = 7,
-#   ax = 20,
-#   ay = -40
-# )
-
-# Add gene labels for all of the top genes we found
-# here we are creating an empty list, and filling it with entries for each row in the dataframe
-# each list entry is another list with named items that will be used by Plot.ly
-# a <- list()
-# for (i in seq_len(nrow(top_peaks))) {
-#   m <- top_peaks[i, ]
-#   a[[i]] <- list(
-#     x = m[["logFC"]],
-#     y = -log10(m[["FDR"]]),
-#     text = m[["gene"]],
-#     xref = "x",
-#     yref = "y",
-#     showarrow = TRUE,
-#     arrowhead = 0.5,
-#     ax = 20,
-#     ay = -40
-#   )
-# }
-
-
-# make the Plot.ly plot
-# p <- plot_ly(data = diff_df, x = logFC, y = -log10(FDR), text = external_gene_name, mode = "markers", color = group) %>% 
-#   layout(title ="Condition 1 vs 2") %>%
-#   layout(annotations = a)
-# p
-diff_df <- as.data.frame(diff_df)
-diff_df <-  diff_df[order(-abs(diff_df$logFC), diff_df$FDR),]
-
-p <- ggplot(diff_df, aes(x = logFC, y = -log10(FDR), colour = group)) + 
-  geom_point() + 
-  ggtitle("Condition 1 vs 2") + 
-  geom_text_repel(
-    data = head(diff_df, 10),
-    aes(label = gene),
-    size = 2,
-    colour = "black",
-    box.padding = unit(0.35, "lines"),
-    point.padding = unit(0.3, "lines")
-  )
-ggsave("macrophage1vs2.png", plot = p)
+volcano_plots(conditions = "condition4_vs_condition24")
