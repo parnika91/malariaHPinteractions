@@ -355,3 +355,12 @@ for(i in 1:length(ERP002273.screen.runs))
 
 ERP002273.ortho.data.all <- ortho_data[,col.num]
 save(ERP002273.ortho.data.all, file = "Data/ERP002273.ortho.data.all.RData")
+
+
+####### Make the big dataset #######
+
+df <- DRP000987.ortho.data.str
+df <- cbind(df, ERP106451.ortho.data, ERP110375.ortho.data.int, ERP004598.ortho.data.all, SRP118827.ortho.data.int, SRP116793.ortho.data.all)
+df_concat_allhosts <- df
+save(df_concat_allhosts, file = "df_concat_allhosts.RData")
+write.table(df_concat_allhosts, "df_concat_allhosts.txt", sep = '\t')
