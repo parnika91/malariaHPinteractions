@@ -231,6 +231,12 @@ Diff_gene_condition <- function(ref, trt, time)
                 fontsize_row = 5, fontsize_col = 5, border_color = NA,
                 main = paste0("Top 50 genes ",ref, " vs ", trt, collapse = ''), 
                 labels_row = res_logcpm$gene_name)
+  logcpm_top50 <- logcpm[rownames(diff)[1:50],]
+  pdf("Parasite_DEG_top50_iRBChi_4h_vs_iRBChi_24h_heatmap.pdf", onefile = T)
+    p <- pheatmap(logcpm_top50, 
+                fontsize_row = 6, fontsize_col = 7, border_color = NA,
+                main = "Parasite_DEG_iRBChi_4h_vs_iRBChi_24h", 
+                labels_row = rownames(logcpm_top50))
   dev.off()
   
   # save the entire table
