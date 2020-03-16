@@ -58,7 +58,8 @@ library(ggrepel)
 setwd("~/Documents/Data/Kai/")
 
 SampleCond <- read.csv("~/Documents/Data/Kai/SampleCond.txt", sep="", stringsAsFactors=FALSE)
-countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE)
+countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE, header = T) %>%
+  tibble::column_to_rownames("ID")
 countfile <- countfile[-grep(rownames(countfile), pattern = "PB"),]
 
 group <- SampleCond[,3]
@@ -183,8 +184,29 @@ gtf <- import("mousePberghei.gtf", format = "gtf")
 gtf <- gtf[gtf$type%in%"exon"]
 gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
 gtf.df <- as.data.frame(gtf)
+gtf.df.gene.names <- gtf.df[,c("gene_id", "gene_name")]
 # gtf.h <- gtf[grep(pattern = "ENS", gtf$gene_id),]
 
+# substitute ensembl names with gene names
+count_matrix <- y[["counts"]]
+g <- c()
+for(i in 1:nrow(count_matrix))
+{
+  u <- rownames(count_matrix)[i]
+  if(length(grep(pattern = u, gtf.df$gene_id)) >= 1)
+  {
+    a <- grep(pattern = u, gtf.df$gene_id)[1]
+    g[i] <- gtf.df$gene_name[a]
+  }
+}
+save(g, file = "gene_names_for_count_matrix.RData")
+write.table(g,"gene_names_for_count_matrix.txt" )
+
+count_matrix_ <- count_matrix
+rownames(count_matrix_) <- g
+
+save(count_matrix_, file = "gene_names_with_norm_count_matrix.RData")
+write.csv(count_matrix_,"gene_names_with_norm_count_matrix.csv", row.names = T)
 ############ many contrasts #############
 
 # plot heatmap for each condition and save table

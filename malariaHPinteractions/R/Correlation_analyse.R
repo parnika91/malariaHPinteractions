@@ -10,7 +10,6 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-########### Main operations ###########
 library(WGCNA)
 library(reshape2)
 library(ggplot2)
@@ -18,8 +17,9 @@ library(dplyr)
 library(UpSetR)
 library(grid)
 
-studyID <- "SRP116593"
-type <- "str"
+########### Main operations ###########
+studyID <- "ERP106451"
+type <- "stringent15"
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -301,42 +301,44 @@ number_of_edges_and_nodes <- function(pcc)
   return(df)
 }
 nodes_and_edges <- rbind(number_of_edges_and_nodes(0.9), 
-                             number_of_edges_and_nodes(0.8), 
-                             number_of_edges_and_nodes(0.7),
-                             number_of_edges_and_nodes(0.6),
-                             number_of_edges_and_nodes(0.5))
+                         number_of_edges_and_nodes(0.8), 
+                         number_of_edges_and_nodes(0.7),
+                         number_of_edges_and_nodes(0.6),
+                         number_of_edges_and_nodes(0.5))
 
-save(nodes_and_edges, file = "ERP106451_allruns_nodes_and_edges.RData")
+save(nodes_and_edges, file = "df_concat_allhosts_nodes_and_edges.RData")
 colnames(nodes_and_edges) <- c("Perms", "cor", "all.edges", "hh.edges", "pp.edges", "hp.edges", "hh.h.nodes", "pp.p.nodes", "hp.h.nodes", "hp.p.nodes")
 df_individual_melt <- melt(nodes_and_edges, id = c("Perms", "cor"))
 colnames(df_individual_melt) <- c("Perms", "cor", "edge.node.type", "count")
 
-edge.node.plot <- ggplot(df_individual_melt, aes(x = Perms, y = count, colour = factor(cor))) +
-                         geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
-			 theme_bw() +
-                         facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("ERP106451_allruns: Number of edges/nodes with permutation score 0")
+png("Allhosts_edge_node_plot.png", width = 800, height = 500, units = "px")
+edge.node.plot <- ggplot(df_individual_melt, aes(x = Perms, y = log10(count), colour = factor(cor))) +
+  geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
+  theme_bw() +
+  facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("All hosts: Number of edges/nodes with permutation score 0")
+dev.off()
 
-ggsave(plot = edge.node.plot, filename = "ERP106451_allruns_no_para_prop_edge.node.plot.png")
+ggsave(plot = edge.node.plot, filename = "Allhosts_edge.node.plot.png")
 
 edges.df <- df_individual_melt[grep(pattern = "edge", df_individual_melt$edge.node.type),]
 nodes.df <- df_individual_melt[grep(pattern = "node", df_individual_melt$edge.node.type),]
 
 edge.plot <- ggplot(edges.df, aes(x = Perms, y = log10(count), colour = factor(cor))) +
-                         geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
-                         theme_bw() +
-                         facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("ERP106451_allruns: Number of edges with permutation score 0") +
-                         xlab("Permutations")
+  geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
+  theme_bw() +
+  facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("SRP118827_all: Number of edges with permutation score 0") +
+  xlab("Permutations")
 
-ggsave(plot = edge.plot, filename = "ERP106451_allruns_no_para_prop_edge.plot.png")
+ggsave(plot = edge.plot, filename = "SRP118827_all_edge.plot.png")
 
 node.plot <- ggplot(nodes.df, aes(x = Perms, y = log10(count), colour = factor(cor))) +               
-                         geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
-                         theme_bw() +
-                         facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("ERP106451_allruns: Number of nodes with permutation score 0") +
-                         xlab("Permutations")
- 
+  geom_line() + scale_x_continuous(breaks = seq(10000, 100000, 25000), limits = c(10000, 100000))+
+  theme_bw() +
+  facet_wrap(. ~ edge.node.type, scales="free_y") + ggtitle("SRP118827_all: Number of nodes with permutation score 0") +
+  xlab("Permutations")
 
-ggsave(plot = node.plot, filename = "ERP106451_allruns_no_para_prop_node.plot.png")
+
+ggsave(plot = node.plot, filename = "SRP118827_all_node.plot.png")
 
 
 ########### find common edges and nodes between the two studies at every 10000 step + plots ###########
@@ -552,13 +554,13 @@ for(i in 1:length(file.names))
   }
 }
 
-sum[is.na(sum)] <- 100000
-str <- sum
-str[lower.tri(str, diag = T)] <- NA
-str_melt <- melt(str)
-colnames(str_melt) <- c("gene1", "gene2", "permute_score")
-str_na.omit <- na.omit(str_melt)
-save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
+  sum[is.na(sum)] <- 100000
+  str <- sum
+  str[lower.tri(str, diag = T)] <- NA
+  str_melt <- melt(str)
+  colnames(str_melt) <- c("gene1", "gene2", "permute_score")
+  str_na.omit <- na.omit(str_melt)
+  save(str_na.omit, file = paste0(studyID, "_", type, "_na.omit.RData", collapse = ''))
 
 ########### single study comparisons ###########
 
@@ -622,6 +624,72 @@ upset(fromList(all6datasets_upset), sets = names(all6datasets_upset), order.by =
 grid.text("SRP118996 and ERP106451 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
+
+########### script to get annotation table for heatmaps #########
+# can do this on the local computer or on the server 
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+setwd("/home/parnika/Documents/Data/")
+library(dplyr)
+allHPexp <- read.delim("allHPexp.txt", sep = ',', stringsAsFactors = F)
+colnames(allHPexp)
+
+# vector of datasets
+datasets <- c("DRP000987.ortho.data.all", "DRP000987.ortho.data.int", "DRP000987.ortho.data.str", 
+              "ERP106451.ortho.data.all", "ERP106451.ortho.data.int", "ERP106451.ortho.data.str",
+              "ERP023982.ortho.data.all", "ERP023982.ortho.data.int", "ERP023982.ortho.data.str",
+              "ERP004598.ortho.data.all", "ERP004598.ortho.data.int", "ERP004598.ortho.data.str",
+              "ERP110375.ortho.data.all", "ERP110375.ortho.data.int", "ERP110375.ortho.data.str",
+              "SRP118996.ortho.data.all", "SRP118996.ortho.data.int", "SRP118996.ortho.data.str",
+              "SRP118827.ortho.data.all", "SRP118827.ortho.data.int", "SRP118827.ortho.data.str",
+              "SRP116593.ortho.data.all", "SRP116593.ortho.data.int", "SRP116593.ortho.data.str",
+              "SRP116793.ortho.data.all", "SRP116793.ortho.data.int", "SRP116793.ortho.data.str"
+)
+
+rn <- c("DRP000987_all", "DRP000987_int", "DRP000987_str", 
+        "ERP106451_all", "ERP106451_int", "ERP106451_str",
+        "ERP023982_all", "ERP023982_int", "ERP023982_str",
+        "ERP004598_all", "ERP004598_int", "ERP004598_str",
+        "ERP110375_all", "ERP110375_int", "ERP110375_str",
+        "SRP118996_all", "SRP118996_int", "SRP118996_str",
+        "SRP118827_all", "SRP118827_int", "SRP118827_str",
+        "SRP116593_all", "SRP116593_int", "SRP116593_str",
+        "SRP116793_all", "SRP116793_int", "SRP116793_str"
+)
+
+anno <- data.frame()
+
+for(i in 1:length(datasets))
+{
+  ds <- loadRData(paste0("DataSubsets/",datasets[i],".RData"))
+  runs <- sapply(colnames(ds), function(x) strsplit(x, split = "_")[[1]][1])
+  
+  pp <- sapply(runs, function(x) allHPexp[which(allHPexp$RunID==x),"Parasite_percent"])
+  pp_median <- median(pp)
+  
+  host <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Host"])
+  parasite <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Parasite"])
+  
+  anno[i,1] <- datasets[i]
+  anno[i,2] <- host
+  anno[i,3] <- parasite
+  anno[i,4] <- pp_median
+  anno[i,5] <- rn[i]
+}
+
+rownames(anno) <- anno[,5]
+anno <- anno[,c(2,3,4)]
+colnames(anno) <- c("Host", "Parasite", "Median_parasite_percent")
+write.table(anno, "anno.txt", sep = '\t', row.names = T)
+save(anno, file = "anno.RData")
+saveRDS(anno, file = "anno.rds")
+
+
 ########### Function to produce comparison matrices #########
 
 studyID <- c("ERP106451", "SRP118996", "SRP118827", "SRP116793", "SRP116593", "DRP000987", "ERP023982", "ERP004598", "ERP110375")
@@ -633,7 +701,7 @@ Cross_study_comparison <- function(feature, op)
   # feature:
   # a_edges == all edges; b_edges == bipartite edges; h_edges; p_edges
   # op:
-  # cor (Pearson's and Spearman); overlap
+  # cor (Pearson's and Spearman); overlap; sig
   if(feature == "a_edges")
   {
     list_ds <- list()
@@ -676,26 +744,26 @@ Cross_study_comparison <- function(feature, op)
       }
   }
   if(feature == "h_edges")
-  {
-    find = "h_OG"
-    
-    list_ds <- list()
-    l <- 0
-    for(i in 1:length(studyID))
     {
-      for(j in 1:3)
-      {
-        study <- colnames(datasets)[i]
-        ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
-                               "_na.omit.RData"))
-        # keep only bipartite edges
-        ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
-        colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+        find = "h_OG"
         
-        list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
-        l <- length(list_ds)
-      }
-    }
+        list_ds <- list()
+        l <- 0
+        for(i in 1:length(studyID))
+        {
+          for(j in 1:3)
+          {
+            study <- colnames(datasets)[i]
+            ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+                                   "_na.omit.RData"))
+            # keep only bipartite edges
+            ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
+            colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+            
+            list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+            l <- length(list_ds)
+          }
+        }
   }
   if(feature == "p_edges")
   {
@@ -730,16 +798,16 @@ operations <- function(data, op, feature)
   # takes 1 column of gene per study for overlap
   if(op == "cor")
   {
-          df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
-          for(i in 1:length(data))
-          {
-            df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
-            colnames(df)[(i+2)] <- names(data)[[i]]
-          }
-          
-          # remove.rows <- which(100000 %in% df[,3:17])
-          # rr <- subset(df, df[,3:17] != 100000)
-          rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
+    df <- data.frame(gene1 = data[[1]][,1], gene2 = data[[1]][,2])
+    for(i in 1:length(data))
+    {
+      df[(1:nrow(df)),(i+2)] <- data[[i]][,3]
+      colnames(df)[(i+2)] <- names(data)[[i]]
+    }
+    
+    # remove.rows <- which(100000 %in% df[,3:17])
+    # rr <- subset(df, df[,3:17] != 100000)
+    rr <- df[!apply(df[, 3:17], 1, function(x) any(x == 100000)), ]
           
     # df <- df[-remove.rows,]
     sampled <- rr[sample(nrow(rr), size = nrow(rr)/1000),]
@@ -748,8 +816,10 @@ operations <- function(data, op, feature)
     
     for(j in 1:length(data))
       logt_df[(1:nrow(logt_df)),(j+2)] <- -log10(1/(sampled[,(j+2)] + 5e-06))
-    
-    colnames(logt_df) <- sapply(colnames(logt_df), function(x) paste0("_logt_",x))
+        
+    colnames(logt_df) <- names(sampled)
+    colnames(logt_df)[3:ncol(logt_df)] <- sapply(colnames(logt_df)[3:ncol(logt_df)], function(x) paste0("_logt_",x))
+    colnames(logt_df)[3:ncol(logt_df)] <- substring(colnames(logt_df)[3:ncol(logt_df)], 1 , 27)
     
     p_cor <- cor(rr[,(3:ncol(rr))])
     s_cor <- cor(rr[,(3:ncol(rr))], method = "spearman")
@@ -759,7 +829,7 @@ operations <- function(data, op, feature)
     write.table(p_cor,  paste0(feature, "_p_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     write.table(s_cor,  paste0(feature, "_s_cor_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
     write.table(logt_df,  paste0(feature, "_logt_df_all_datasets_for_vis.txt"), sep = '\t', row.names = T)
-    
+      
     res <- list(p_cor, s_cor, logt_df)
   }
   
@@ -815,19 +885,116 @@ operations <- function(data, op, feature)
      }
     res <- list(upset, mat)
   }
+  
+  if(op == "sig")
+  {
+    feature = feature
+    m <- length(data)
+    n <- ncol(data[[1]])
+    
+    sig <- data.frame()
+    a = 1
+    upset <- list()
+    
+    # finding intersecting edges
+    for(i in 1:length(data))
+    {
+      upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2] # edges with ISIGEM score 0
+      upset[[i]] <- paste(upset[[i]][,1], upset[[i]][,2], sep = '_')
+    }
+    names(upset) <- names(data)
+    system.time(
+    for(i in 1:length(upset))
+    {
+      U1 = nrow(data[[i]][which(data[[i]][,3] != 100000),])
+      for(j in 1:length(upset))
+      {
+        U2 = nrow(data[[j]][which(data[[j]][,3] != 100000),])
+        U = U1 + U2
+        X = length(union(upset[[i]], upset[[j]]))
+        Y = length(setdiff(upset[[i]],upset[[j]]))
+        W = length(setdiff(upset[[j]],upset[[i]]))
+        Z = length(intersect(upset[[i]], upset[[j]]))
+        
+        significance <- fisher.test(matrix(c(U-X, Y, W, Z), nrow=2), alternative = "greater")
+        
+        sig[a,1] <- names(upset)[i]
+        sig[a,2] <- length(upset[[i]])
+        sig[a,3] <- names(upset)[j]
+        sig[a,4] <- length(upset[[j]])
+        sig[a,5] <- U
+        sig[a,6] <- Z
+        sig[a,7] <- significance$p.value
+        
+        a = a+1
+      }
+        
+    })
+    
+    colnames(sig) <- c("Set1","Set1_edges#", "Set2", "Set2_edges#", "Universe_size", "Intersection_size", "pvalue")
+    padj <- p.adjust(sig[,7], method = "BH")
+    sig$p.adj <- padj
+    
+    #cast the df into a matrix
+    sig.mat <- reshape(sig[,c(1,3,8)], timevar = "Set1", idvar = "Set2", direction = "wide")
+    rownames(sig.mat) <- sig.mat[,1]
+    sig.mat <- sig.mat[,-1]
+    colnames(sig.mat) <- substring(colnames(sig.mat),7, 19)
+    rownames(sig.mat) <- substring(rownames(sig.mat), 1, 13)
+    logt.sig.mat <- log10(1/(sig.mat + 1e-5))
+    logt.sig.mat <- logt.sig.mat[c("SRP118827_all", "SRP116793_all", "SRP118827_int", "SRP116793_int", "SRP118996_all", "ERP110375_str",
+                                   "ERP110375_int", "SRP116793_str", "SRP118996_str", "SRP118996_int", "ERP004598_all", "ERP004598_str",
+                                   "ERP004598_int", "SRP118827_str", "DRP000987_str", "ERP106451_str", "ERP106451_int", "ERP106451_all",
+                                   "ERP023982_all", "ERP110375_all", "DRP000987_int", "DRP000987_all", "SRP116593_int", "SRP116593_all",
+                                   "SRP116593_str", "ERP023982_str", "ERP023982_int"), 
+                                 c("SRP118827_all", "SRP116793_all", "SRP118827_int", "SRP116793_int", "SRP118996_all", "ERP110375_str",
+                                   "ERP110375_int", "SRP116793_str", "SRP118996_str", "SRP118996_int", "ERP004598_all", "ERP004598_str",
+                                   "ERP004598_int", "SRP118827_str", "DRP000987_str", "ERP106451_str", "ERP106451_int", "ERP106451_all",
+                                   "ERP023982_all", "ERP110375_all", "DRP000987_int", "DRP000987_all", "SRP116593_int", "SRP116593_all",
+                                   "SRP116593_str", "ERP023982_str", "ERP023982_int")]
+    
+    save(sig, file = paste0(feature, "_overlap_signif_all_datasets.RData"))
+    write.table(sig,  paste0(feature, "_overlap_signif_all_datasets.txt"), sep = '\t', row.names = T)
+    save(sig.mat, file = paste0(feature, "_overlap_signif_all_datasets_matrix.RData"))
+    write.table(sig.mat,  paste0(feature, "_overlap_signif_all_datasets_matrix.txt"), sep = '\t', row.names = T)
+    save(logt.sig.mat, file = paste0(feature, "_logt_overlap_signif_all_datasets_matrix.RData"))
+    
+  }
   return(res)
 }
 
 Cross_study_comparison(feature = "b_edges", op = "cor")
 
-###### plot overlap matrices #####
+########### plot overlap matrices #####
 
+colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
+pdf("pheatmap_b_edges_overlap_significance_unclustered.pdf")
+pheatmap::pheatmap(logt.sig.mat, annotation_row = anno, fontsize = 8, main = "significance of intersection (bipartite edges)",
+                   cluster_cols = F, cluster_rows = F) #-log10(1/(sig.mat + 1e-06))
+dev.off()
 
-###### upset plots #####
+# test = matrix(rnorm(200), 20, 10)
+# test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
+# test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
+# test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
+# colnames(test) = paste("Test", 1:10, sep = "")
+# rownames(test) = paste("Name", 1:20, sep = "")
+# 
+# paletteLength <- 50
+# myColor <- colorRampPalette(c("yellow", "white", "blue"))(paletteLength)
+# # length(breaks) == length(paletteLength) + 1
+# # use floor and ceiling to deal with even/odd length pallettelengths
+# myBreaks <- c(seq(min(logt.sig.mat), 0, length.out=ceiling(paletteLength/2) + 1), 
+#               seq(max(logt.sig.mat)/paletteLength, max(logt.sig.mat), length.out=floor(paletteLength/2)))
+
+# Plot the heatmap
+pheatmap::pheatmap(logt.sig.mat, color=myColor, breaks=myBreaks)
+
+########### upset plots #####
 
 all_datasets_upset = upset
 
-png(file="All27datasets_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
+png(file="Allhosts_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
 upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.angles = 90, number.angles = 90, 
       scale.intersections = "log10",
       scale.sets = "log10",
@@ -837,71 +1004,153 @@ upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.a
 grid.text("27 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
-######### script to get annotation table for heatmaps #########
-# can do this on the local computer or on the server 
+################# repetition of drop plots ###############
 
-loadRData <- function(fileName){
-  #loads an RData file, and returns it
-  load(fileName)
-  get(ls()[ls() != "fileName"])
+ds <- c("SRP118827_all", "SRP116793_all", "SRP118827_int", "SRP116793_int", "SRP118996_all", "ERP110375_str",
+        "ERP110375_int", "SRP116793_str", "SRP118996_str", "SRP118996_int", "ERP004598_all", "ERP004598_str",
+        "ERP004598_int", "SRP118827_str", "DRP000987_str", "ERP106451_str", "ERP106451_int", "ERP106451_all",
+        "ERP023982_all", "ERP110375_all", "DRP000987_int", "DRP000987_all", "SRP116593_int", "SRP116593_all",
+        "SRP116593_str", "ERP023982_str", "ERP023982_int")
+
+
+number_of_edges_and_nodes <- function(pcc)
+{
+  for(f in 1:length(ds))
+  {
+    #setwd(paste0("/SAN/Plasmo_compare/SRAdb/Output/", ds[f], "/cor/ds/", collapse = ''))
+    #system(paste0("tar -xvf ",ds[f],".tar"))
+    
+    study <- strsplit(ds[f], split = "_")[[1]][1]
+    type <- strsplit(ds[f], split = "_")[[1]][2]
+      
+    files <- grep(pattern = "outer_", list.files())
+    file.names <- list.files()[files]
+    
+    sum2 <- matrix(rep(0, 17991*17991), nrow = 17991)
+    sum2[lower.tri(sum2, diag = T)] <- NA
+    df <- data.frame(Perms = seq(10000, 100000, 10000))
+    a = 1
+    
+    study <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/cor/", study,".ortho.data.",type,".RData", collapse = ''))
+    study <- t(study)
+    ori_cor <- cor(study, use = "pairwise.complete.obs")
+    ori_cor[lower.tri(ori_cor, diag = T)] <- NA
+    cor_melt <- melt(ori_cor)
+    colnames(cor_melt) <- c("gene1", "gene2", "cor")
+    
+    for(i in 1:length(file.names))
+    {
+      print(i)
+      if(grepl(pattern = ".RData", file.names[i]))
+      {
+        load(file.names[i])
+        sum2 <- outer + sum2
+        sum2_melt <- melt(sum2)
+        
+        colnames(sum2_melt) <- c("gene1", "gene2", "permute_score")
+        
+        pval_cor <- cbind(cor_melt, sum2_melt$permute_score)
+        colnames(pval_cor)[4] <- "permute_score"
+        
+        pval_cor_na.omit <- na.omit(pval_cor)
+        pval0 <- pval_cor_na.omit[pval_cor_na.omit$permute_score==0,]
+        
+        if(pcc >= 0.9){ r1 = 0.9; r2 = 1.0 }
+        if(pcc >= 0.8 & pcc < 0.9){ r1 = 0.8; r2 = 0.9 }
+        if(pcc >= 0.7 & pcc < 0.8){ r1 = 0.7; r2 = 0.8 }
+        if(pcc >= 0.6 & pcc < 0.7){ r1 = 0.6; r2 = 0.7 }
+        if(pcc >= 0.5 & pcc < 0.6){ r1 = 0.5; r2 = 0.6 }
+        
+        all.edges <- pval0[(abs(pval0$cor) >= r1 & abs(pval0$cor) < r2),]
+        all.edges.number <- nrow(all.edges)
+        hh.edges <- all.edges[(grepl(pattern = "h_OG", as.character(all.edges$gene1)) & grepl(pattern = "h_OG", as.character(all.edges$gene2))),]
+        hh.edges.number <- nrow(hh.edges)
+        pp.edges <- all.edges[(grepl(pattern = "p_OG", as.character(all.edges$gene1)) & grepl(pattern = "p_OG", as.character(all.edges$gene2))),]
+        pp.edges.number <- nrow(pp.edges)
+        hp.edges <- all.edges[((grepl(pattern = "h_OG", as.character(all.edges$gene1)) & grepl(pattern = "p_OG", as.character(all.edges$gene2))) | (grepl(pattern = "p_OG", as.character(all.edges$gene1)) & grepl(pattern = "h_OG", as.character(all.edges$gene2)))),]
+        hp.edges.number <- nrow(hp.edges)
+        
+        hh.h.nodes <- unique(c(unique(as.character(hh.edges$gene1))), c(unique(as.character(hh.edges$gene2))))
+        pp.p.nodes <- unique(c(unique(as.character(pp.edges$gene1))), c(unique(as.character(pp.edges$gene2))))
+        
+        hp.h.nodes.col1 <- unique(as.character(hp.edges$gene1))
+        # if(length(hp.h.nodes.col1) > 0 & length(hp.h.nodes.col2) > 0)
+        #   hp.h.nodes <- unique(hp.h.nodes.col1, hp.h.nodes.col2)
+        # if(length(hp.h.nodes.col1) > 0 & length(hp.h.nodes.col2) == 0)
+        #   hp.h.nodes <- unique(hp.h.nodes.col1)
+        # if(length(hp.h.nodes.col2) > 0 & length(hp.h.nodes.col1) == 0)
+        hp.h.nodes <- length(hp.h.nodes.col1)
+        
+        hp.p.nodes.col1 <- unique(as.character(hp.edges$gene2))
+        # hp.p.nodes.col2 <- unique(as.character(grep(pattern = "p_OG",hp.edges$gene2)))
+        # if(length(hp.p.nodes.col1) > 0 & length(hp.p.nodes.col2) > 0)
+        #   hp.p.nodes <- unique(hp.p.nodes.col1, hp.p.nodes.col2)
+        # if(length(hp.p.nodes.col1) > 0 & length(hp.p.nodes.col2) == 0)
+        #   hp.p.nodes <- unique(hp.p.nodes.col1)
+        # if(length(hp.p.nodes.col2) > 0 & length(hp.p.nodes.col1) == 0)
+        hp.p.nodes <- length(hp.p.nodes.col1)
+        
+        df[a,2] <- pcc
+        df[a,3] <- all.edges.number
+        df[a,4] <- hh.edges.number
+        df[a,5] <- pp.edges.number
+        df[a,6] <- hp.edges.number
+        df[a,7] <- length(hh.h.nodes)
+        df[a,8] <- length(pp.p.nodes)
+        df[a,9] <- hp.h.nodes
+        df[a,10] <- hp.p.nodes
+        
+        a = a+1
+      }
+    }
+    #system("rm outer*.RData")
+  }
+  return(df)
 }
+nodes_and_edges <- rbind(number_of_edges_and_nodes(0.9), 
+                         number_of_edges_and_nodes(0.8), 
+                         number_of_edges_and_nodes(0.7),
+                         number_of_edges_and_nodes(0.6),
+                         number_of_edges_and_nodes(0.5))
 
-setwd("/home/parnika/Documents/Data/")
+
+################ intersections between overall dataset and individual datasets ###############
+studies <- c("DRP000987_str", "ERP106451_int", "ERP110375_int", 
+             "ERP004598_all", "SRP118827_int", "SRP116793_all")
 library(dplyr)
-allHPexp <- read.delim("allHPexp.txt", sep = ',', stringsAsFactors = F)
+allHPexp <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/allHPexp.txt", sep = ',')
 colnames(allHPexp)
 
-# vector of datasets
-datasets <- c("DRP000987.ortho.data.all", "DRP000987.ortho.data.int", "DRP000987.ortho.data.str", 
-              "ERP106451.ortho.data.all", "ERP106451.ortho.data.int", "ERP106451.ortho.data.str",
-              "ERP023982.ortho.data.all", "ERP023982.ortho.data.int", "ERP023982.ortho.data.str",
-              "ERP004598.ortho.data.all", "ERP004598.ortho.data.int", "ERP004598.ortho.data.str",
-              "ERP110375.ortho.data.all", "ERP110375.ortho.data.int", "ERP110375.ortho.data.str",
-              "SRP118996.ortho.data.all", "SRP118996.ortho.data.int", "SRP118996.ortho.data.str",
-              "SRP118827.ortho.data.all", "SRP118827.ortho.data.int", "SRP118827.ortho.data.str",
-              "SRP116593.ortho.data.all", "SRP116593.ortho.data.int", "SRP116593.ortho.data.str",
-              "SRP116793.ortho.data.all", "SRP116793.ortho.data.int", "SRP116793.ortho.data.str"
-              )
+bip_intersect_list <- list()
+#load("/SAN/Plasmo_compare/SRAdb/Output/df_allhosts_concat/df_allhosts_concat.")
+# paste the host and parasite genes and put them in one column. The other column in the cor coef
+hp <- paste(bipartite[,1], bipartite[,2], sep = "_")
 
-rn <- c("DRP000987_all", "DRP000987_int", "DRP000987_str", 
-        "ERP106451_all", "ERP106451_int", "ERP106451_str",
-        "ERP023982_all", "ERP023982_int", "ERP023982_str",
-        "ERP004598_all", "ERP004598_int", "ERP004598_str",
-        "ERP110375_all", "ERP110375_int", "ERP110375_str",
-        "SRP118996_all", "SRP118996_int", "SRP118996_str",
-        "SRP118827_all", "SRP118827_int", "SRP118827_str",
-        "SRP116593_all", "SRP116593_int", "SRP116593_str",
-        "SRP116793_all", "SRP116793_int", "SRP116793_str"
-        )
+# overall is the dataset with all the bipartite edges with score 0
+overall <- data.frame(edge = hp, cor = bipartite[,3])
+rm(bipartite)
+rm(hp)
 
-anno <- data.frame()
-
-for(i in 1:length(datasets))
+for(i in 1:length(studies))
 {
-  ds <- loadRData(paste0("DataSubsets/",datasets[i],".RData"))
-  runs <- sapply(colnames(ds), function(x) strsplit(x, split = "_")[[1]][1])
+  print(i)
+  studyID <- strsplit(studies[i], split = "_")[[1]][1]
+  type <- strsplit(studies[i], split = "_")[[1]][2]
+  study <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID,
+                            "/cor/", studyID, "_", type, "_bipartite.RData"))
   
-  pp <- sapply(runs, function(x) allHPexp[which(allHPexp$RunID==x),"Parasite_percent"])
-  pp_median <- median(pp)
+  hp <- paste(study[,1], study[,2], sep = "_")
+  study_df <- data.frame(edge = hp, cor = study[,3])
+  rm(study)
+  rm(hp)
   
-  host <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Host"])
-  parasite <- as.character(allHPexp[which(allHPexp$RunID==runs[1]),"Parasite"])
+  host <- as.character(unique(allHPexp[which(allHPexp$Study==studyID),"Host"]))
+  para <- as.character(unique(allHPexp[which(allHPexp$Study==studyID),"Parasite"]))
+  intersection <- as.character(intersect(as.character(overall$edge), as.character(study_df$edge)))
+  Cor_in_subset <- sapply(intersection, function(x) study_df[which(study_df$edge==x), "cor"])
+  Cor_in_overall <- sapply(intersection, function(x) overall[which(overall$edge==x), "cor"])
   
-  anno[i,1] <- datasets[i]
-  anno[i,2] <- host
-  anno[i,3] <- parasite
-  anno[i,4] <- pp_median
-  anno[i,5] <- rn[i]
+  bip_intersect_list[[studies[i]]] <- list(host = host, para = para, intersection = intersection, Cor_in_subset = Cor_in_subset, Cor_in_overall = Cor_in_overall)
 }
 
-rownames(anno) <- anno[,5]
-anno <- anno[,c(2,3,4)]
-colnames(anno) <- c("Host", "Parasite", "Median_parasite_percent")
-write.table(anno, "anno.txt", sep = '\t', row.names = T)
-save(anno, file = "anno.RData")
-saveRDS(anno, file = "anno.rds")
-
-# colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
-# pdf("pheatmap_a_edges_overlap_proportion.pdf")
-# pheatmap::pheatmap((mat), annotation_row = anno, fontsize = 8, main = "Proportion of intersection of all edges")
-# dev.off()
+save(bip_intersect_list, file = "bip_intersect_list.RData")
