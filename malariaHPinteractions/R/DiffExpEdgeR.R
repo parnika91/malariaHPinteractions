@@ -58,14 +58,22 @@ library(ggrepel)
 setwd("~/Documents/Data/Kai/")
 
 SampleCond <- read.csv("~/Documents/Data/Kai/SampleCond.txt", sep="", stringsAsFactors=FALSE)
+SampleCond$Condition <- gsub(" ", "_", SampleCond$Condition)
+selection <- SampleCond[c(which(SampleCond$Condition==c("PBS_4h")), 
+                          which(SampleCond$Condition==c("LPS_4h"))),"Sample"]
+SampleCond <- SampleCond[c(which(SampleCond$Condition==c("PBS_4h")), 
+                           which(SampleCond$Condition==c("LPS_4h"))),]
+
 countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE, header = T) %>%
   tibble::column_to_rownames("ID")
+colnames(countfile) <- sapply(colnames(countfile), function(x) strsplit(x, split = "X")[[1]][2])
 countfile <- countfile[-grep(rownames(countfile), pattern = "PB"),]
+countfile <- countfile[,selection]
 
 group <- SampleCond[,3]
 
 # remove space so I can use the names later to makeContrasts
-group <- gsub(" ", "_", group)
+# group <- gsub(" ", "_", group)
 
 # make the count file a DGEList file
 y <- DGEList(counts=countfile, group=group)
@@ -85,8 +93,8 @@ y <- calcNormFactors(y)
 # when using ~group, do it manually using relevel
 design <- model.matrix(~0+group)
 
-y$samples$group <- relevel(y$samples$group, ref="untr_4h")
-design1 <- model.matrix(~group)
+# y$samples$group <- relevel(y$samples$group, ref="untr_4h")
+# design1 <- model.matrix(~group)
 
 # get estimation of dispersion
 y <- estimateDisp(y, design = design)
@@ -95,13 +103,13 @@ y <- estimateDisp(y, design = design)
 fit <- glmQLFit(y, design = design)
 
 # test hypothesis: gene different in any of the groups
-qlf <- glmQLFTest(fit, coef = 2:16)
+qlf <- glmQLFTest(fit)
 # or, to give a threshold of fold change,
 # qlf <- glmTreat(fit, lfc = 2)
 #res <- topTags(qlf, n=nrow(qlf$table))
 # de.genes <- rownames(topTags(qlf, n=100)$table)
 diff <- topTags(qlf, n = nrow(qlf$table))$table
-write.table(diff, "diff_genes_all_conditions.txt", sep = '\t', row.names = T)
+#write.table(diff, "DEG_iRBChi_4h_vs_SPZhi_4h_parasite_genes.txt", sep = '\t', row.names = T)
 
 # heatmap
 logcpm <- cpm(y, log=TRUE)
@@ -185,6 +193,14 @@ gtf <- gtf[gtf$type%in%"exon"]
 gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
 gtf.df <- as.data.frame(gtf)
 gtf.df.gene.names <- gtf.df[,c("gene_id", "gene_name")]
+gtf.df.gene.names <- gtf.df.gene.names[!duplicated(gtf.df.gene.names$gene_id),]
+
+logcpm.genes <- as.data.frame(rownames(logcpm))
+colnames(logcpm.genes)[1] <- c("gene_id")
+logcpm.gene.names <- inner_join(logcpm.genes, gtf.df.gene.names)
+identical(rownames(logcpm), logcpm.gene.names[,1])
+#[1] TRUE
+logcpm <- cbind(logcpm.gene.names, logcpm)
 # gtf.h <- gtf[grep(pattern = "ENS", gtf$gene_id),]
 
 # substitute ensembl names with gene names
@@ -253,12 +269,24 @@ Diff_gene_condition <- function(ref, trt, time)
                 fontsize_row = 5, fontsize_col = 5, border_color = NA,
                 main = paste0("Top 50 genes ",ref, " vs ", trt, collapse = ''), 
                 labels_row = res_logcpm$gene_name)
-  logcpm_top50 <- logcpm[rownames(diff)[1:50],]
-  pdf("Parasite_DEG_top50_iRBChi_4h_vs_iRBChi_24h_heatmap.pdf", onefile = T)
-    p <- pheatmap(logcpm_top50, 
+  
+  logcpm_diff <- logcpm[rownames(diff),]
+  identical(rownames(diff), logcpm_diff[,1])
+  
+  zscore_df <- data.frame()
+  for(i in 1:nrow(logcpm_diff))
+  {
+    row <- scale(as.numeric(logcpm_diff[i,3:ncol(logcpm_diff)]), center = TRUE, scale = T)
+    zscore_df[i,1:length(row)] <- row
+  }
+  zscore_df <- cbind(logcpm_diff[,c(1,2)], zscore_df)
+  colnames(zscore_df) <- colnames(logcpm_diff)
+  #[1] TRUE
+  pdf("mouse_DEG_top50_PBS_4h_vs_LPS_4h_heatmap.pdf", onefile = T)
+  p <- pheatmap(logcpm_diff[1:50,3:ncol(logcpm_diff)], 
                 fontsize_row = 6, fontsize_col = 7, border_color = NA,
-                main = "Parasite_DEG_iRBChi_4h_vs_iRBChi_24h", 
-                labels_row = rownames(logcpm_top50))
+                main = "mouse_DEG_PBS_4h_vs_LPS_4h", 
+                labels_row = logcpm_diff[1:50,2])
   dev.off()
   
   # save the entire table
