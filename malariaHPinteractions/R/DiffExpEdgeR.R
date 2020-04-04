@@ -59,10 +59,18 @@ setwd("~/Documents/Data/Kai/")
 
 SampleCond <- read.csv("~/Documents/Data/Kai/SampleCond.txt", sep="", stringsAsFactors=FALSE)
 SampleCond$Condition <- gsub(" ", "_", SampleCond$Condition)
+<<<<<<< HEAD
+=======
+selection <- SampleCond[c(which(SampleCond$Condition==c("PBS_4h")), 
+                          which(SampleCond$Condition==c("LPS_4h"))),"Sample"]
+SampleCond <- SampleCond[c(which(SampleCond$Condition==c("PBS_4h")), 
+                           which(SampleCond$Condition==c("LPS_4h"))),]
+>>>>>>> master
 
 countfile <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", stringsAsFactors=FALSE, header = T) %>%
   tibble::column_to_rownames("ID")
 colnames(countfile) <- sapply(colnames(countfile), function(x) strsplit(x, split = "X")[[1]][2])
+<<<<<<< HEAD
 countfile <- countfile[-grep(rownames(countfile), pattern = "ENS"),]
 
 selection <- SampleCond[c(which(SampleCond$Condition==c("SPZhi_4h")), 
@@ -77,11 +85,19 @@ countfile <- countfile[,-which(colnames(countfile)=="2B05")]
 cols <- as.data.frame(colnames(countfile))
 colnames(cols) <- "Sample"
 SampleCond <- inner_join(SampleCond, cols)
+=======
+countfile <- countfile[-grep(rownames(countfile), pattern = "PB"),]
+countfile <- countfile[,selection]
+>>>>>>> master
 
 group <- SampleCond[,3]
 
 # remove space so I can use the names later to makeContrasts
+<<<<<<< HEAD
 #group <- gsub(" ", "_", group)
+=======
+# group <- gsub(" ", "_", group)
+>>>>>>> master
 
 # make the count file a DGEList file
 y <- DGEList(counts=countfile, group=group)
@@ -101,8 +117,13 @@ y <- calcNormFactors(y, method = "TMM")
 # when using ~group, do it manually using relevel
 design <- model.matrix(~0+group)
 
+<<<<<<< HEAD
 y$samples$group <- relevel(y$samples$group, ref = "SPZhi_4h")
 design1 <- model.matrix(~group)
+=======
+# y$samples$group <- relevel(y$samples$group, ref="untr_4h")
+# design1 <- model.matrix(~group)
+>>>>>>> master
 
 # get estimation of dispersion
 y <- estimateDisp(y, design = design)
@@ -117,7 +138,11 @@ qlf <- glmQLFTest(fit)
 #res <- topTags(qlf, n=nrow(qlf$table))
 # de.genes <- rownames(topTags(qlf, n=100)$table)
 diff <- topTags(qlf, n = nrow(qlf$table))$table
+<<<<<<< HEAD
 write.table(diff, "para_diff_genes_SPZhi_24_vs_SPZhi_4_relaxed.txt", sep = '\t', row.names = T)
+=======
+#write.table(diff, "DEG_iRBChi_4h_vs_SPZhi_4h_parasite_genes.txt", sep = '\t', row.names = T)
+>>>>>>> master
 
 # heatmap
 logcpm <- cpm(y, log=TRUE)
@@ -201,6 +226,14 @@ gtf <- gtf[gtf$type%in%"exon"]
 gtf <- gtf[gtf$gene_biotype%in%"protein_coding"]
 gtf.df <- as.data.frame(gtf)
 gtf.df.gene.names <- gtf.df[,c("gene_id", "gene_name")]
+gtf.df.gene.names <- gtf.df.gene.names[!duplicated(gtf.df.gene.names$gene_id),]
+
+logcpm.genes <- as.data.frame(rownames(logcpm))
+colnames(logcpm.genes)[1] <- c("gene_id")
+logcpm.gene.names <- inner_join(logcpm.genes, gtf.df.gene.names)
+identical(rownames(logcpm), logcpm.gene.names[,1])
+#[1] TRUE
+logcpm <- cbind(logcpm.gene.names, logcpm)
 # gtf.h <- gtf[grep(pattern = "ENS", gtf$gene_id),]
 
 # substitute ensembl names with gene names
@@ -284,6 +317,7 @@ Diff_gene_condition <- function(ref, trt, time)
   p <- pheatmap(res_logcpm[,c(which(colnames(res_logcpm)==ref),which(colnames(res_logcpm)==trt))], 
                 fontsize_row = 5, fontsize_col = 5, border_color = NA,
                 main = paste0("Top 50 genes ",ref, " vs ", trt, collapse = ''), 
+<<<<<<< HEAD
                 labels_row = rownames(res_logcpm))
   
   logcpm_top50 <- res_logcpm#[rownames(diff)[1:50],]
@@ -292,6 +326,27 @@ Diff_gene_condition <- function(ref, trt, time)
                 fontsize_row = 6, fontsize_col = 7, border_color = NA,
                 main = "Parasite DEG SPZhi_24h (trt) vs SPZhi_4h (ref)",
                 labels_row = rownames(logcpm_top50))
+=======
+                labels_row = res_logcpm$gene_name)
+  
+  logcpm_diff <- logcpm[rownames(diff),]
+  identical(rownames(diff), logcpm_diff[,1])
+  
+  zscore_df <- data.frame()
+  for(i in 1:nrow(logcpm_diff))
+  {
+    row <- scale(as.numeric(logcpm_diff[i,3:ncol(logcpm_diff)]), center = TRUE, scale = T)
+    zscore_df[i,1:length(row)] <- row
+  }
+  zscore_df <- cbind(logcpm_diff[,c(1,2)], zscore_df)
+  colnames(zscore_df) <- colnames(logcpm_diff)
+  #[1] TRUE
+  pdf("mouse_DEG_top50_PBS_4h_vs_LPS_4h_heatmap.pdf", onefile = T)
+  p <- pheatmap(logcpm_diff[1:50,3:ncol(logcpm_diff)], 
+                fontsize_row = 6, fontsize_col = 7, border_color = NA,
+                main = "mouse_DEG_PBS_4h_vs_LPS_4h", 
+                labels_row = logcpm_diff[1:50,2])
+>>>>>>> master
   dev.off()
   write.table(logcpm, "Parasite_logcpm_SPZhi_24h_vs_SPZhi_4h.txt",row.names = T, sep = '\t')
   write.table(mat, "Parasite_logcpm_zscore_SPZhi_24h_vs_SPZhi_4h.txt",row.names = T, sep = '\t')
