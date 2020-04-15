@@ -69,8 +69,15 @@ unique_pg <- unique(c(unique_pg_col1), c(unique_pg_col2))
 bipartite <- pval0[(grepl(pattern = "h_OG", pval0$gene1) & grepl(pattern = "p_OG", pval0$gene2)) |
                      (grepl(pattern = "p_OG", pval0$gene1) & grepl(pattern = "h_OG", pval0$gene2)),]
 colnames(bipartite) <- sapply(colnames(bipartite), function(x) paste0(studyID,"_",type,"_",x, collapse = ''))
-
 save(bipartite, file = paste0(studyID,"_", type, "_bipartite.RData", collapse = ''))
+
+para <- pval0[(grepl(pattern = "p_OG", pval0$gene1) & grepl(pattern = "p_OG", pval0$gene2)),]
+colnames(para) <- sapply(colnames(para), function(x) paste0(studyID,"_",type,"_",x, collapse = ''))
+save(para, file = "overall_6_datasets_para_edges.RData")
+
+host <- pval0[(grepl(pattern = "h_OG", pval0$gene1) & grepl(pattern = "h_OG", pval0$gene2)),]
+colnames(host) <- sapply(colnames(host), function(x) paste0(studyID,"_",type,"_",x, collapse = ''))
+save(host, file = "overall_6_datasets_host_edges.RData")
 
 b_hg_col1 <- as.character(bipartite[grep(pattern = "h_OG", bipartite[,1]),1])
 b_unique_hg_col1 <- unique(b_hg_col1)
