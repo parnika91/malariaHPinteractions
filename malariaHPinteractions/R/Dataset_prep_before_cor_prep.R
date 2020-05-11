@@ -364,3 +364,77 @@ df <- cbind(df, ERP106451.ortho.data, ERP110375.ortho.data.int, ERP004598.ortho.
 df_concat_allhosts <- df
 save(df_concat_allhosts, file = "df_concat_allhosts.RData")
 write.table(df_concat_allhosts, "df_concat_allhosts.txt", sep = '\t')
+
+############## Prep Kai's data #############
+
+Mph <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", 
+                  stringsAsFactors=FALSE) %>%
+  tibble::column_to_rownames("ID")
+# # divide into host and parasite part
+Mph.h <- Mph[grep(pattern = "ENS", rownames(Mph)),] %>% tibble::rownames_to_column("ID")
+Mph.p <- Mph[-grep(pattern = "ENS", rownames(Mph)),] %>% tibble::rownames_to_column("ID")
+# # get runs that have 1e6 host reads and 1e5 para reads
+geneSums.h <- colSums(Mph.h)
+geneSums.p <- colSums(Mph.p)
+runs.h <- colnames(Mph.h)[which(geneSums.h >= 1e6)]
+runs.p <- colnames(Mph.p)[which(geneSums.p >= 1e5)]
+# # Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
+geneCounts.h <- c()
+for(i in 1:ncol(Mph.h))
+{
+  counts = 0
+  for(j in 1:nrow(Mph.h))
+  {
+    if(Mph.h[j,i]>0)
+      counts = counts +1
+  }
+  geneCounts.h[i] <- counts
+}
+
+geneCounts.p <- c()
+for(i in 1:ncol(Mph.p))
+{
+  counts = 0
+  for(j in 1:nrow(Mph.p))
+  {
+    if(Mph.p[j,i]>0)
+      counts = counts +1
+  }
+  geneCounts.p[i] <- counts
+}
+
+names(geneCounts.h) <- colnames(Mph.h)
+names(geneCounts.p) <- colnames(Mph.p)
+
+runs.g.h <- colnames(Mph.h)[which(geneCounts.h >= 10000)]
+runs.g.p <- colnames(Mph.p)[which(geneCounts.p >= 3000)]
+
+# # Unique map percent: >= 70%
+# holds good for all runs
+
+# to find the runs that fit all of the criteria:
+Reduce(intersect, list(runs.p, runs.h, runs.g.p, runs.g.h))
+
+##  or use Mph_all
+# map data to orthogroups
+
+parasite_orthogroups <- read.delim("~/Downloads/parasite_orthogroups.txt", stringsAsFactors=FALSE) 
+parasite_orthogroups <- parasite_orthogroups[,c(1,4)]
+colnames(parasite_orthogroups)[2] <- "ID"
+host_orthogroups <- read.delim("~/Downloads/host_orthogroups.txt", stringsAsFactors=FALSE)
+host_orthogroups <- host_orthogroups[,c(1,3)]
+colnames(host_orthogroups)[2] <- "ID"
+
+h <- inner_join(host_orthogroups, Mph.h) %>% 
+  tibble %>%
+  dplyr::select(-c(2)) %>% 
+  tibble::column_to_rownames("Orthogroup")
+
+p <- inner_join(parasite_orthogroups, Mph.p) %>% 
+  tibble %>%
+  dplyr::select(-c(2)) %>% 
+  tibble::column_to_rownames("Orthogroup")
+
+Mph.ortho.data <- rbind(h, p)
+save(Mph.ortho.data, file = "Mph.ortho.data.RData")
+write.table(Mph.ortho.data, "Mph.ortho.data", sep = '\t', row.names = T)

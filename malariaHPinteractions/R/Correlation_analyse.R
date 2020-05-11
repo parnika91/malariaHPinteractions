@@ -623,7 +623,12 @@ SRP118996_str <- apply(SRP118996_stringent22_bipartite[,c("gene1","gene2") ] , 1
 SRP118996_nor <- apply(SRP118996_bipartite[,c("gene1","gene2") ] , 1 , paste , collapse = "_" )
 
 library(grid)
-all6datasets_upset = list(ERP106451_all = ERP106451_all, ERP106451_str = ERP106451_str, ERP106451_nor = ERP106451_nor, SRP118996_all = SRP118996_all, SRP118996_str = SRP118996_str, SRP118996_nor = SRP118996_nor)
+all6datasets_upset = list(ERP106451_all = ERP106451_all, 
+                          ERP106451_str = ERP106451_str,
+                          ERP106451_nor = ERP106451_nor, 
+                          SRP118996_all = SRP118996_all, 
+                          SRP118996_str = SRP118996_str, 
+                          SRP118996_nor = SRP118996_nor)
 
 png(file="All6datasets_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
 upset(fromList(all6datasets_upset), sets = names(all6datasets_upset), order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.8, 0.75))
@@ -974,10 +979,22 @@ Cross_study_comparison(feature = "b_edges", op = "cor")
 
 ########### plot overlap matrices #####
 
-colnames(mat) <- substring(colnames(mat), 1, 13); rownames(mat) <- substring(rownames(mat1), 1, 13)
-pdf("pheatmap_b_edges_overlap_significance_unclustered.pdf")
-pheatmap::pheatmap(logt.sig.mat, annotation_row = anno, fontsize = 8, main = "significance of intersection (bipartite edges)",
-                   cluster_cols = F, cluster_rows = F) #-log10(1/(sig.mat + 1e-06))
+load("~/Documents/Data/b_edges_overlap_raw_numbers_matrix_all_datasets.RData")
+anno <- read.delim("~/Documents/Data/anno.txt", stringsAsFactors=FALSE)
+colnames(mat1) <- substring(colnames(mat1), 1, 13)
+rownames(mat1) <- substring(rownames(mat1), 1, 13)
+
+# remove ERP023982_str row
+
+anno <- anno[-which(rownames(anno)=="ERP023982_str"),]
+mat1 <- mat1[-which(rownames(mat1)=="ERP023982_str"),]
+mat1 <- mat1[,-which(colnames(mat1)=="ERP023982_str")]
+
+pdf("pheatmap_b_edges_overlap_new.pdf")
+pheatmap::pheatmap(log10(mat1+1), annotation_row = anno, 
+                   fontsize = 8, 
+                   main = "Log10 intersection size (bipartite edges)",
+                   cluster_cols = T, cluster_rows = T) #-log10(1/(sig.mat + 1e-06))
 dev.off()
 
 # test = matrix(rnorm(200), 20, 10)
@@ -1161,3 +1178,6 @@ for(i in 1:length(studies))
 }
 
 save(bip_intersect_list, file = "bip_intersect_list.RData")
+
+
+  

@@ -1,6 +1,8 @@
 library(dplyr)
 library(igraph)
 library(ggplot2)
+library(lrtest)
+library(fitdistrplus)
 
 load("~/Documents/Data/overall_bipartite_with_6_datasets.RData")
 Barseq20200228 <- read.csv("~/Downloads/Barseq20200305.csv", stringsAsFactors=FALSE)
@@ -81,10 +83,17 @@ df <- left_join(h,df2); df
 # 
 # df <- df[,c(1,2,7,11,12,13)]
 
-ggplot(data=df, aes(x=n, y=Confidence, colour = phenotype))+
-  geom_point(alpha = 0.4) +
+ggplot(data=df, aes(x=n, y=Relative.Growth.Rate, colour = phenotype))+
+  geom_point(alpha = 0.8) +
   scale_colour_manual(values=unique(as.character(df$color.codes))) +
-  theme_bw()
+  theme_bw() + 
+  ggtitle("Relative growth rate of low and high degree nodes") +
+  xlab("Node (gene) degree") + 
+  ylab("Relative Growth Rate")
+ggsave("RGR_vs_degree_SameSize_para_para.png")
+
+n_ess <- df[which(df$phenotype == "Essential"), "n"]
+n_dis <- df[which(df$phenotype == "Dispensable"), "n"]
 
 png("Pb_cor0.9_PlasmoGEM.png")
 ggplot(data=df, aes(x=n, y=Confidence, colour = phenotype, label=gene_id))+
@@ -98,6 +107,14 @@ dev.off()
 # betweenness and closness
 host_genes <- sapply(overall_0.9[,1], function(x) strsplit(sub('(^[^_]+_[^_]+)_(.*)$', '\\1 \\2', x), ' ')[[1]][1])
 hp <- data.frame(h = host_genes, p = para_genes, cor = overall[,2])
+
+# degree 
+load("overall_6_datasets_para_edges.RData")
+para_genes <- c(as.character(para[,1]), as.character(para[,2]))
+para_genes <- as.data.frame(para_genes)
+colnames(para_genes) <- "para"
+para_deg <- para_genes %>% count(para)
+save(para_deg, file = "SameSize_para_para_degree.RData")
 
 ig <-graph_from_data_frame(hp, directed = F)
 bw <- betweenness(ig, directed=F, weights=NA)
@@ -372,4 +389,61 @@ cor.test(essl$cl, essl$Relative.Growth.Rate , method = "spearman")
 
 ##################################################
 
+# lm_eqn <- function(df, y, x, z){
+#   m <- lm(y ~ x + z, df);
+#   eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+#                    list(a = format(unname(coef(m)[1]), digits = 2),
+#                         b = format(unname(coef(m)[2]), digits = 2),
+#                         r2 = format(summary(m)$r.squared, digits = 3)))
+#   as.character(as.expression(eq));
+# }
+# 
+# degree_g <- ggplot(Disp, aes(n, Relative.Growth.Rate)) + 
+#   geom_point(alpha = 0.7) +
+#   geom_smooth(method='lm', formula= y~x) +
+#   geom_text(x = 2000, y = 0.65, label = lm_eqn(Disp, Disp$Relative.Growth.Rate, Disp$n), parse = T)
+# 
+install.packages("devtools")
+devtools::install_github("cardiomoon/ggiraphExtra")
 
+require(ggplot2)
+install.packages("stargazer") #Produces easy to read regression results (similar to what you get in SPSS)
+install.packages("effects") #We will use this to create our interactions 
+#install.packages("ggplot2")
+install.packages("psych")
+m.add <- lm(formula = Relative.Growth.Rate ~ cl+n, data = df)
+m.int <- lm(formula = Relative.Growth.Rate ~ cl*n, data = df)
+
+library(stargazer)
+stargazer(m.add, m.int,type="text", 
+          column.labels = c("Main Effects", "Interaction"), 
+          intercept.bottom = FALSE, 
+          single.row=FALSE,     
+          notes.append = FALSE, 
+          header=FALSE) 
+
+ggplot(df,aes(y=Relative.Growth.Rate,x=-log10(cl),color=n))+geom_point()+stat_smooth(method="lm",se=FALSE)
+summary(m.int)
+vcov(m.int)
+describe(df)
+install.packages("sjPlot")
+plot_model(m.int, type = "int", mdrt.values = "meansd")
+
+#check correlation of original RGR and fitted RGR
+
+oriRGR <- na.omit(df$Relative.Growth.Rate)
+cor(oriRGR, fitted(m.int))
+
+
+# likelihood ratio test
+require(lmtest)
+m.add <- glm(formula = Relative.Growth.Rate ~ cl+n+bw, data = na.omit(df))
+m.int <- glm(formula = Relative.Growth.Rate ~ cl*n*bw, data = na.omit(df))
+lrtest(m.int, m.add)
+
+require(fitdistrplus)
+fitdistrplus::descdist(as.numeric(na.omit(df$Relative.Growth.Rate)))
+
+
+require(betareg)
+mod <- betareg(Relative.Growth.Rate ~  n, data = na.omit(df), family = binomial(link = "logit"))
