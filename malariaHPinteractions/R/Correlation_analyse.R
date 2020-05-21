@@ -763,18 +763,20 @@ Cross_study_comparison <- function(feature, op)
         l <- 0
         for(i in 1:length(studyID))
         {
-          for(j in 1:3)
-          {
+          #for(j in 1:3)
+          #{
             study <- colnames(datasets)[i]
-            ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
-                                   "_na.omit.RData"))
+            #ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[j,study],
+             #                      "_na.omit.RData"))
+            ds <- loadRData(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyID[i], "/cor/", datasets[i],
+                                                       "_na.omit.RData"))
             # keep only bipartite edges
             ds <- ds[(grepl(pattern = find, ds$gene1) & grepl(pattern = find, ds$gene2)),]
-            colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[j,study],"_", feature, "_", x))
+            colnames(ds) <- sapply(colnames(ds), function(x) paste0(datasets[i],"_", feature, "_", x))
             
-            list_ds[[paste0(datasets[j,study], "_",feature)]] <- ds
+            list_ds[[paste0(datasets[i], "_",feature)]] <- ds
             l <- length(list_ds)
-          }
+          #}
         }
   }
   if(feature == "p_edges")
@@ -847,38 +849,38 @@ operations <- function(data, op, feature)
   
   if(op == "overlap")
   {
-    feature = feature
-    m <- length(data)
-    n <- ncol(data[[1]])
-    
-    upset <- list()
-    mat <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
-     
-    if(n==3)
-    {
-      # finding intersecting edges
-      for(i in 1:length(data))
-      {
-        upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2]
-        upset[[i]] <- paste(upset[[i]][,1], upset[[i]][,2], sep = '_')
-      }
-      names(upset) <- names(data)
-      for(i in 1:length(upset))
-        for(j in 1:length(upset))
-          mat[i,j] <- 2*length(intersect(upset[[i]], upset[[j]]))/(length(upset[[i]]) + length(upset[[j]]))
-      rownames(mat) <- colnames(mat) <- names(upset)
-      save(mat, file = paste0(feature, "_overlap_matrix_all_datasets.RData"))
-      save(upset, file =  paste0(feature,"_overlap_upset_all_datasets.RData"))
-      write.table(mat,  paste0(feature, "_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
-      
-      mat1 <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
-      
-      for(i in 1:length(upset))
-        for(j in 1:length(upset))
-          mat1[i,j] <- length(intersect(upset[[i]], upset[[j]]))
-      rownames(mat1) <- colnames(mat1) <- names(upset)
-      save(mat1, file = paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.RData"))
-      write.table(mat1,  paste0(feature, "_overlap_raw_numbers_matrix_all_datasets.txt"), sep = '\t', row.names = T)
+        feature = feature
+        m <- length(data)
+        n <- ncol(data[[1]])
+        
+        upset <- list()
+        mat <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
+         
+        if(n==3)
+        {
+          # finding intersecting edges
+          for(i in 1:length(data))
+          {
+            upset[[i]] <- data[[i]][which(data[[i]][,3] == 0),1:2]
+            upset[[i]] <- paste(upset[[i]][,1], upset[[i]][,2], sep = '_')
+          }
+          names(upset) <- names(data)
+          for(i in 1:length(upset))
+            for(j in 1:length(upset))
+              mat[i,j] <- 2*length(intersect(upset[[i]], upset[[j]]))/(length(upset[[i]]) + length(upset[[j]]))
+          rownames(mat) <- colnames(mat) <- names(upset)
+          save(mat, file = paste0(feature, "pp_overlap_matrix_all_datasets.RData"))
+          save(upset, file =  paste0(feature,"pp_overlap_upset_all_datasets.RData"))
+          write.table(mat,  paste0(feature, "pp_overlap_matrix_all_datasets.txt"), sep = '\t', row.names = T)
+          
+          mat1 <- matrix(rep(0, (length(data)^2)), nrow = length(data), ncol = length(data))
+          
+          for(i in 1:length(upset))
+            for(j in 1:length(upset))
+              mat1[i,j] <- length(intersect(upset[[i]], upset[[j]]))
+          rownames(mat1) <- colnames(mat1) <- names(upset)
+          save(mat1, file = paste0(feature, "pp_overlap_raw_numbers_matrix_all_datasets.RData"))
+          write.table(mat1,  paste0(feature, "pp_overlap_raw_numbers_matrix_all_datasets.txt"), sep = '\t', row.names = T)
     }
     
     if(n==1)
@@ -979,7 +981,7 @@ Cross_study_comparison(feature = "b_edges", op = "cor")
 
 ########### plot overlap matrices #####
 
-load("~/Documents/Data/b_edges_overlap_raw_numbers_matrix_all_datasets.RData")
+load("~/Documents/Data/p_edgespp_overlap_raw_numbers_matrix_all_datasets.RData")
 anno <- read.delim("~/Documents/Data/anno.txt", stringsAsFactors=FALSE)
 colnames(mat1) <- substring(colnames(mat1), 1, 13)
 rownames(mat1) <- substring(rownames(mat1), 1, 13)
@@ -990,7 +992,7 @@ anno <- anno[-which(rownames(anno)=="ERP023982_str"),]
 mat1 <- mat1[-which(rownames(mat1)=="ERP023982_str"),]
 mat1 <- mat1[,-which(colnames(mat1)=="ERP023982_str")]
 
-pdf("pheatmap_b_edges_overlap_new.pdf")
+pdf("pheatmap_p_edges_overlap.pdf")
 pheatmap::pheatmap(log10(mat1+1), annotation_row = anno, 
                    fontsize = 8, 
                    main = "Log10 intersection size (bipartite edges)",
@@ -1011,21 +1013,21 @@ dev.off()
 # myBreaks <- c(seq(min(logt.sig.mat), 0, length.out=ceiling(paletteLength/2) + 1), 
 #               seq(max(logt.sig.mat)/paletteLength, max(logt.sig.mat), length.out=floor(paletteLength/2)))
 
-# Plot the heatmap
+# Plot the heatmap  
 pheatmap::pheatmap(logt.sig.mat, color=myColor, breaks=myBreaks)
 
 ########### upset plots #####
 
 all_datasets_upset = upset
 
-png(file="Allhosts_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
+png(file="studies6_intersect.png", width = 25, height = 15, units = "cm", res = 450) # or other device; , onefile = F for pdf()
 upset(fromList(all_datasets_upset), sets = names(all_datasets_upset), set_size.angles = 90, number.angles = 90, 
       scale.intersections = "log10",
       scale.sets = "log10",
       order.by = "freq",  mainbar.y.label = "Genes pairs in intersections", 
       sets.x.label = "Genes pairs per dataset", text.scale = c(1.2, 0.8, 0.8, 0.8, 0.6, 0.75),mb.ratio = c(0.55, 0.45))
 # empty.intersections = "on", main.bar.color = "darkblue", sets.bar.color=c("maroon"), matrix.color="darkgreen", )
-grid.text("27 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
+grid.text("6 datasets",x = 0.65, y=0.95, gp=gpar(fontsize=10))
 dev.off()
 
 ################# repetition of drop plots ###############

@@ -8,10 +8,6 @@ library(Rgraphviz)
 library(biomaRt)
 library(org.Mm.eg.db)
 library(ggplot2)
-#library(org.Pf.plasmo.db)
-#In the first step a convenientRobject of class topGOdata is created 
-#containing all the information requiredfor  the  remaining  two  steps.
-
 
 ##Prepping gene sets
 # load("ERP106451_SRP118996/ERP106451_SRP118996_bipartite.RData")
@@ -22,21 +18,118 @@ library(ggplot2)
 # write.table(p_OG, "ERP106451_SRP118996_concat_indi_bipartite_para_genes.txt",
 #             sep = "\t", quote = F, row.names = F)
 # 
+
 ## Parasite
-#paraGO <- readGAF("/home/parnika/Downloads/Pberghei.gaf")
-# para <- read.delim("~/topGO/Pb_annot_biomaRt.txt", header=T,
-#                    stringsAsFactors=FALSE)
-# parasite_orthogroups <- read.delim("~/Documents/Data/parasite_orthogroups.txt", stringsAsFactors=FALSE)
-# 
-# para_annot <- para[,c(1,5)]
-# para_annot[,1] <- sapply(para_annot[,1], function(x)
-#   strsplit(x, split = "\\.")[[1]][[1]])
-# colnames(para_annot) <- c("Gene", "GO")
-# para_annot <- aggregate(para_annot$GO,para_annot['Gene'],paste,collapse=', ')
-# para_annot <- para_annot[which(as.character(para_annot$GO) != ""),]
-# colnames(para_annot) <- NULL
-# write.table(para_annot, "Pb_annot_biomaRt.txt", row.names = F, sep = "\t", quote = F)
-# paste(Pb_annot[,1], "0", sep = '')
+Pb_Gdb <- read.delim("~/topGO/Pberghei.gaf", header=FALSE, 
+                     stringsAsFactors=FALSE)
+Pb_bm <- read.delim("~/topGO/Pb_mart_export.txt", header=T,
+                   stringsAsFactors=FALSE)
+
+Pf_Gdb <- read.delim("~/topGO/Pfalciparum.gaf", header=FALSE, 
+                     stringsAsFactors=FALSE)
+Pf_bm <- read.delim("~/topGO/Pf_mart_export.txt", header=T,
+                    stringsAsFactors=FALSE)
+
+Pv_Gdb <- read.delim("~/topGO/PvivaxP01.gaf", header=FALSE, 
+                     stringsAsFactors=FALSE)
+Pv_bm <- read.delim("~/topGO/Pv_mart_export.txt", header=T,
+                    stringsAsFactors=FALSE)
+
+pOG <- read.delim("~/Documents/Data/parasite_orthogroups.txt", 
+                                   stringsAsFactors=FALSE)
+
+# treating Pf tables
+# remove rows with empty GO accession from both
+Pf_bm <- Pf_bm[which(Pf_bm$GO.term.accession != ""),]
+Pf_Gdb <- Pf_Gdb[which(Pf_Gdb$V5 != ""),]
+
+# remove .1 from Pf_Gdb
+Pf_Gdb$V2 <- substr(Pf_Gdb$V2, 1, 13)
+
+# collect rows wih gene IDs and GO term
+Pf_bm_red <- Pf_bm[,c("Gene.stable.ID", "GO.term.accession")]
+Pf_Gdb_red <- Pf_Gdb[,c("V2", "V5")]
+colnames(Pf_Gdb_red) <- colnames(Pf_bm_red)
+
+# rbind bm and Gdb
+Pf <- rbind(Pf_bm_red, Pf_Gdb_red)
+Pf <- aggregate(Pf$GO.term.accession,Pf['Gene.stable.ID'],paste,collapse=',')
+ 
+# keep unique GOterms
+Pf$GO <- sapply(Pf$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+Pf <- Pf[, -c(2)]
+
+# treating Pb tables
+# remove rows with empty GO accession from both
+Pb_bm <- Pb_bm[which(Pb_bm$GO.term.accession != ""),]
+Pb_Gdb <- Pb_Gdb[which(Pb_Gdb$V5 != ""),]
+
+# remove .1 from Pb_Gdb
+Pb_Gdb$V2 <- substr(Pb_Gdb$V2, 1, 13)
+
+# collect rows wih gene IDs and GO term
+Pb_bm_red <- Pb_bm[,c("Gene.stable.ID", "GO.term.accession")]
+Pb_Gdb_red <- Pb_Gdb[,c("V2", "V5")]
+colnames(Pb_Gdb_red) <- colnames(Pb_bm_red)
+
+# rbind bm and Gdb
+Pb <- rbind(Pb_bm_red, Pb_Gdb_red)
+Pb <- aggregate(Pb$GO.term.accession,Pb['Gene.stable.ID'],paste,collapse=',')
+
+# keep unique GOterms
+Pb$GO <- sapply(Pb$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+Pb <- Pb[, -c(2)]
+
+# treating Pv tables
+# remove rows with empty GO accession from both
+Pv_bm <- Pv_bm[which(Pv_bm$GO.term.accession != ""),]
+Pv_Gdb <- Pv_Gdb[which(Pv_Gdb$V5 != ""),]
+
+# remove .1 from Pb_Gdb
+Pv_Gdb$V2 <- substr(Pv_Gdb$V2, 1, 13)
+
+# collect rows wih gene IDs and GO term
+Pv_bm_red <- Pv_bm[,c("Gene.stable.ID", "GO.term.accession")]
+Pv_Gdb_red <- Pv_Gdb[,c("V2", "V5")]
+colnames(Pv_Gdb_red) <- colnames(Pv_bm_red)
+
+# rbind bm and Gdb
+Pv <- rbind(Pv_bm_red, Pv_Gdb_red)
+Pv <- aggregate(Pv$GO.term.accession,Pv['Gene.stable.ID'],paste,collapse=',')
+
+# keep unique GOterms
+Pv$GO <- sapply(Pv$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+Pv <- Pv[, -c(2)]
+
+save(Pf, file = "Pf_annot.RData")
+save(Pb, file = "Pb_annot.RData")
+save(Pv, file = "Pv_annot.RData")
+
+# merge with orthogroups
+Pb_OG <- merge(Pb, pOG[,c("Orthogroup", "Pb_g")], by.x = "Gene.stable.ID", by.y = "Pb_g")
+Pf_OG <- merge(Pf, pOG[,c("Orthogroup", "Pf_g")], by.x = "Gene.stable.ID", by.y = "Pf_g")
+Pv_OG <- merge(Pv, pOG[,c("Orthogroup", "Pv_g")], by.x = "Gene.stable.ID", by.y = "Pv_g")
+
+Pb_Pf <- full_join(Pb_OG, Pf_OG, by = "Orthogroup")
+Pb_Pf_Pv <- full_join(Pb_Pf, Pv_OG, by = "Orthogroup")
+
+# keeping only orthogroups
+GO <- data.frame(paste(as.character(Pb_Pf_Pv$GO.x), as.character(Pb_Pf_Pv$GO.y), as.character(Pb_Pf_Pv$GO), sep = ","))
+GO_ <- data.frame()
+for(i in 1:nrow(GO))
+{
+  t <- unique(strsplit(as.character(GO[i,]), split = ",")[[1]])
+  t <- t[!t %in% "NA"]
+  GO_[i,1] <- paste(t, collapse = ",")
+}
+
+Pb_Pf_Pv_OG <- data.frame(Orthogroup = Pb_Pf_Pv$Orthogroup, GOterm = GO_)
+colnames(Pb_Pf_Pv_OG)[2] <- "GO"
+save(Pb_Pf_Pv_OG, file = "p_OG_GOterms.RData")
+colnames(Pb_Pf_Pv_OG) <- NULL
+
+write.table(Pb_Pf_Pv_OG, "p_OG_GOterms.txt", sep = '\t', row.names = F, quote = F)
+
 # 1. Backgound genes and their annotations
 # Found via GeneDB redirecting to
 
@@ -85,23 +178,22 @@ for(m in 1:length(bip_studies))
     # 7. ERP106451_SRP118996_concat_indi_bipartite
     GeneOnt <- geneont[n]
     
-    parasite_orthogroups <- read.delim("~/Documents/Data/parasite_orthogroups.txt",
-                                       stringsAsFactors=FALSE) %>%
-      dplyr::as_tibble() %>%
-      dplyr::select(Orthogroup, Pb_g) %>%
-      mutate(Pb_g = paste(Pb_g, "0", sep = ""))
+    # parasite_orthogroups <- read.delim("~/Documents/Data/parasite_orthogroups.txt",
+    #                                    stringsAsFactors=FALSE) %>%
+    #   dplyr::as_tibble() %>%
+    #   dplyr::select(Orthogroup, Pb_g) %>%
+    #   mutate(Pb_g = paste(Pb_g, "0", sep = ""))
     
-    geneID2GO <- readMappings(file = "topGO/Pb_annot_ens_genedb.txt") # 3659 genes
+    geneID2GO <- readMappings(file = "topGO/p_OG_GOterms.txt") # 3659 genes
     
     # 2. Make list of interesting genes. They don't need p.values
     # Pvalues would be required only to categorise interesting genes from the universe
     # Here we achieve this by 0/1 using %in%
     para_genes <- read.csv(paste0("~/Documents/Data/", study ,"_para_genes.txt",
                                   collapse = ""), sep="", stringsAsFactors=FALSE)
-    colnames(para_genes)[1] <- "Orthogroup"
-    para_in <- inner_join(para_genes, parasite_orthogroups)
+    #para_in <- inner_join(para_genes, parasite_orthogroups)
     #para_in <- para_in[,c(1,4)]
-    para_in <- unique(as.character(para_in[,2]))
+    para_in <- unique(as.character(para_genes[,1]))
     # para_in <- paste(para_in, "0", sep = "")
     # 
     # # 3. Interesting genes
@@ -117,10 +209,10 @@ for(m in 1:length(bip_studies))
     # # Make topGOdata
     # 
     #3. To know which genes are interesting in the universe, we do %in% with background genes
-    para_bg <- as.data.frame(names(geneID2GO))
-    colnames(para_bg) <- "Pb_g"
-    para_annot <- parasite_orthogroups[,2]
-    para_bg <- unlist(c(inner_join(para_bg, para_annot)))
+    para_bg <- names(geneID2GO)
+    #colnames(para_bg) <- "p_OG"
+    #para_annot <- parasite_orthogroups[,2]
+    #para_bg <- unlist(c(inner_join(para_bg, para_annot)))
     
     # universe containing annotated genes out of 4010 orthogroups
     # para_bg <- gsub("\"", "", para_bg, fixed = T)
@@ -163,7 +255,7 @@ for(m in 1:length(bip_studies))
     }
 
     all_res$GenesForGOterm <- GenesForGOterm
-    write.table(all_res, paste0("Pb_topGO_", GeneOnt,"_", study, "_para_result.txt", collapse = ''), sep = '\t', row.names = F)
+    write.table(all_res, paste0("p_OG_topGO_", GeneOnt,"_", study, "_para_result.txt", collapse = ''), sep = '\t', row.names = F)
 
     results.ks <- runTest(GOdata, algorithm="weight01", statistic="ks")
     goEnrichment <- GenTable(GOdata, KS=results.ks, orderBy="KS", topNodes=20)
@@ -187,28 +279,28 @@ for(m in 1:length(bip_studies))
     # b$Term <- factor(b$Term, levels=rev(b$Term))
     # b$KS <- as.numeric(b$KS)
     
-    ggplot(goEnrichment, aes(x=Term, y=Significant, fill = KS)) +
-      stat_summary(geom = "bar", width = 0.3, fun = mean, position = "dodge") +
-      xlab(GeneOnt) +
+    ggplot(goEnrichment, aes(x=Term, y=log10(Significant), fill = KS)) +
+      stat_summary(geom = "bar", width = 0.5, fun = mean, position = "dodge") +
+      xlab("Molecular Function") +
       ylab("Number of parasite genes in GO term") +
-      ggtitle(study) +
+      ggtitle("Significant Plasmodium GOterms") +
       #scale_y_continuous(breaks = round(seq(0, max(-log10(goEnrichment$KS)), by = 2), 1)) +
-      theme_bw(base_size=14) +
+      theme_bw(base_size=20) +
       theme(
         #legend.position='none',
         #legend.background=element_rect(),
-        plot.title=element_text(angle=0, size=10, face="bold", vjust=1),
-        axis.text.x=element_text(angle=0, size=10, face="bold", hjust=1.10),
-        axis.text.y=element_text(angle=0, size=10, face="bold", vjust=0.5),
-        axis.title=element_text(size=10, face="bold"),
+        plot.title=element_text(angle=0, size=20, face="bold", vjust=1),
+        axis.text.x=element_text(angle=0, size=20, face="bold", hjust=1.10),
+        axis.text.y=element_text(angle=0, size=20, face="bold", vjust=0.5),
+        axis.title=element_text(size=20, face="bold"),
         #legend.key=element_blank(),     #removes the border
         #legend.key.size=unit(1, "cm"),      #Sets overall area/size of the legend
         #legend.text=element_text(size=8),  #Text size
-        title=element_text(size=8)) +
+        title=element_text(size=18)) +
       #guides(colour=guide_legend(override.aes=list(size=2.5))) +
       coord_flip()
-      ggsave(paste0(study, "_", GeneOnt, "_parasite_Enrichment.png"), height = 20, width = 20, units = "cm")
-    # Host
+      ggsave(paste0(study, "_", GeneOnt, "_p_OG_Enrichment.png"), height = 30, width = 45, units = "cm")
+      # Host
     # 1. gene-to-GO annotation file
     
     # 2. Background genes

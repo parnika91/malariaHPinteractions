@@ -3,7 +3,7 @@ library(dplyr)
 allHPexp <- read.delim("Data/allHPexp.txt", sep = ',')
 colnames(allHPexp)
 ortho_data <- read.delim("Data/ortho_data.txt")# %>%
-  #tibble::column_to_rownames("Orthogroup")
+#tibble::column_to_rownames("Orthogroup")
 
 #SRP108356 <- allHPexp[which(allHPexp$Study=="SRP108356"),]
 #SRP108632 <- allHPexp[which(allHPexp$Study=="SRP108632"),]
@@ -22,6 +22,14 @@ ERP004598 <- allHPexp[which(allHPexp$Study=="ERP004598"),]
 ERP110375 <- allHPexp[which(allHPexp$Study=="ERP110375"),]
 ERP002273 <- allHPexp[which(allHPexp$Study=="ERP002273"),]
 
+liver <- allHPexp[which(allHPexp$Tissue=="liver"),]
+table(liver$Host)
+table(liver$HostParasite)
+table(liver$Study)
+liver.screen <- liver[which(liver$ProteinCodHost >= 1e6 & liver$ProteinCodPara >= 1e5),]
+liver.screen <- liver.screen[which(liver.screen$NumberProtCodGenesHost >= 10000 &
+                                     liver.screen$NumberProtCodGenesPara > 3000),]
+liver.screen <- liver.screen[which(liver.screen$MapPercent >= 70),]
 # SRP108356 #
 
 # # Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5

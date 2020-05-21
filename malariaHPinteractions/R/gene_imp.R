@@ -436,6 +436,7 @@ cor(oriRGR, fitted(m.int))
 
 
 # likelihood ratio test
+df <- df[df$Relative.Growth.Rate <= 1,]
 require(lmtest)
 m.add <- glm(formula = Relative.Growth.Rate ~ cl+n+bw, data = na.omit(df))
 m.int <- glm(formula = Relative.Growth.Rate ~ cl*n*bw, data = na.omit(df))
