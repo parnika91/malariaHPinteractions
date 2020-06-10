@@ -18,8 +18,8 @@ library(UpSetR)
 library(grid)
 
 ########### Main operations ###########
-studyID <- "ERP110375"
-type <- "int"
+studyID <- "df_concat_allhosts"
+type <- "all"
 
 sum <- matrix(rep(0, 17991*17991), nrow = 17991)
 
@@ -43,8 +43,8 @@ for(i in 1:length(file.names))
    # sum <- sum + outer 
   #}
 #
-#study <- loadRData("../df_concat_allhosts.RData")
-study <- loadRData(paste0(studyID,".ortho.data.",type,".RData", collapse = ''))
+study <- loadRData("../df_concat_allhosts.RData")
+#study <- loadRData(paste0(studyID,".ortho.data.",type,".RData", collapse = ''))
 study <- t(study)
 ori_cor <- cor(study, use = "pairwise.complete.obs")
 ori_cor[lower.tri(ori_cor, diag = T)] <- NA
@@ -190,7 +190,7 @@ bipartite_$type <- rep("bipartite_ISIGEM0", nrow(bipartite_))
 edges <- rbind(pval_cor_na.omit_, pval0_, bipartite_all_ISIGEM_, bipartite_)
 save(edges, file = "all_bipartite_edges_ISIGEM_0_and_more.RData")
 
-g <- ggplot(edges, aes(x = cor, fill = type, color = type)) + geom_freqpoly(alpha=0.75, binwidth = 0.01)
+g <- ggplot(edges, aes(x = cor, fill = type)) + geom_freqpoly(alpha=0.25, binwidth = 100)
 ggsave(plot = g, filename = "histogram_edges.png")
 ########### (commented out; improved version below) to plot perm_sc == 0 vs number of perms ###########
 
