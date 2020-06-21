@@ -3,7 +3,7 @@ library(dplyr)
 allHPexp <- read.delim("Data/allHPexp.txt", sep = ',')
 colnames(allHPexp)
 ortho_data <- read.delim("Data/ortho_data.txt")# %>%
-  #tibble::column_to_rownames("Orthogroup")
+#tibble::column_to_rownames("Orthogroup")
 
 #SRP108356 <- allHPexp[which(allHPexp$Study=="SRP108356"),]
 #SRP108632 <- allHPexp[which(allHPexp$Study=="SRP108632"),]
@@ -21,7 +21,18 @@ ERP023982 <- allHPexp[which(allHPexp$Study=="ERP023982"),]
 ERP004598 <- allHPexp[which(allHPexp$Study=="ERP004598"),]
 ERP110375 <- allHPexp[which(allHPexp$Study=="ERP110375"),]
 ERP002273 <- allHPexp[which(allHPexp$Study=="ERP002273"),]
+SRP096160 <- allHPexp[which(allHPexp$Study=="SRP096160"),]
+SRP110282 <- allHPexp[which(allHPexp$Study=="SRP110282"),]
 
+
+liver <- allHPexp[which(allHPexp$Tissue=="liver"),]
+table(liver$Host)
+table(liver$HostParasite)
+table(liver$Study)
+liver.screen <- liver[which(liver$ProteinCodHost >= 1e6 & liver$ProteinCodPara >= 1e5),]
+liver.screen <- liver.screen[which(liver.screen$NumberProtCodGenesHost >= 10000 &
+                                     liver.screen$NumberProtCodGenesPara > 3000),]
+liver.screen <- liver.screen[which(liver.screen$MapPercent >= 70),]
 # SRP108356 #
 
 # # Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5
@@ -224,6 +235,31 @@ ERP002273.screen.runs <- as.character(ERP002273.screen[,"RunID"])
 # SRP108356.ortho.data <- ortho_data[,col.num]
 # save(SRP108356.ortho.data, file = "Data/SRP108356.ortho.data.RData")
 
+# Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5
+SRP096160.screen <- SRP096160[which(SRP096160$ProteinCodHost >= 1e6 & SRP096160$ProteinCodPara >= 1e5),]
+# Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
+SRP096160.screen <- SRP096160.screen[which(SRP096160.screen$NumberProtCodGenesHost >= 10000 & SRP096160.screen$NumberProtCodGenesPara > 3000),]
+# Unique map percent: >= 70%
+SRP096160.screen <- SRP096160.screen[which(SRP096160.screen$MapPercent >= 70),]
+# # parasite proportion > 5%
+# SRP096160.screen <- SRP096160.screen[which(SRP096160.screen$Parasite_percent >= 5),]
+# I have 48 samples from SRP096160
+SRP096160.screen.runs <- as.character(SRP096160.screen[,"RunID"])
+
+# SRP110282 #
+
+# Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5
+SRP110282.screen <- SRP110282[which(SRP110282$ProteinCodHost >= 1e6 & SRP110282$ProteinCodPara >= 1e5),]
+# Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
+SRP110282.screen <- SRP110282.screen[which(SRP110282.screen$NumberProtCodGenesHost >= 10000 & SRP110282.screen$NumberProtCodGenesPara > 3000),]
+# Unique map percent: >= 70%
+SRP110282.screen <- SRP110282.screen[which(SRP110282.screen$MapPercent >= 70),]
+# # parasite proportion > 5%
+# SRP110282.screen <- SRP110282.screen[which(SRP110282.screen$Parasite_percent >= 5),]
+# I have 48 samples from SRP110282
+SRP110282.screen.runs <- as.character(SRP110282.screen[,"RunID"])
+
+
 col.num <- c()
 for(i in 1:length(ERP106451.screen.runs))
 {
@@ -356,11 +392,109 @@ for(i in 1:length(ERP002273.screen.runs))
 ERP002273.ortho.data.all <- ortho_data[,col.num]
 save(ERP002273.ortho.data.all, file = "Data/ERP002273.ortho.data.all.RData")
 
+## RP096160  ##
+col.num <- c()
+for(i in 1:length(SRP096160.screen.runs))
+{
+  id <- grep(pattern = SRP096160.screen.runs[i], colnames(ortho_data))
+  if(length(id)==1)
+    col.num[i] <- id
+}
+
+SRP096160.ortho.data.int <- ortho_data[,col.num]
+save(SRP096160.ortho.data.int, file = "Data/SRP096160.ortho.data.int.RData")
+
+## RP110282  ##
+col.num <- c()
+for(i in 1:length(SRP110282.screen.runs))
+{
+  id <- grep(pattern = SRP110282.screen.runs[i], colnames(ortho_data))
+  if(length(id)==1)
+    col.num[i] <- id
+}
+
+SRP110282.ortho.data.int <- ortho_data[,col.num]
+save(SRP110282.ortho.data.int, file = "Data/SRP110282.ortho.data.int.RData")
+
 
 ####### Make the big dataset #######
 
 df <- DRP000987.ortho.data.str
 df <- cbind(df, ERP106451.ortho.data, ERP110375.ortho.data.int, ERP004598.ortho.data.all, SRP118827.ortho.data.int, SRP116793.ortho.data.all)
 df_concat_allhosts <- df
-save(df_concat_allhosts, file = "df_concat_allhosts.RData")
-write.table(df_concat_allhosts, "df_concat_allhosts.txt", sep = '\t')
+save(df_concat_allhosts2, file = "df_concat_allhosts2.RData")
+write.table(df_concat_allhosts2, "df_concat_allhosts2.txt", sep = '\t')
+
+############## Prep Kai's data #############
+
+Mph <- read.delim("~/Documents/Data/Kai/Macrophage_RNAseqReadCount.txt", 
+                  stringsAsFactors=FALSE) %>%
+  tibble::column_to_rownames("ID")
+# # divide into host and parasite part
+Mph.h <- Mph[grep(pattern = "ENS", rownames(Mph)),] %>% tibble::rownames_to_column("ID")
+Mph.p <- Mph[-grep(pattern = "ENS", rownames(Mph)),] %>% tibble::rownames_to_column("ID")
+# # get runs that have 1e6 host reads and 1e5 para reads
+geneSums.h <- colSums(Mph.h)
+geneSums.p <- colSums(Mph.p)
+runs.h <- colnames(Mph.h)[which(geneSums.h >= 1e6)]
+runs.p <- colnames(Mph.p)[which(geneSums.p >= 1e5)]
+# # Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
+geneCounts.h <- c()
+for(i in 1:ncol(Mph.h))
+{
+  counts = 0
+  for(j in 1:nrow(Mph.h))
+  {
+    if(Mph.h[j,i]>0)
+      counts = counts +1
+  }
+  geneCounts.h[i] <- counts
+}
+
+geneCounts.p <- c()
+for(i in 1:ncol(Mph.p))
+{
+  counts = 0
+  for(j in 1:nrow(Mph.p))
+  {
+    if(Mph.p[j,i]>0)
+      counts = counts +1
+  }
+  geneCounts.p[i] <- counts
+}
+
+names(geneCounts.h) <- colnames(Mph.h)
+names(geneCounts.p) <- colnames(Mph.p)
+
+runs.g.h <- colnames(Mph.h)[which(geneCounts.h >= 10000)]
+runs.g.p <- colnames(Mph.p)[which(geneCounts.p >= 3000)]
+
+# # Unique map percent: >= 70%
+# holds good for all runs
+
+# to find the runs that fit all of the criteria:
+Reduce(intersect, list(runs.p, runs.h, runs.g.p, runs.g.h))
+
+##  or use Mph_all
+# map data to orthogroups
+
+parasite_orthogroups <- read.delim("~/Downloads/parasite_orthogroups.txt", stringsAsFactors=FALSE) 
+parasite_orthogroups <- parasite_orthogroups[,c(1,4)]
+colnames(parasite_orthogroups)[2] <- "ID"
+host_orthogroups <- read.delim("~/Downloads/host_orthogroups.txt", stringsAsFactors=FALSE)
+host_orthogroups <- host_orthogroups[,c(1,3)]
+colnames(host_orthogroups)[2] <- "ID"
+
+h <- inner_join(host_orthogroups, Mph.h) %>% 
+  tibble %>%
+  dplyr::select(-c(2)) %>% 
+  tibble::column_to_rownames("Orthogroup")
+
+p <- inner_join(parasite_orthogroups, Mph.p) %>% 
+  tibble %>%
+  dplyr::select(-c(2)) %>% 
+  tibble::column_to_rownames("Orthogroup")
+
+Mph.ortho.data <- rbind(h, p)
+save(Mph.ortho.data, file = "Mph.ortho.data.RData")
+write.table(Mph.ortho.data, "Mph.ortho.data", sep = '\t', row.names = T)

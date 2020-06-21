@@ -1,0 +1,412 @@
+# all modelling stuff
+library(dplyr)
+library(igraph)
+library(betareg)
+library(ggeffects)
+library(ggplot2)
+library(reshape2)
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+############################## data pre-processing
+
+# PARASITE - PARASITE EDGES
+
+ov_pp <- loadRData("df_concat_allhosts/cor/overall_6_datasets_para_edges2.RData")
+pb_pp <- loadRData("ERP004598/cor/ERP004598_all_para.RData")
+
+ig_ov_pp <- graph_from_data_frame(ov_pp[,1:3], directed = F)
+ig_ov_pp <- set_edge_attr(ig_ov_pp, "weight", index = E(ig_ov_pp), ov_pp[,3])
+ig_pb_pp <- graph_from_data_frame(pb_pp[,1:3], directed = F)
+ig_pb_pp <- set_edge_attr(ig_pb_pp, "weight", index = E(ig_pb_pp), pb_pp[,3])
+
+# OVERALL NW
+# get node properties with edge weights
+ov_pp_bw_w <- betweenness(ig_ov_pp, v = V(ig_ov_pp), directed = FALSE, weights = abs(E(ig_ov_pp)$weight))
+ov_pp_cl_w <- closeness(ig_ov_pp, vids = V(ig_ov_pp), weights = abs(E(ig_ov_pp)$weight))
+ov_pp_dg_w <- ov_pp[,1:3] %>%
+  setNames(., c("para1", "para2", "cor")) %>%
+  melt(., "cor") %>%
+  select(value, cor) %>%
+  group_by(value) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()
+save.image("Overall_weighted_properties_para_corrected.RData")
+# node properties without edge weights
+ov_pp_bw <- betweenness(ig_ov_pp, v = V(ig_ov_pp), directed = FALSE)
+ov_pp_cl <- closeness(ig_ov_pp, vids = V(ig_ov_pp))
+ov_pp_dg <- degree(ig_ov_pp, v = V(ig_ov_pp))
+save.image("Overall_unweighted_properties_para_corrected.RData")
+
+# PBERGHEI NW
+# get node properties with edge weights
+pb_pp_bw_w <- betweenness(ig_pb_pp, v = V(ig_pb_pp), directed = FALSE, weights = abs(E(ig_pb_pp)$weight))
+pb_pp_cl_w <- closeness(ig_pb_pp, vids = V(ig_pb_pp), weights = abs(E(ig_pb_pp)$weight))
+pb_pp_dg_w <- pb_pp[,1:3] %>%
+  setNames(., c("para1", "para2", "cor")) %>%
+  melt(., "cor") %>%
+  select(value, cor) %>%
+  group_by(value) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()
+  save.image("Pfal_weighted_properties_para.RData")
+  # node properties without edge weights
+ig_pf_pp <- graph_from_data_frame(pf_pp[,1:3], directed = F)
+pb_pp_bw <- betweenness(ig_pb_pp, v = V(ig_pb_pp), directed = FALSE)
+pb_pp_cl <- closeness(ig_pb_pp, vids = V(ig_pb_pp))
+pb_pp_dg <- degree(ig_pb_pp, v = V(ig_pb_pp))
+save.image("Pfal_unweighted_properties_para.RData")
+# PFal
+
+
+# HOST - PARASITE EDGES (ONLY PARASITE GENES)
+
+ov_bp <- loadRData("df_concat_allhosts/cor/df_concat_allhosts2_all_bipartite.RData")
+pb_bp <- loadRData("ERP004598/cor/ERP004598_all_bipartite.RData")
+
+ig_ov_bp <- graph_from_data_frame(ov_bp[,1:3], directed = F)
+ig_ov_bp <- set_edge_attr(ig_ov_bp, "weight", index = E(ig_ov_bp), ov_bp[,3])
+ig_pb_bp <- graph_from_data_frame(pb_bp[,1:3], directed = F)
+ig_pb_bp <- set_edge_attr(ig_pb_bp, "weight", index = E(ig_pb_bp), pb_bp[,3])
+
+# OVERALL NW
+# get node properties with edge weights
+
+
+ov_bp_bw_w <- betweenness(ig_ov_bp, v = V(ig_ov_bp), directed = FALSE, weights = abs(E(ig_ov_bp)$weight))
+ov_bp_cl_w <- closeness(ig_ov_bp, vids = V(ig_ov_bp), weights = abs(E(ig_ov_bp)$weight))
+ov_bp_dg_w <- ov_bp[,1:3] %>%
+  setNames(., c("host", "para", "cor")) %>%
+  select(para, cor) %>%
+  group_by(para) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()
+  save.image("Overall_weighted_properties_bipartite_corrected.RData")
+
+# node properties without edge weights
+ov_bp_bw <- betweenness(ig_ov_bp, v = V(ig_ov_bp), directed = FALSE)
+ov_bp_cl <- closeness(ig_ov_bp, vids = V(ig_ov_bp))
+ov_bp_dg <- degree(ig_ov_bp, v = V(ig_ov_bp))
+save.image("Overall_unweighted_properties_bipartite.RData")
+
+
+pb_bp_bw <- betweenness(ig_pb_bp, v = V(ig_pb_bp), directed = FALSE)
+pb_bp_cl <- closeness(ig_pb_bp, vids = V(ig_pb_bp))
+pb_bp_dg <- degree(ig_pb_bp, v = V(ig_pb_bp))
+
+save.image("Pberghei_unweighted_properties_bipartite.RData")
+# PBERGHEI NW
+# get node properties with edge weights
+pb_bp_bw_w <- betweenness(ig_pb_bp, v = V(ig_pb_bp), directed = FALSE, weights = abs(E(ig_pb_bp)$weight))
+pb_bp_cl_w <- closeness(ig_pb_bp, vids = V(ig_pb_bp), weights = abs(E(ig_pb_bp)$weight))
+pb_bp_dg_w <- pb_bp[,1:3] %>%
+  setNames(., c("host", "para", "cor")) %>%
+  select(para, cor) %>%
+  group_by(para) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()library(dplyr)
+library(igraph)
+library(betareg)
+library(ggeffects)
+library(ggplot2)
+library(reshape2)
+
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+#
+ save.image("Pberghei_weighted_properties_bipartite_corrected.RData")
+# node properties without edge weights
+
+#Pfal
+ 
+
+pf_pp <- loadRData("DRP000987/cor/DRP000987_str_para.RData")
+ig_pf_pp <- graph_from_data_frame(pf_pp[,1:3], directed = F)
+
+# node properties without edge weights
+pf_pp_bw <- betweenness(ig_pf_pp, v = V(ig_pf_pp), directed = FALSE)
+pf_pp_cl <- closeness(ig_pf_pp, vids = V(ig_pf_pp))
+pf_pp_dg <- degree(ig_pf_pp, v = V(ig_pf_pp))
+save.image("Pfal_unweighted_properties_para.RData")
+
+ig_pf_pp <- set_edge_attr(ig_pf_pp, "weight", index = E(ig_pf_pp), pf_pp[,3])
+
+pf_pp_bw_w <- betweenness(ig_pf_pp, v = V(ig_pf_pp), directed = FALSE, weights = abs(E(ig_pf_pp)$weight))
+pf_pp_cl_w <- closeness(ig_pf_pp, vids = V(ig_pf_pp), weights = abs(E(ig_pf_pp)$weight))
+pf_pp_dg_w <- pf_pp[,1:3] %>%
+  setNames(., c("para1", "para2", "cor")) %>%
+  melt(., "cor") %>%
+  select(value, cor) %>%
+  group_by(value) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()
+save.image("Pfal_weighted_properties_para.RData")
+rm(list = list(pf_pp, ig_pf_pp))
+
+pf_bp <- loadRData("DRP000987/cor/DRP000987_str_bipartite.RData")
+ig_pf_bp <- graph_from_data_frame(pf_bp[,1:3], directed = F)
+
+pf_bp_bw <- betweenness(ig_pf_bp, v = V(ig_pf_bp), directed = FALSE)
+pf_bp_cl <- closeness(ig_pf_bp, vids = V(ig_pf_bp))
+pf_bp_dg <- degree(ig_pf_bp, v = V(ig_pf_bp))
+save.image("Pfal_unweighted_properties_bipartite.RData")
+
+# get node properties with edge weights
+ig_pf_bp <- set_edge_attr(ig_pf_bp, "weight", index = E(ig_pf_bp), pf_bp[,3])
+
+pf_bp_bw_w <- betweenness(ig_pf_bp, v = V(ig_pf_bp), directed = FALSE, weights = abs(E(ig_pf_bp)$weight))
+pf_bp_cl_w <- closeness(ig_pf_bp, vids = V(ig_pf_bp), weights = abs(E(ig_pf_bp)$weight))
+pf_bp_dg_w <- pf_bp[,1:3] %>%
+  setNames(., c("host", "para", "cor")) %>%
+  select(para, cor) %>%
+  group_by(para) %>%
+  summarise(degree = sum(abs(cor))) %>%
+  tibble::deframe()
+save.image("Pfal_weighted_properties_bipartite.RData")
+
+
+## PlasmoGEM dataset
+Barseq20200228 <- read.csv("Barseq20200228.csv", stringsAsFactors=FALSE)
+parasite_orthogroups <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", stringsAsFactors=FALSE)
+para <- parasite_orthogroups[,c(1,4)]
+colnames(para)[2] <- "gene"
+RGR_OG <- inner_join(Barseq20200228, para, by.x="gene", by.y= "Pb_g")
+# WEIGHTED PLASMOGEM
+# inner_join with the parasite genes from orthogroups with all 8 parasite vectors
+# pick only parasite genes from bw objects
+ov_bp_bw_w_p <- ov_bp_bw_w[grep(pattern = "p_OG", names(ov_bp_bw_w))]
+pb_bp_bw_w_p <- pb_bp_bw_w[grep(pattern = "p_OG", names(pb_bp_bw_w))]
+pf_bp_bw_w_p <- pf_bp_bw_w[grep(pattern = "p_OG", names(pf_bp_bw_w))]
+
+
+ov_pp_bw_w_p <- ov_pp_bw_w[grep(pattern = "p_OG", names(ov_pp_bw_w))]
+pb_pp_bw_w_p <- pb_pp_bw_w[grep(pattern = "p_OG", names(pb_pp_bw_w))]
+pf_pp_bw_w_p <- pf_pp_bw_w[grep(pattern = "p_OG", names(pf_pp_bw_w))]
+
+ov_bp_bw_w_df <- as.data.frame(ov_bp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+pb_bp_bw_w_df <- as.data.frame(pb_bp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+ov_pp_bw_w_df <- as.data.frame(ov_pp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+pb_pp_bw_w_df <- as.data.frame(pb_pp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+
+pf_bp_bw_w_df <- as.data.frame(pf_bp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+pf_pp_bw_w_df <- as.data.frame(pf_pp_bw_w_p) %>% tibble::rownames_to_column("Orthogroup")
+
+ov_bp_dg_w_df <- as.data.frame(ov_bp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+pb_bp_dg_w_df <- as.data.frame(pb_bp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+ov_pp_dg_w_df <- as.data.frame(ov_pp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+pb_pp_dg_w_df <- as.data.frame(pb_pp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+
+pf_bp_dg_w_df <- as.data.frame(pf_bp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+pf_pp_dg_w_df <- as.data.frame(pf_pp_dg_w) %>% tibble::rownames_to_column("Orthogroup")
+
+#join.all <- plyr::join_all(list(ov_bp_bw_w_df, pb_bp_bw_w_df, ov_pp_bw_w_df, pb_pp_bw_w_df, ov_bp_dg_w_df, pb_bp_dg_w_df, ov_pp_dg_w_df, pb_pp_dg_w_df), by='Orthogroup', type='inner')
+
+# don't just join but also keep all the genes
+join.all.full_w <- plyr::join_all(list(ov_bp_bw_w_df, pb_bp_bw_w_df, 
+                                       ov_pp_bw_w_df, pb_pp_bw_w_df, 
+                                       ov_bp_dg_w_df, pb_bp_dg_w_df, 
+                                       ov_pp_dg_w_df, pb_pp_dg_w_df,
+                                       pf_pp_dg_w_df, pf_bp_df_w_df,
+                                       pf_pp_bw_w_df, pf_bp_bw_w_df), 
+                                  by='Orthogroup', type='full')
+
+
+join.all.full_w <- plyr::join_all(list(join.all.full_w, pf_pp_dg_w_df, pf_bp_dg_w_df,
+                                  pf_pp_bw_w_df, pf_bp_bw_w_df), by='Orthogroup', type='full')
+
+join.all.full_w[is.na(join.all.full_w)] <- 0
+RGR_w <- inner_join(join.all.full_w, RGR_OG)
+
+RGR_w <- na.omit(RGR_w)
+RGR <- RGR_w$Relative.Growth.Rate
+RGR[which(RGR >= 1)] <- 0.99999999
+#RGR[which(RGR == 0)] <- 0.00000001
+range(RGR)
+#[1] 0.03307655 1.00000000
+RGR_w$Relative.Growth.Rate <- RGR
+# UNWEIGHTED PLASMOGEM
+# inner_join with the parasite genes from orthogroups with all 8 parasite vectors
+
+Barseq20200228 <- read.csv("Barseq20200228.csv", stringsAsFactors=FALSE)
+parasite_orthogroups <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", stringsAsFactors=FALSE)
+para <- parasite_orthogroups[,c(1,4)]
+colnames(para)[2] <- "gene"
+RGR_OG <- inner_join(Barseq20200228, para, by.x="gene", by.y= "Pb_g")
+
+ov_bp_bw_p <- ov_bp_bw[grep(pattern = "p_OG", names(ov_bp_bw))]
+pb_bp_bw_p <- pb_bp_bw[grep(pattern = "p_OG", names(pb_bp_bw))]
+
+ov_pp_bw_p <- ov_pp_bw[grep(pattern = "p_OG", names(ov_pp_bw))]
+pb_pp_bw_p <- pb_pp_bw[grep(pattern = "p_OG", names(pb_pp_bw))]
+
+ov_bp_bw_df <- as.data.frame(ov_bp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+pb_bp_bw_df <- as.data.frame(pb_bp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+ov_pp_bw_df <- as.data.frame(ov_pp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+pb_pp_bw_df <- as.data.frame(pb_pp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+
+ov_bp_dg_p <- ov_bp_dg[grep(pattern = "p_OG", names(ov_bp_dg))]
+ov_bp_dg_df <- as.data.frame(ov_bp_dg_p) %>% tibble::rownames_to_column("Orthogroup")
+pb_bp_dg_p <- pb_bp_dg[grep(pattern = "p_OG", names(pb_bp_dg))]
+pb_bp_dg_df <- as.data.frame(pb_bp_dg_p) %>% tibble::rownames_to_column("Orthogroup")
+ov_pp_dg_df <- as.data.frame(ov_pp_dg) %>% tibble::rownames_to_column("Orthogroup")
+pb_pp_dg_df <- as.data.frame(pb_pp_dg) %>% tibble::rownames_to_column("Orthogroup")
+
+pf_bp_bw_p <- pf_bp_bw[grep(pattern = "p_OG", names(pf_bp_bw))]
+pf_pp_bw_p <- pf_pp_bw[grep(pattern = "p_OG", names(pf_pp_bw))]
+pf_bp_bw_df <- as.data.frame(pf_bp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+pf_pp_bw_df <- as.data.frame(pf_pp_bw_p) %>% tibble::rownames_to_column("Orthogroup")
+pf_bp_dg_p <- pf_bp_dg[grep(pattern = "p_OG", names(pf_bp_dg))]
+pf_bp_dg_df <- as.data.frame(pf_bp_dg_p) %>% tibble::rownames_to_column("Orthogroup")
+pf_pp_dg_df <- as.data.frame(pf_pp_dg) %>% tibble::rownames_to_column("Orthogroup")
+
+
+#join.all.unweighted <- plyr::join_all(list(ov_bp_bw_df, pb_bp_bw_df, ov_pp_bw_df, pb_pp_bw_df, ov_bp_dg_df, pb_bp_dg_df, ov_pp_dg_df, pb_pp_dg_df), by='Orthogroup', type='inner')
+
+join.all.full_un<- plyr::join_all(list(ov_bp_bw_df, pb_bp_bw_df, ov_pp_bw_df, pb_pp_bw_df, ov_bp_dg_df, pb_bp_dg_df, ov_pp_dg_df, pb_pp_dg_df), by='Orthogroup', type='full')
+
+join.all.full_un <- plyr::join_all(list(join.all.full_un, pf_pp_dg_df, pf_bp_dg_df,
+                                       pf_pp_bw_df, pf_bp_bw_df), by='Orthogroup', type='full')
+
+join.all.full_un[is.na(join.all.full_un)] <- 0
+RGR_un <- inner_join(join.all.full_un, RGR_OG)
+
+RGR_un <- na.omit(RGR_un)
+RGR <- RGR_un$Relative.Growth.Rate
+RGR[which(RGR >=1)] <- 0.99999999
+range(RGR)
+#[1] 0.03307655 1.00000000
+RGR_un$Relative.Growth.Rate <- RGR
+
+
+#################### models
+
+ov_bp_dg_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg, data = RGR_un) #works
+ov_bp_dg_bw_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg + ov_bp_bw_p, data = RGR_un) #does not work
+ov_bp_pp_dg_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg + ov_pp_dg, data = RGR_un) # works
+ov_pp_dg_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg, data = RGR_un)
+ov_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg + ov_pp_bw_p, data = RGR_un)
+
+
+pb_bp_dg_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg, data = RGR_un) # works - positive effect
+ov_pb_bp_dg_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg + pb_bp_dg, data = RGR_un) # works
+pb_pp_dg_m <- betareg(Relative.Growth.Rate ~ pb_pp_dg, data = RGR_un) # works very well
+ov_pb_pp_dg_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg + pb_pp_dg, data = RGR_un) # works very well no warning
+
+pb_bp_dg_bw_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg + pb_bp_bw_p, data = RGR_un) # opposite effects
+ov_pb_bp_dg_bw_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg + pb_bp_dg + 
+                              ov_bp_bw_p + pb_bp_bw_p, data = RGR_un)# pberghei effects are opposite
+pb_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ pb_pp_dg + pb_pp_bw_p, data = RGR_un) # works
+ov_pb_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg + pb_pp_dg + 
+                              ov_pp_bw_p + pb_pp_bw_p, data = RGR_un)# all good
+
+
+pb_bp_pp_dg_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg + pb_pp_dg, data = RGR_un) # works all good
+
+# all degrees
+ov_pb_bp_pp_dg_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg + pb_pp_dg + 
+                              ov_bp_dg + ov_pp_dg, data = RGR_un)# ov degree has opposite effect
+# all betweenness and degres
+ov_pb_bp_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg + pb_pp_dg +
+                                 ov_bp_dg + ov_pp_dg + 
+                                 pb_bp_bw_p + pb_pp_bw_p + 
+                                 ov_bp_bw_p + ov_pp_bw_p, data = RGR_un) # overall bip hs opposite effects
+  
+
+
+## weighted
+
+ov_bp_dg_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w, data = RGR_w) #has positive effect
+ov_bp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + ov_bp_bw_w_p, data = RGR_w) #both have positive effect
+ov_bp_pp_dg_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + ov_pp_dg_w, data = RGR_w) # works:both have negative effect
+ov_bp_pp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + ov_pp_dg_w + 
+                              ov_bp_bw_w_p + ov_pp_bw_w_p, data = RGR_w)# pp bw has negative effect
+
+
+pb_bp_dg_w_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg_w, data = RGR_w) # works - positive effect
+ov_pb_bp_dg_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + pb_bp_dg_w, data = RGR_w) # both positive effects
+pb_pp_dg_w_m <- betareg(Relative.Growth.Rate ~ pb_pp_dg_w, data = RGR_w) # works very well
+ov_pb_pp_dg_w_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg_w + pb_pp_dg_w, data = RGR_w) # works very well no warning
+
+
+pb_bp_pp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg_w + pb_bp_bw_w_p + pb_pp_dg_w + pb_pp_bw_w_p, data = RGR_w)
+pb_bp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg_w + pb_bp_bw_w_p, data = RGR_w) # opposite effects
+ov_pb_bp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + pb_bp_dg_w + 
+                              ov_bp_bw_w_p + pb_bp_bw_w_p, data = RGR_w)# pberghei effects are opposite
+pb_pp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ pb_pp_dg_w + pb_pp_bw_w_p, data = RGR_w) # works
+ov_pb_pp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ ov_pp_dg_w + pb_pp_dg_w + 
+                              ov_pp_bw_w_p + pb_pp_bw_w_p, data = RGR_w)# all good
+ov_pb_bp_pp_dg_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + ov_pp_dg_w + pb_bp_dg_w + pb_pp_dg_w, data = RGR_w)
+ov_pb_bp_pp_dg_bw_w_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_w + ov_pp_dg_w + pb_bp_dg_w + pb_pp_dg_w + ov_bp_bw_w_p + ov_pp_bw_w + pb_bp_bw_w_p + pb_pp_bw_w_p, data = RGR_w)
+
+
+ov_bp_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ ov_bp_dg_p + ov_pp_dg + 
+                              ov_bp_bw_p + ov_pp_bw_p, data = RGR_un)# works
+
+pb_bp_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ pb_bp_dg_p + pb_pp_dg + 
+                              pb_bp_bw_p + pb_pp_bw_p, data = RGR_un)# pberghei bipartite had opposite effects
+
+pf_bp_pp_dg_bw_m <- betareg(Relative.Growth.Rate ~ pf_bp_dg_p + pf_pp_dg + 
+                              pf_bp_bw_p + pf_pp_bw_p, data = RGR_un)# pberghei bipartite had opposite effects
+
+
+# lower the AIC/BIC value, the better
+ov_ef <- ggeffect(pb_bp_pp_dg_bw_m, terms = c("ov_pp_dg"))
+  
+  ggplot(ov_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("ov_ef_pp_dg_bw.png")
+
+pb_ef <- ggeffect(pb_bp_pp_dg_bw_m, terms = c("pb_pp_dg"))
+
+ggplot(pb_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("pb_ef_pp.png")
+
+pf_ef <- ggeffect(pf_bp_pp_dg_bw_m, terms = c("pf_pp_dg"))
+
+ggplot(pf_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("pf_ef_pp.png")
+
+##### compute unweighted stats for full networks of overall, Pb and Pf
+
+# load full networks
+
+ov <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/df_concat_allhosts/cor/df_concat_allhosts_all_na.omit.RData")
+ov <-  ov[ov$permute_score==0,]
+
+pb <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/ERP004598/cor/ERP004598_all_na.omit.RData")
+pb <-  pb[pb$permute_score==0,]
+
+pf <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/DRP000987/cor/DRP000987_str_na.omit.RData")
+pf <-  pf[pf$permute_score==0,]
+
+# make unweighted igraphs for all
+ov_ig <- graph_from_data_frame(ov[,1:3], directed = F)
+
+ov_all_bw <- betweenness(ov_ig, v = V(ov_ig), directed = FALSE)
+ov_all_cl <- closeness(ov_ig, vids = V(ov_ig))
+ov_all_dg <- degree(ov_ig, v = V(ov_ig))
+
+pb_ig <- graph_from_data_frame(pb[,1:3], directed = F)
+
+pb_all_bw <- betweenness(pb_ig, v = V(pb_ig), directed = FALSE)
+pb_all_cl <- closeness(pb_ig, vids = V(pb_ig))
+pb_all_dg <- degree(pb_ig, v = V(pb_ig))
+
+pf_ig <- graph_from_data_frame(pf[,1:3], directed = F)
+
+pf_all_bw <- betweenness(pf_ig, v = V(pf_ig), directed = FALSE)
+pf_all_cl <- closeness(pf_ig, vids = V(pf_ig))
+pf_all_dg <- degree(pf_ig, v = V(pf_ig))
+
+save.image("Unweighted_full_network_stats_ov_pb_pf.RData")

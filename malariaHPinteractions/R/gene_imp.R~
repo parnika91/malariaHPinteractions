@@ -447,5 +447,25 @@ fitdistrplus::descdist(as.numeric(na.omit(df$Relative.Growth.Rate)))
 
 
 require(betareg)
-df <- df[which(df$Relative.Growth.Rate<=1),]
+df <- df[which(df$Relative.Growth.Rate <= 1),]
 mod1 <- betareg(Relative.Growth.Rate ~  n*bw, data = na.omit(df))
+
+redblue <- hcl(c(0, 260), 90, 40)
+plot(yield ~ temp, data = GasolineYield, type = "n",
+  ylab = "Proportion of crude oil converted to gasoline",
+  xlab = "Temperature at which all gasoline has vaporized",
+  main = "Prater's gasoline yield data")
+points(yield ~ temp, data = GasolineYield, cex = 1.75, 
+  pch = 19, col = rev(gray.colors(10))[as.numeric(batch)])
+points(yield ~ temp, data = GasolineYield, cex = 1.75)
+legend("topleft", as.character(1:10), title = "Batch",
+  col = rev(gray.colors(10)), pch = 19, bty = "n")
+legend("topleft", as.character(1:10), title = "Batch", pch = 1, bty = "n")
+lines(150:500, predict(gy_logit, 
+  newdata = data.frame(temp = 150:500, batch = "6")),
+  col = redblue[2], lwd = 2, lty = 2)
+lines(150:500, predict(gy_loglog, 
+  newdata = data.frame(temp = 150:500, batch = "6")),
+  col = redblue[1], lwd = 2)
+legend("bottomright", c("log-log", "logit"),
+  col = redblue, lty = 1:2, lwd = 2, bty = "n")
