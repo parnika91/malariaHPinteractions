@@ -475,7 +475,7 @@ colnames(para)[2] <- "gene"
 colnames(para_pf)[2] <- "Gene_ID"
 
 RGR_OG <- inner_join(Barseq20200228, para, by.x="gene", by.y= "Pb_g")
-Pfal_ess_ortho <- inner_join(Pfal_ess, para)
+Pfal_ess_ortho <- inner_join(Pfal_ess, para_pf)
 RGR_un <- inner_join(pb_pb_pf.full_un, RGR_OG)
 RGR_Ov_Pb_Pf <- inner_join(RGR_j, Pfal_ess_ortho, b = "Orthogroup")
 
@@ -543,3 +543,197 @@ pf_pp_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ pf_pp_dg + pf_pp_bw_p) #
 ov_all_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ ov_all_dg + ov_all_bw_p + ov_all_cl_p) # bw not sig
 pb_all_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ pb_all_dg_p.x + pb_all_bw_p.x + pb_all_cl_p.x) # bw not sig
 pf_all_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ pf_all_dg_p.x + pf_all_bw_p.x + pf_all_cl_p.x) # horrible models
+
+
+pb_all_ef <- ggeffect(pb_all_m, terms = c("pb_all_dg_p.x"))
+
+ggplot(pb_all_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("pb_all_ef.png")
+
+pb_pp_ef <- ggeffect(pb_pp_m, terms = c("pb_pp_dg"))
+
+ggplot(pb_pp_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("pb_pp_ef.png")
+
+ov_all_ef <- ggeffect(ov_all_m, terms = c("ov_all_dg_p"))
+
+ggplot(ov_all_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("ov_all_ef.png")
+
+ov_pp_ef <- ggeffect(ov_pp_m, terms = c("ov_pp_dg"))
+
+ggplot(ov_pp_ef, aes(x, predicted)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+ggsave("ov_pp_ef.png")
+
+# new stats for bipartite network: clustering coefficient, density, size
+bip <- loadRData("df_concat_allhosts/cor/df_concat_allhosts_all_bipartite.RData")
+
+bip_ig <- graph_from_data_frame(ov, directed = F)
+
+# size is 8 million
+# clustering coef == transitivity
+bip_ig_tr <- transitivity(bip_ig, type = "global", weights = NULL)
+
+# density
+bip_ig_dens <- edge_density(bip_ig, loops = FALSE)
+
+# new stats for full nw ov, pb, pf : eigen centrality, k-shells, expected force
+# 1. Ov
+
+ov <- loadRData("df_concat_allhosts/cor/df_concat_allhosts_all_na.omit.RData") %>%
+  filter(permute_score == 0)
+
+ov_ig <- graph_from_data_frame(ov, directed = F)
+
+# a. eigen centrality
+
+ov_ig_ec <- eigen_centrality(ov_ig, directed = FALSE)
+
+# b. k-shells or k-core
+ov_ig_kc <- coreness(ov_ig, mode = c("all"))
+
+ov_ig_ec_p <- ov_ig_ec$vector[grep(pattern = "p_OG", names(ov_ig_ec$vector))]
+ov_ig_ec_df <- as.data.frame(ov_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+ov_ig_kc_p <- ov_ig_kc[grep(pattern = "p_OG", names(ov_ig_kc))]
+ov_ig_kc_df <- as.data.frame(ov_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+# c. expected force
+
+
+# 2. Pb
+pb <- loadRData("ERP004598/cor/ERP004598_all_na.omit.RData") %>%
+  filter(permute_score == 0)
+
+pb_ig <- graph_from_data_frame(pb, directed = F)
+
+# a. eigen centrality
+
+pb_ig_ec <- eigen_centrality(pb_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pb_ig_kc <- coreness(pb_ig, mode = c("all"))
+
+pb_ig_ec_p <- pb_ig_ec$vector[grep(pattern = "p_OG", names(pb_ig_ec$vector))]
+pb_ig_ec_df <- as.data.frame(pb_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pb_ig_kc_p <- pb_ig_kc[grep(pattern = "p_OG", names(pb_ig_kc))]
+pb_ig_kc_df <- as.data.frame(pb_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+
+# c. expected force
+
+# 3. pf
+pf <- loadRData("DRP000987/cor/DRP000987_str_na.omit.RData") %>%
+  filter(permute_score == 0)
+
+pf_ig <- graph_from_data_frame(pf, directed = F)
+
+# a. eigen centrality
+
+pf_ig_ec <- eigen_centrality(pf_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pf_ig_kc <- coreness(pf_ig, mode = c("all"))
+
+# c. expected force
+
+pf_ig_ec_p <- pf_ig_ec$vector[grep(pattern = "p_OG", names(pf_ig_ec$vector))]
+pf_ig_ec_df <- as.data.frame(pf_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pf_ig_kc_p <- pf_ig_kc[grep(pattern = "p_OG", names(pf_ig_kc))]
+pf_ig_kc_df <- as.data.frame(pf_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+join <-plyr::join_all(list(ov_ig_ec_df, ov_ig_kc_df, 
+                             pb_ig_ec_df, pb_ig_kc_df,
+                             pf_ig_ec_df, pf_ig_kc_df), by = "Orthogroup", type = "full")
+join[is.na(join)] <- 0
+
+RGR_MIS <- inner_join(join, RGR_j, by = "Orthogroup")
+
+
+# new stats for para nw ov, pb, pf : eigen centrality, k-shells, expected force
+#1. Ov
+
+ov_p <- loadRData("df_concat_allhosts/df_concat_allhosts_all_para.RData")
+ov_ig_p <- graph_from_data_frame(ov_p, directed = F)
+
+# a. eig_en centrality
+
+ov_ig_p_ec <- eigen_centrality(ov_ig_p, directed = FALSE)
+ov_ig_p_ec <- ov_ig_p_ec$vector
+
+# b. k-shells or k-core
+ov_ig_p_kc <- coreness(ov_ig_p, mode = c("all"))
+
+ov_ig_p_ec_p <- ov_ig_p_ec[grep(pattern = "p_OG", names(ov_ig_p_ec))]
+ov_ig_p_ec_df <- as.data.frame(ov_ig_p_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+ov_ig_p_kc_p <- ov_ig_p_kc[grep(pattern = "p_OG", names(ov_ig_p_kc))]
+ov_ig_p_kc_df <- as.data.frame(ov_ig_p_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+# 2. Pb
+pb_p <- loadRData("ERP004598/cor/ERP004598_all_para_edges.RData")
+
+pb_ig_p <- graph_from_data_frame(pb_p, directed = F)
+
+# a. eigen centrality
+
+pb_ig_p_ec <- eigen_centrality(pb_ig_p, directed = FALSE)
+pb_ig_p_ec <- pb_ig_p_ec$vector
+
+# b. k-shells or k-core
+pb_ig_p_kc <- coreness(pb_ig_p, mode = c("all"))
+
+pb_ig_p_ec_p <- pb_ig_p_ec[grep(pattern = "p_OG", names(pb_ig_p_ec))]
+pb_ig_p_ec_df <- as.data.frame(pb_ig_p_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pb_ig_p_kc_p <- pb_ig_p_kc[grep(pattern = "p_OG", names(pb_ig_p_kc))]
+pb_ig_p_kc_df <- as.data.frame(pb_ig_p_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+# 3. pf
+pf_p <- loadRData("DRP000987/cor/DRP000987_str_para.RData")
+
+pf_ig_p <- graph_from_data_frame(pf_p, directed = F)
+
+# a. eigen centrality
+
+pf_ig_p_ec <- eigen_centrality(pf_ig_p, directed = FALSE)
+pf_ig_p_ec <- pf_ig_p_ec$vector
+
+# b. k-shells or k-core
+pf_ig_p_kc <- coreness(pf_ig_p, mode = c("all"))
+
+pf_ig_p_ec_p <- pf_ig_p_ec[grep(pattern = "p_OG", names(pf_ig_p_ec))]
+pf_ig_p_ec_df <- as.data.frame(pf_ig_p_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pf_ig_p_kc_p <- pf_ig_p_kc[grep(pattern = "p_OG", names(pf_ig_p_kc))]
+pf_ig_p_kc_df <- as.data.frame(pf_ig_p_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+
+join_p <-plyr::join_all(list(ov_ig_p_ec_df, ov_ig_p_kc_df, 
+                             pb_ig_p_ec_df, pb_ig_p_kc_df,
+                             pf_ig_p_ec_df, pf_ig_p_kc_df), by = "Orthogroup", type = "full")
+join_p[is.na(join_p)] <- 0
+
+RGR_MIS <- inner_join(join_p, RGR_Ov_Pb_Pf, by = "Orthogroup")
