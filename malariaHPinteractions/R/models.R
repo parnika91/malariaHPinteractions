@@ -737,3 +737,110 @@ join_p <-plyr::join_all(list(ov_ig_p_ec_df, ov_ig_p_kc_df,
 join_p[is.na(join_p)] <- 0
 
 RGR_MIS <- inner_join(join_p, RGR_Ov_Pb_Pf, by = "Orthogroup")
+
+# cleaning up RGR_MIS
+n <- grep(pattern = ".x", colnames(RGR_MIS))
+RGR_MIS <- RGR_MIS[,c(-n)]
+n <- c(54,55,56,57,58,59,60,61,62,63,64,39,44,45,48)
+RGR_MIS <- RGR_MIS[,c(-n)]
+
+colnames(RGR_MIS)[2:7] <- c("ov_all_ec", "ov_all_kc", "pb_all_ec", "pb_all_c", "pf_all_ec", "pf_all_kc")
+colnames(RGR_MIS)[8:13] <- c("ov_pp_ec", "ov_pp_kc", "pb_pp_ec", "pb_pp_kc", "pf_pp_ec", "pf_pp_kc")
+colnames(RGR_MIS)[14:15] <- c("ov_bp_cl","ov_pp_cl")
+colnames(RGR_MIS)[16:19] <- c("pb_bp_cl", "pb_pp_cl", "pf_bp_cl", "pf_pp_cl")
+colnames(RGR_MIS)[20:22] <- c("ov_bp_bw", "pb_bp_bw", "pb_pp_bw")
+colnames(RGR_MIS)[23:24] <- c("ov_bp_dg", "pb_bp_dg")
+colnames(RGR_MIS)[27:30] <- c("pf_bp_dg", "pf_pp_bw", "pf_bp_bw", "ov_pp_bw")
+colnames(RGR_MIS)[32:37] <- c("pb_all_bw", "pb_all_cl", "pb_all_dg", "pf_all_bw", "pf_all_cl", "pf_all_dg")
+
+RGR_MIS_cleaned <- RGR_MIS
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
+join_ov_full <-plyr::join_all(list(ov_all_bw_df, ov_all_cl_df, 
+                             ov_all_dg_df), by = "Orthogroup", type = "full")
+join_ov_full[is.na(join_ov_full)] <- 0
+
+RGR_MIS_cleaned <- inner_join(RGR_MIS_cleaned, join_ov_full)
+#models
+
+ov_pp_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ ov_pp_dg + ov_pp_bw_p) # awesome
+
+
+# ERP106451 - full nw
+
+pfE <- loadRData("ERP106451/cor/ERP106451_int_na.omit.RData") %>%
+  filter(permute_score == 0)
+
+pfE_ig <- graph_from_data_frame(pfE, directed = F)
+
+# a. eigen centrality
+
+pfE_ig_ec <- eigen_centrality(pfE_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pfE_ig_kc <- coreness(pfE_ig, mode = c("all"))
+# c. degree
+pfE_ig_dg <- degree(pfE_ig, v = V(pfE_ig))
+# d. betweenness
+pfE_ig_bw <- betweenness(pfE_ig, directed = FALSE, v = V(pfE_ig))
+# e. closeness
+pfE_ig_cl <- closeness(pfE_ig, vids = V(pfE_ig))
+
+pfE_ig_dg_p <- pfE_ig_dg[grep(pattern = "p_OG", names(pfE_ig_dg))]
+pfE_ig_dg_df <- as.data.frame(pfE_ig_dg_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_ig_bw_p <- pfE_ig_bw[grep(pattern = "p_OG", names(pfE_ig_bw))]
+pfE_ig_bw_df <- as.data.frame(pfE_ig_bw_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_ig_cl_p <- pfE_ig_cl[grep(pattern = "p_OG", names(pfE_ig_cl))]
+pfE_ig_cl_df <- as.data.frame(pfE_ig_cl_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_ig_ec_p <- pfE_ig_ec$vector[grep(pattern = "p_OG", names(pfE_ig_ec$vector))]
+pfE_ig_ec_df <- as.data.frame(pfE_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_ig_kc_p <- pfE_ig_kc[grep(pattern = "p_OG", names(pfE_ig_kc))]
+pfE_ig_kc_df <- as.data.frame(pfE_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+# ERP106451 - para nw
+
+pfE_p <- loadRData("ERP106451/cor/ERP106451_int_para.RData")
+
+pfE_p_ig <- graph_from_data_frame(pfE_p, directed = F)
+
+# a. ep_igen centrality
+
+pfE_p_ig_ec <- eigen_centrality(pfE_p_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pfE_p_ig_kc <- coreness(pfE_p_ig, mode = c("all"))
+# c. degree
+pfE_p_ig_dg <- degree(pfE_p_ig, v = V(pfE_p_ig))
+# d. betweenness
+pfE_p_ig_bw <- betweenness(pfE_p_ig, directed = FALSE, v = V(pfE_p_ig))
+# e. closeness
+pfE_p_ig_cl <- closeness(pfE_p_ig, vids = V(pfE_p_ig))
+
+pfE_p_ig_dg_p <- pfE_p_ig_dg[grep(pattern = "p_OG", names(pfE_p_ig_dg))]
+pfE_p_ig_dg_df <- as.data.frame(pfE_p_ig_dg_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_p_ig_bw_p <- pfE_p_ig_bw[grep(pattern = "p_OG", names(pfE_p_ig_bw))]
+pfE_p_ig_bw_df <- as.data.frame(pfE_p_ig_bw_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_p_ig_cl_p <- pfE_p_ig_cl[grep(pattern = "p_OG", names(pfE_p_ig_cl))]
+pfE_p_ig_cl_df <- as.data.frame(pfE_p_ig_cl_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_p_ig_ec_p <- pfE_p_ig_ec$vector[grep(pattern = "p_OG", names(pfE_p_ig_ec$vector))]
+pfE_p_ig_ec_df <- as.data.frame(pfE_p_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_p_ig_kc_p <- pfE_p_ig_kc[grep(pattern = "p_OG", names(pfE_p_ig_kc))]
+pfE_p_ig_kc_df <- as.data.frame(pfE_p_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
