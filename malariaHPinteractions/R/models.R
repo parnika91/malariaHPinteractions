@@ -744,7 +744,7 @@ RGR_MIS <- RGR_MIS[,c(-n)]
 n <- c(54,55,56,57,58,59,60,61,62,63,64,39,44,45,48)
 RGR_MIS <- RGR_MIS[,c(-n)]
 
-colnames(RGR_MIS)[2:7] <- c("ov_all_ec", "ov_all_kc", "pb_all_ec", "pb_all_c", "pf_all_ec", "pf_all_kc")
+colnames(RGR_MIS)[2:7] <- c("ov_all_ec", "ov_all_kc", "pb_all_ec", "pb_all_kc", "pf_all_ec", "pf_all_kc")
 colnames(RGR_MIS)[8:13] <- c("ov_pp_ec", "ov_pp_kc", "pb_pp_ec", "pb_pp_kc", "pf_pp_ec", "pf_pp_kc")
 colnames(RGR_MIS)[14:15] <- c("ov_bp_cl","ov_pp_cl")
 colnames(RGR_MIS)[16:19] <- c("pb_bp_cl", "pb_pp_cl", "pf_bp_cl", "pf_pp_cl")
@@ -761,9 +761,6 @@ join_ov_full <-plyr::join_all(list(ov_all_bw_df, ov_all_cl_df,
 join_ov_full[is.na(join_ov_full)] <- 0
 
 RGR_MIS_cleaned <- inner_join(RGR_MIS_cleaned, join_ov_full)
-#models
-
-ov_pp_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ ov_pp_dg + ov_pp_bw_p) # awesome
 
 
 # ERP106451 - full nw
@@ -806,6 +803,12 @@ pfE_ig_kc_p <- pfE_ig_kc[grep(pattern = "p_OG", names(pfE_ig_kc))]
 pfE_ig_kc_df <- as.data.frame(pfE_ig_kc_p) %>% 
   tibble::rownames_to_column("Orthogroup")
 
+join_pfE <-plyr::join_all(list(pfE_ig_dg_df,pfE_ig_bw_df, pfE_ig_cl_df,
+                                 pfE_ig_ec_df, pfE_ig_kc_df), by = "Orthogroup", type = "full")
+join_pfE[is.na(join_pfE)] <- 0
+RGR_MIS_cleaned <- inner_join(join_pfE, RGR_MIS_cleaned)
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
 # ERP106451 - para nw
 
 pfE_p <- loadRData("ERP106451/cor/ERP106451_int_para.RData")
@@ -844,3 +847,148 @@ pfE_p_ig_ec_df <- as.data.frame(pfE_p_ig_ec_p) %>%
 pfE_p_ig_kc_p <- pfE_p_ig_kc[grep(pattern = "p_OG", names(pfE_p_ig_kc))]
 pfE_p_ig_kc_df <- as.data.frame(pfE_p_ig_kc_p) %>% 
   tibble::rownames_to_column("Orthogroup")
+
+join_pfE_p <-plyr::join_all(list(pfE_p_ig_dg_df,pfE_p_ig_bw_df, pfE_p_ig_cl_df,
+                                 pfE_p_ig_ec_df, pfE_p_ig_kc_df), by = "Orthogroup", type = "full")
+join_pfE_p[is.na(join_pfE_p)] <- 0
+
+RGR_MIS_cleaned <- inner_join(join_pfE_p, RGR_MIS_cleaned)
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
+colnames(RGR_MIS_cleaned)[2:6] <- c("pfE_pp_dg", "pfE_pp_bw", "pfE_pp_cl", 
+                                     "pfE_pp_ec", "pfE_pp_kc")
+
+# ERP106451 - bip
+
+
+pfE_bp <- loadRData("ERP106451/cor/ERP106451_int_bipartite.RData")
+
+pfE_bp_ig <- graph_from_data_frame(pfE_bp, directed = F)
+
+# a. ebp_igen centrality
+
+pfE_bp_ig_ec <- eigen_centrality(pfE_bp_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pfE_bp_ig_kc <- coreness(pfE_bp_ig, mode = c("all"))
+# c. degree
+pfE_bp_ig_dg <- degree(pfE_bp_ig, v = V(pfE_bp_ig))
+# d. betweenness
+pfE_bp_ig_bw <- betweenness(pfE_bp_ig, directed = FALSE, v = V(pfE_bp_ig))
+# e. closeness
+pfE_bp_ig_cl <- closeness(pfE_bp_ig, vids = V(pfE_bp_ig))
+
+pfE_bp_ig_dg_p <- pfE_bp_ig_dg[grep(pattern = "p_OG", names(pfE_bp_ig_dg))]
+pfE_bp_ig_dg_df <- as.data.frame(pfE_bp_ig_dg_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_bp_ig_bw_p <- pfE_bp_ig_bw[grep(pattern = "p_OG", names(pfE_bp_ig_bw))]
+pfE_bp_ig_bw_df <- as.data.frame(pfE_bp_ig_bw_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_bp_ig_cl_p <- pfE_bp_ig_cl[grep(pattern = "p_OG", names(pfE_bp_ig_cl))]
+pfE_bp_ig_cl_df <- as.data.frame(pfE_bp_ig_cl_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_bp_ig_ec_p <- pfE_bp_ig_ec$vector[grep(pattern = "p_OG", names(pfE_bp_ig_ec$vector))]
+pfE_bp_ig_ec_df <- as.data.frame(pfE_bp_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pfE_bp_ig_kc_p <- pfE_bp_ig_kc[grep(pattern = "p_OG", names(pfE_bp_ig_kc))]
+pfE_bp_ig_kc_df <- as.data.frame(pfE_bp_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+join_pfE_bp <-plyr::join_all(list(pfE_bp_ig_dg_df,pfE_bp_ig_bw_df, pfE_bp_ig_cl_df,
+                               pfE_bp_ig_ec_df, pfE_bp_ig_kc_df), by = "Orthogroup", type = "full")
+join_pfE_bp[is.na(join_pfE_bp)] <- 0
+RGR_MIS_cleaned <- inner_join(join_pfE_bp, RGR_MIS_cleaned)
+save(RGR_MIS_cleaned, file = "Unwebp_ighted_RGR_MIS_cleaned.RData")
+
+
+# new stats forbip nw ov, pb, pf : eigen centrality, k-shells, expected force
+# 1. Ov
+
+ov_bp <- loadRData("df_concat_allhosts/cor/df_concat_allhosts_all_bipartite.RData")
+
+ov_bp_ig <- graph_from_data_frame(ov_bp, directed = F)
+
+# a. eigen centrality
+
+ov_bp_ig_ec <- eigen_centrality(ov_bp_ig, directed = FALSE)
+
+# b. k-shells or k-core
+ov_bp_ig_kc <- coreness(ov_bp_ig, mode = c("all"))
+
+ov_bp_ig_ec_p <- ov_bp_ig_ec$vector[grep(pattern = "p_OG", names(ov_bp_ig_ec$vector))]
+ov_bp_ig_ec_df <- as.data.frame(ov_bp_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+ov_bp_ig_kc_p <- ov_bp_ig_kc[grep(pattern = "p_OG", names(ov_bp_ig_kc))]
+ov_bp_ig_kc_df <- as.data.frame(ov_bp_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+# c. expected force
+
+
+# 2. Pb
+pb_bp <- loadRData("ERP004598/cor/ERP004598_all_bipartite.RData")
+
+pb_bp_ig <- graph_from_data_frame(pb_bp, directed = F)
+
+# a. ebp_igen centrality
+
+pb_bp_ig_ec <- eigen_centrality(pb_bp_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pb_bp_ig_kc <- coreness(pb_bp_ig, mode = c("all"))
+
+pb_bp_ig_ec_p <- pb_bp_ig_ec$vector[grep(pattern = "p_OG", names(pb_bp_ig_ec$vector))]
+pb_bp_ig_ec_df <- as.data.frame(pb_bp_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pb_bp_ig_kc_p <- pb_bp_ig_kc[grep(pattern = "p_OG", names(pb_bp_ig_kc))]
+pb_bp_ig_kc_df <- as.data.frame(pb_bp_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+
+# c. expected force
+
+# 3. pf
+pf_bp <- loadRData("DRP000987/cor/DRP000987_str_bipartite.RData")
+
+pf_bp_ig <- graph_from_data_frame(pf_bp, directed = F)
+
+# a. ebp_igen centrality
+
+pf_bp_ig_ec <- eigen_centrality(pf_bp_ig, directed = FALSE)
+
+# b. k-shells or k-core
+pf_bp_ig_kc <- coreness(pf_bp_ig, mode = c("all"))
+
+# c. expected force
+
+pf_bp_ig_ec_p <- pf_bp_ig_ec$vector[grep(pattern = "p_OG", names(pf_bp_ig_ec$vector))]
+pf_bp_ig_ec_df <- as.data.frame(pf_bp_ig_ec_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+pf_bp_ig_kc_p <- pf_bp_ig_kc[grep(pattern = "p_OG", names(pf_bp_ig_kc))]
+pf_bp_ig_kc_df <- as.data.frame(pf_bp_ig_kc_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+join_bp <-plyr::join_all(list(ov_bp_ig_ec_df, ov_bp_ig_kc_df, 
+                           pb_bp_ig_ec_df, pb_bp_ig_kc_df,
+                           pf_bp_ig_ec_df, pf_bp_ig_kc_df), by = "Orthogroup", type = "full")
+join_bp[is.na(join_bp)] <- 0
+
+RGR_MIS_cleaned <- inner_join(join_bp, RGR_MIS_cleaned, by = "Orthogroup")
+
+colnames(RGR_MIS_cleaned)[2:17] <- c("ov_bp_ec", "ov_bp_kc",
+                               "pb_bp_ec", "pb_bp_kc", "pf_bp_ec",
+                               "pf_bp_kc", "pfE_bp_dg", "pfE_bp_bw",
+                               "pfE_bp_cl", "pfE_bp_ec", "pfE_bp_kc",
+                               "pfE_all_dg", "pfE_all_bw", "pfE_all_cl",
+                               "pfE_all_ec","pfE_all_kc")
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+#models
+
+ov_pp_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ ov_pp_dg + ov_pp_bw_p) # awesome
