@@ -193,3 +193,121 @@ pfE_all_dg_bw_m <- betareg(data = RGR_MIS_cleaned, RGR ~ pfE_all_dg + pfE_all_bw
 pfE_all_dg_ec_m <- betareg(data = RGR_MIS_cleaned, RGR ~ pfE_all_dg + pfE_all_ec)
 
 pfE_all_m <- betareg(data = RGR_MIS_cleaned, RGR ~ pfE_all_dg + pfE_all_bw + pfE_all_ec)
+
+
+# MIS models
+
+# ov models
+ov_pp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_dg)
+ov_pp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_ec)
+ov_pp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_bw)
+
+ov_pp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_dg + ov_pp_bw)
+ov_pp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_dg + ov_pp_ec)
+
+ov_pp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_pp_dg + ov_pp_bw + ov_pp_ec)
+
+ov_bp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_dg)
+ov_bp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_ec)
+ov_bp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_bw)
+
+ov_bp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_dg + ov_bp_bw)
+ov_bp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_dg + ov_bp_ec)
+
+ov_bp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_bp_dg + ov_bp_bw + ov_bp_ec)
+
+ov_all_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_dg)
+ov_all_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_ec)
+ov_all_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_bw)
+
+ov_all_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_dg + ov_all_bw)
+ov_all_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_dg + ov_all_ec)
+
+ov_all_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ ov_all_dg + ov_all_bw + ov_all_ec)
+
+# pb models
+
+pb_pp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_dg)
+pb_pp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_ec)
+pb_pp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_bw)
+
+pb_pp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_dg + pb_pp_bw)
+pb_pp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_dg + pb_pp_ec)
+
+pb_pp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_pp_dg + pb_pp_bw + pb_pp_ec)
+
+pb_bp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_dg)
+pb_bp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_ec)
+pb_bp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_bw)
+
+pb_bp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_dg + pb_bp_bw)
+pb_bp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_dg + pb_bp_ec)
+
+pb_bp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_bp_dg + pb_bp_bw + pb_bp_ec)
+
+pb_all_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_dg)
+pb_all_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_ec)
+pb_all_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_bw)
+
+pb_all_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_dg + pb_all_bw)
+pb_all_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_dg + pb_all_ec)
+
+pb_all_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pb_all_dg + pb_all_bw + pb_all_ec)
+
+# pf models
+
+pf_pp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_dg)
+pf_pp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_ec)
+pf_pp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_bw)
+
+pf_pp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_dg + pf_pp_bw)
+pf_pp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_dg + pf_pp_ec)
+
+pf_pp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_pp_dg + pf_pp_bw + pf_pp_ec)
+
+pf_bp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_dg)
+pf_bp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_ec)
+pf_bp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_bw)
+
+pf_bp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_dg + pf_bp_bw)
+pf_bp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_dg + pf_bp_ec)
+
+pf_bp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_bp_dg + pf_bp_bw + pf_bp_ec)
+
+pf_all_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_dg)
+pf_all_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_ec)
+pf_all_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_bw)
+
+pf_all_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_dg + pf_all_bw)
+pf_all_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_dg + pf_all_ec)
+
+pf_all_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pf_all_dg + pf_all_bw + pf_all_ec)
+
+# pfE models
+
+pfE_pp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_dg)
+pfE_pp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_ec)
+pfE_pp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_bw)
+
+pfE_pp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_dg + pfE_pp_bw)
+pfE_pp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_dg + pfE_pp_ec)
+
+pfE_pp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_pp_dg + pfE_pp_bw + pfE_pp_ec)
+
+pfE_bp_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_dg)
+pfE_bp_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_ec)
+pfE_bp_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_bw)
+
+pfE_bp_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_dg + pfE_bp_bw)
+pfE_bp_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_dg + pfE_bp_ec)
+
+pfE_bp_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_bp_dg + pfE_bp_bw + pfE_bp_ec)
+
+pfE_all_dg_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_dg)
+pfE_all_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_ec)
+pfE_all_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_bw)
+
+pfE_all_dg_bw_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_dg + pfE_all_bw)
+pfE_all_dg_ec_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_dg + pfE_all_ec)
+
+pfE_all_mis <- betareg(data = RGR_MIS_cleaned, MIS ~ pfE_all_dg + pfE_all_bw + pfE_all_ec)
