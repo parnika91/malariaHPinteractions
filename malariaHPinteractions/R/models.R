@@ -756,6 +756,20 @@ colnames(RGR_MIS)[32:37] <- c("pb_all_bw", "pb_all_cl", "pb_all_dg", "pf_all_bw"
 RGR_MIS_cleaned <- RGR_MIS
 save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
 
+load("Overal_....RData")
+
+ov_all_bw_p <- ov_all_bw[grep(pattern = "p_OG", names(ov_all_bw))]
+ov_all_bw_df <- as.data.frame(ov_all_bw_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+  ov_all_dg_p <- ov_all_bw[grep(pattern = "p_OG", names(ov_all_dg))]
+ov_all_dg_df <- as.data.frame(ov_all_dg_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
+  ov_all_cl_p <- ov_all_cl[grep(pattern = "p_OG", names(ov_all_cl))]
+ov_all_cl_df <- as.data.frame(ov_all_cl_p) %>% 
+  tibble::rownames_to_column("Orthogroup")
+
 join_ov_full <-plyr::join_all(list(ov_all_bw_df, ov_all_cl_df, 
                              ov_all_dg_df), by = "Orthogroup", type = "full")
 join_ov_full[is.na(join_ov_full)] <- 0
@@ -992,3 +1006,48 @@ save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
 #models
 
 ov_pp_m <- betareg(data = RGR_j, Relative.Growth.Rate ~ ov_pp_dg + ov_pp_bw_p) # awesome
+
+colnames(rgr_mis_allgenes)[2:29] <- c("ov_all_ec",
+  "ov_all_kc", "pb_all_ec",
+  "pb_all_kc", "pf_all_ec",
+  "pf_all_kc", "ov_pp_ec",
+  "ov_pp_kc","pb_pp_ec",
+  "pb_pp_kc", "pf_pp_ec",
+  "pf_pp_kc", "ov_bp_cl", 
+  "ov_pp_cl", "pb_bp_cl",
+  "pb_pp_cl", "pf_bp_cl", 
+  "pf_pp_cl", "ov_bp_bw",
+  "pb_bp_bw", "pb_pp_bw",
+  "ov_bp_dg", "pb_bp_dg",
+  "pb_pp_dg", "pf_pp_dg",
+  "pf_bp_dg", "pf_pp_bw",
+  "pf_bp_bw")
+
+rgr_mis_allgenes <- subset(rgr_mis_allgenes, 
+  select = -c(grep(pattern = ".x", colnames(rgr_mis_allgenes))))
+
+rgr_mis_allgenes <- subset(rgr_mis_allgenes, 
+  select = -c("current_version_ID.y", "gene_name.y",
+  "gene_product.y", "lower.y", "upper.y", "timesAnalysed.y", "Confidence.y",
+  "Chr", "Product.description", "Gene.Identification", 
+  grep(pattern = "X.", colnames(rgr_mis_allgenes)), "Note.", "TTAA.density.in.CDS", "tramscript.length",
+  "geneStart", "endStart", "gene.strand", "Ortholog.count"))
+
+rgr_mis_allgenes <- subset(rgr_mis_allgenes, 
+  select = -c(current_version_ID.y, gene_name.y,
+  gene_product.y, lower.y, upper.y, timesAnalysed.y, Confidence.y,
+  Chr, Product.description, Gene.Identification, 
+  grep(pattern = "X.", colnames(rgr_mis_allgenes)), Note., TTAA.density.in.CDS, transcript.length,
+  geneStart, endStart, gene.strand, Ortholog.count, Paralog.count))
+
+# trn_data[, !(colnames(trn_data) %in% c("Rye flour","Barley products"))]
+
+colnames(rgr_mis_allgenes)[48:71] <- c("pfE_all_dg",
+  "pfE_all_bw", "pfE_all_cl", "pfE_all_ec",
+  "pfE_all_kc", "pfE_bp_dg", "pfE_bp_bw",
+  "pfE_bp_cl", "pfE_bp_ec", "pfE_bp_kc",
+  "ov_bp_ec", "ov_bp_kc", "pb_bp_ec", 
+  "pb_bp_kc", "pf_bp_ec", "pf_bp_kc",
+  "ov_all_bw", "ov_all_cl", "ov_all_dg",
+  "pfE_pp_dg", "pfE_pp_bw", "pfE_pp_cl",
+  "pfE_pp_ec", "pfE_pp_kc")

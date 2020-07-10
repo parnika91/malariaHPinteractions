@@ -5,7 +5,7 @@ library(lrtest)
 library(fitdistrplus)
 
 load("~/Documents/Data/overall_bipartite_with_6_datasets.RData")
-Barseq20200228 <- read.csv("~/Downloads/Barseq20200305.csv", stringsAsFactors=FALSE)
+Barseq20200228 <- read.csv("~/Downloads/Barseq20200228.csv", stringsAsFactors=FALSE)
 parasite_orthogroups <- read.delim("~/Documents/Data/parasite_orthogroups.txt", stringsAsFactors=FALSE)
 
 overall_0.9 <- overall[abs(overall$cor) >= 0.95,]
@@ -65,13 +65,13 @@ write.table(j, "host_para_overall0.95cor_interactions.txt", sep = '\t', row.name
 i.p.agg <- i.p %>% count(Orthogroup, gene_id)
 h <- merge(i.p.agg, Barseq20200228, by.x = "gene_id", by.y = "gene")
 
-phenotype <-c("Essential","Dispensable", "Fast", "Insufficient data", "Slow")
+phenotype.y <-c("Essential","Dispensable", "Fast", "Insufficient data", "Slow")
 color.codes<-as.character(c("#3399FF", "#FF00F0", "#Fd1F65",
                             "#FFF000", "#5efa0b00"))
 color.names<-c("blue", "purple", "pink", "yellow", "green")
-df2=data.frame(phenotype, color.codes, color.names); df2
+df2=data.frame(phenotype.y, color.codes, color.names); df2
 
-df <- left_join(h,df2); df
+df <- left_join(rgr_mis_allgenes_clean,df2); df
 # v <- rep("#FF00F0", 15)
 # v[14] <- "Fd1F65"
 # 
@@ -83,14 +83,14 @@ df <- left_join(h,df2); df
 # 
 # df <- df[,c(1,2,7,11,12,13)]
 
-ggplot(data=df, aes(x=n, y=Relative.Growth.Rate, colour = phenotype))+
+ggplot(data=df, aes(x=pb_pp_ec, y=RGR, colour = phenotype.y))+
   geom_point(alpha = 0.8) +
   scale_colour_manual(values=unique(as.character(df$color.codes))) +
   theme_bw() + 
-  ggtitle("Relative growth rate of low and high degree nodes") +
-  xlab("Node (gene) degree") + 
+  ggtitle("Relative growth rate vs eigen centrality") +
+  xlab("Eigenvector centrality") + 
   ylab("Relative Growth Rate")
-ggsave("RGR_vs_degree_SameSize_para_para.png")
+ggsave("RGR_vs_ec_pb_pp_ec.png")
 
 n_ess <- df[which(df$phenotype == "Essential"), "n"]
 n_dis <- df[which(df$phenotype == "Dispensable"), "n"]

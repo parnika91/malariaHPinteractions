@@ -24,6 +24,7 @@ ERP002273 <- allHPexp[which(allHPexp$Study=="ERP002273"),]
 SRP096160 <- allHPexp[which(allHPexp$Study=="SRP096160"),]
 SRP110282 <- allHPexp[which(allHPexp$Study=="SRP110282"),]
 ERP105548 <- allHPexp[which(allHPexp$Study=="ERP105548"),]
+ERP020067 <- allHPexp[which(allHPexp$Study=="ERP020067"),]
 
 liver <- allHPexp[which(allHPexp$Tissue=="liver"),]
 table(liver$Host)
@@ -273,6 +274,20 @@ ERP105548.screen <- ERP105548.screen[which(ERP105548.screen$MapPercent >= 70),]
 # I have 48 samples from ERP105548
 ERP105548.screen.runs <- as.character(ERP105548.screen[,"RunID"])
 
+# ERP020067 #
+
+# Reads for protein-coding genes: Host - >= 10^6, Parasite - >= 10^5
+ERP020067.screen <- ERP020067[which(ERP020067$ProteinCodHost >= 1e6 & ERP020067$ProteinCodPara >= 1e5),]
+# Protein-coding genes: Host - >= 10^4, Parasite - >= 3000
+ERP020067.screen <- ERP020067.screen[which(ERP020067.screen$NumberProtCodGenesHost >= 10000 & ERP020067.screen$NumberProtCodGenesPara > 3000),]
+# Unique map percent: >= 70%
+ERP020067.screen <- ERP020067.screen[which(ERP020067.screen$MapPercent >= 70),]
+# # parasite proportion > 5%
+# ERP020067.screen <- ERP020067.screen[which(ERP020067.screen$Parasite_percent >= 5),]
+# I have 48 samples from ERP020067
+ERP020067.screen.runs <- as.character(ERP020067.screen[,"RunID"])
+
+
 
 col.num <- c()
 for(i in 1:length(ERP106451.screen.runs))
@@ -441,6 +456,18 @@ for(i in 1:length(ERP105548.screen.runs))
 
 ERP105548.ortho.data.int <- ortho_data[,col.num]
 save(ERP105548.ortho.data.int, file = "Data/ERP105548.ortho.data.int.RData")
+
+## ERP020067  ##
+col.num <- c()
+for(i in 1:length(ERP020067.screen.runs))
+{
+  id <- grep(pattern = ERP020067.screen.runs[i], colnames(ortho_data))
+  if(length(id)==1)
+    col.num[i] <- id
+}
+
+ERP020067.ortho.data.int <- ortho_data[,col.num]
+save(ERP020067.ortho.data.int, file = "Data/ERP020067.ortho.data.int.RData")
 
 
 ####### Make the big dataset #######
