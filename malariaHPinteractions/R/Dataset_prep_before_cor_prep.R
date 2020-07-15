@@ -551,3 +551,35 @@ p <- inner_join(parasite_orthogroups, Mph.p) %>%
 Mph.ortho.data <- rbind(h, p)
 save(Mph.ortho.data, file = "Mph.ortho.data.RData")
 write.table(Mph.ortho.data, "Mph.ortho.data", sep = '\t', row.names = T)
+
+## manually from  study_coding_gene.txt
+
+studyIDs <- c("SRP171171", "SRP261098", "SRP250329", "ERP109432")
+
+for(i in 1:length(studyIDs))
+{
+    # read study
+    study <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", studyIDs[i],"/", studyIDs[i], "_coding_genes.txt", collapse = ''), sep ='\t', header = T)
+    # separate host and parasite parts
+    hostrows <- grep(pattern = "ENS", rownames(study))
+    host <- study[hostrows,]
+    para <- study[-hostrows,]
+    
+    # reads threshold
+    hostread <- host[,which(colSums(host) >= 1e6)]
+    pararead <- para[,which(colSums(para) >= 1e5)]
+    
+    # genes threshold
+    host_n <- c()
+    for(i in 1:ncol(hostread))
+       host_n[i] <- length(hostread[rowSums(hostread) > 0,i])
+    names(host_n) <- colnames(hostread)
+
+    para_n <- c()
+    for(i in 1:ncol(pararead))
+       para_n[i] <- length(pararead[rowSums(pararead) > 0,i])
+    names(para_n) <- colnames(pararead)
+    
+    # common runs to host and parasite
+    bestruns <- intersect(colnames(hostgenes), colnames(paragenes))
+}

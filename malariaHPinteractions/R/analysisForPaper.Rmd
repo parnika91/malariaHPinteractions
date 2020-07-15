@@ -394,3 +394,9 @@ gg_h <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), y = log10(NumberProtCodG
 readsvsgenes <- gg_h + geom_point(alpha = 0.7, fill = allHPexp$colours) + xlab("log10 (Number of reads in a run mapping onto host genome)") + ylab("log10 (Number of genes represented by reads in a run)") + ggtitle("Number of reads mapping onto host genes")
 readsvsgenes
 ```
+
+```{r} 
+# get total number of host and parasite genes for all rows
+h_tot =
+mon_tot =
+mou_tot =

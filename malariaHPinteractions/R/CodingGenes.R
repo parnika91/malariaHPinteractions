@@ -124,8 +124,10 @@ moPcyn_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/mo
 
 ########## do it for every study #########
 
-studyIDs <- as.character(read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", sep = '\t', header = F)[,1])
+positive_experiments <- read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", sep = ",", header = F)
 allHPexp <- read.csv2("/SAN/Plasmo_compare/SRAdb/Output/allHPexp.txt", sep = ',', header = T)
+
+studyIDs <- c("SRP171171", "SRP261098", "SRP250329", "ERP109432")
 
 for(i in 1:length(studyIDs))
 {
@@ -133,7 +135,8 @@ for(i in 1:length(studyIDs))
   # get study.txt including all runs
   study <- as.data.frame(t(read.delim(paste0("Output/", studyIDs[i], "/", studyIDs[i], ".txt", collapse = ''), sep = '\t', header = T)))
   # get host parasite from allHPexp
-  hp <- as.character(unique(allHPexp[allHPexp$Study==studyIDs[i],"HostParasite"]))
+  #hp <- as.character(unique(allHPexp[allHPexp$Study==studyIDs[i],"HostParasite"]))
+  hp <- paste(as.character(positive_experiments[grep(studyIDs[i],positive_experiments[,1]),2]), as.character(positive_experiments[grep(studyIDs[i],positive_experiments[,1]),3]), sep="")
   
   if(hp == "humanPfalciparum"){ coding = hPfal_coding }
   if(hp == "humanPberghei"){ coding = hPber_coding }

@@ -5,7 +5,7 @@ echo $run
 default_path="/SAN/Plasmo_compare/"
 
 
-studyID="SRP250329"
+studyID="ERP109432"
 host=human
 parasite=Pberghei
 

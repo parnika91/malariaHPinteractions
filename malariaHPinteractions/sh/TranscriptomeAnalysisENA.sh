@@ -1,7 +1,7 @@
 #!/bin/bash
 
 default_path="/SAN/Plasmo_compare/"
-studyID="SRP250329"
+studyID="ERP109432"
 
 #cut -d, -f 1 current_runs.txt | parallel --eta -j 12 --link bash $doall {1}
 
