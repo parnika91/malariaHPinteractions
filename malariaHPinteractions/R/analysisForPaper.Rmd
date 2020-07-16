@@ -395,8 +395,99 @@ readsvsgenes <- gg_h + geom_point(alpha = 0.7, fill = allHPexp$colours) + xlab("
 readsvsgenes
 ```
 
-```{r} 
-# get total number of host and parasite genes for all rows
-h_tot =
-mon_tot =
-mou_tot =
+```{r extend_allHPexp} 
+require(dplyr)
+# load allHPexp
+
+human =
+monkey =
+mouse =
+
+Pfalciparum =
+Pvivax =
+Pberghei = 
+Pchabaudi =
+Pyoelii =
+Pcynomolgi =
+Pcoatneyi =
+
+Org.db = data.frame(human = human, monkey = monkey, mouse = mouse, Pfalciparum = Pfalciparum,
+	Pvivax = Pvivax, Pberghei = Pberghei, Pchabaudi = Pchabaudi, Pyoelii = Pyoelii,
+	Pcynomolgi = Pcynomolgi, Pcoatneyi = Pcoatneyi)
+
+TotalHostGenes = c()
+TotalParaGenes = c()
+
+for(i in 1:nrow(allHPexp))
+{
+	TotalParaGenes[i] <- Org.db[grep(pattern = allHPexp[i, "Parasite"], colnames(Org.db))]
+	TotalHostGenes[i] <- Org.db[grep(pattern = allHPexp[i, "Host"], colnames(Org.db))]
+}
+
+allHPexp[ncol(allHPexp)+1] <- TotalHostGenes
+allHPexp[ncol(allHPexp)+1] <- TotalParaGenes
+
+# include orthogroup related counts
+
+# use positive experiments and _coding_genes.txt to create ortho version of each study
+positive_experiments <- 
+studyIDs <- 
+parasite_orthogroups <-
+host_orthogroups <-
+
+for(i in 1:length(studyIDs))
+{
+	#if the study_coding_genes exists, merge with orthogroups (join functions)
+	filepath = paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[i],"/",studyIDs[i],"_coding_genes.txt", collapse = "")
+	if(file.exists(filepath))
+	{
+		# find out what host and parasite the study is
+		host <- positive_experiments[grep(pattern = studyIDs[i], positive_experiments[,1]),2]
+		para <- positive_experiments[grep(pattern = studyIDs[i], positive_experiments[,1]),3]
+
+		# take the host and para orthogroups and make a df -> orthogroup | gene name 
+
+		h.df <- data.frame(Orthogroup = host_orthogroups[,1], Org = host_orthogroups[,grep(pattern = host, colnames(host_orthogroups))])
+		p.df <- data.frame(Orthogroup = para_orthogroups[,1], Org = para_orthogroups[,grep(pattern = para, colnames(para_orthogroups))])
+
+		hp.df <- cbind(h.df, p.df)
+
+		# read table
+		file = read.delim(filepath, header = T) %>% tibble::rownames_to_column("Gene")
+
+		ortho.table = merge(file, hp.df, by.x = "Gene", by.y = "Org")
+
+		write.table(ortho.table, paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[i],"/",studyIDs[i],"_orthogroups.txt", collapse = ""))
+	}
+
+}
+
+# add new study orthogroups to ortho_data.txt
+# merge study_orthogroups.txt to ortho_data.txt
+
+ortho_data <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/ortho_data.txt",header = T)
+ortho_data <- merge(ortho_data, SRP250329_orthogroups.txt)
+
+ # % of orthogroups expressed
+OrthoHostGenesExp = c()
+OrthoParaGenesExp = c()
+
+for(j in 1:nrow(allHPexp))
+{
+	study <- allHPexp[j, "Study"]
+	
+	# read file of study_orthogroups file
+	countfile <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/", study,"_orthogroups.txt", collapse = ""), header = T) %>% 
+		tibble::column_to_rownames("Orthogroup") %>%
+		select(-c("Gene", "Org"))
+
+	study_count <- c()
+
+	for(x in 1:ncol(countfile))
+	{
+		study_count[x] <- length(which(countfile[,x] > 0))
+		names(study_count[x]) <- colnames(countfile)[x]
+
+	}
+}
+```
