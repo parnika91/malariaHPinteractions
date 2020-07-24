@@ -565,22 +565,26 @@ allHPexp <- read.delim("/SAN/Plasmo_compare/SRAdb/Output//allHPexp.txt", header 
 
 for(j in 1:nrow(allHPexp))
 {
-	study <- allHPexp[j, "Study"]
+	study <- as.character(allHPexp[j, "Study"])
+	run <- as.character(allHPexp[j, "RunID"])
 	
-	# read file of study_orthogroups file
-	countfile <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/", study,"_orthogroups.txt", collapse = ""), header = T) %>% 
-		tibble::column_to_rownames("Orthogroup") %>%
-		select(-c("Gene"))
+	countfile <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/", study,"_orthogroups.txt", collapse = ''), header = T, stringsAsFactors = F)
+    countfile_ <- as.data.frame(countfile[,grep(pattern = run, colnames(countfile))])
+    colnames(countfile_) <- paste0(runID, "_", study)
+    countfile_$Orthogroup <- countfile$Orthogroup
 
-	study_count <- c()
+	host_rows <- grep(pattern = "h_OG", countfile_[,"Orthogroup"])
+    host_part <- countfile_[host_rows,]
+    parasite_part <- countfile_[-host_rows,]
 
-	for(x in 1:ncol(countfile))
-	{
-		study_count[x] <- length(which(countfile[,x] > 0))
-		names(study_count[x]) <- colnames(countfile)[x]
+    host_genes <- length(which(host_part[,1]>0)) # Total number of gene with count > 0
+    parasite_genes <- length(which(parasite_part[,1]>0))
 
-	}
+    OrthoHostGenesExp[j] <- host_genes
+    OrthoParaGenesExp[j] <- parasite_genes
+
 }
+
 ```
 ```{r}
 
@@ -631,5 +635,136 @@ hostgenes_gg
 ggsave("host_geneome_prop.png", width = 40, height = 30, units = "cm")
 
 
+
+```
+
+```{r}
+
+# make tables to tabulate how many runs and studies are in each hp for each %
+above75blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.75 & allHPexp$ParaGenomeProp >= 0.75 & allHPexp$Tissue == "blood"),]
+above70blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.70 & allHPexp$ParaGenomeProp >= 0.70 & allHPexp$Tissue == "blood"),]
+above65blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.65 & allHPexp$ParaGenomeProp >= 0.65 & allHPexp$Tissue == "blood"),]
+above60blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.60 & allHPexp$ParaGenomeProp >= 0.60 & allHPexp$Tissue == "blood"),]
+
+above75bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.75 & allHPexp$OrthoParaGenesExpProp >= 0.75 & allHPexp$Tissue == "blood"),]
+above70bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.70 & allHPexp$OrthoParaGenesExpProp >= 0.70 & allHPexp$Tissue == "blood"),]
+above65bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.65 & allHPexp$OrthoParaGenesExpProp >= 0.65 & allHPexp$Tissue == "blood"),]
+above60bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.60 & allHPexp$OrthoParaGenesExpProp >= 0.60 & allHPexp$Tissue == "blood"),]
+
+blood_genome_prop <- data.frame()
+
+hp <- unique(as.character(allHPexp$HostParasite))
+genome_prop <- c(75, 70, 65, 60)
+
+for(i in 1:length(genome_prop))
+{    prop <- data.frame()
+		
+	for(j in 1:length(hp))
+	{
+
+		studies <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "blood"), "Study"])))
+		runs <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "blood"),"RunID"])))
+
+		if(genome_prop[i]==75)
+			{obj = above75blood
+			obj_ortho = above75bloodortho}
+		if(genome_prop[i]==70)
+			{obj = above70blood
+			obj_ortho = above70bloodortho}
+		if(genome_prop[i]==65)
+			{obj = above65blood
+			obj_ortho = above65bloodortho}
+		if(genome_prop[i]==60)
+			{obj = above60blood
+			obj_ortho = above60bloodortho}
+
+		prop_studies <- length(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])))
+		prop_runs <- length(unique(as.character(obj[obj$HostParasite==hp[j],"RunID"])))
+    studyIDs <- paste(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])), collapse = ' ')
+
+		ortho_studies <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"Study"])))
+		ortho_runs <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"RunID"])))
+
+		prop[j,1] <- genome_prop[i]
+		prop[j,2] <- hp[j]
+		prop[j,3] <- studies
+		prop[j,4] <- runs
+		prop[j,5] <- prop_studies
+    prop[j,6] <- studyIDs
+		prop[j,7] <- prop_runs
+		prop[j,8] <- ortho_studies
+		prop[j,9] <- ortho_runs
+	}
+
+	blood_genome_prop <- rbind(blood_genome_prop, prop)
+}
+colnames(blood_genome_prop) <- c("Genome_proportion_blood", "HostParasite", "Number_of_studies", "Number_of_runs", 
+	"Number_of_studies_in_prop", "Study_in_prop_IDs", "Number_of_runs_in_prop", "Number_of_studies_prop_ortho", "Number_of_runs_prop_ortho")
+
+
+above75liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.75 & allHPexp$ParaGenomeProp >= 0.75 & allHPexp$Tissue == "liver"),]
+above70liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.70 & allHPexp$ParaGenomeProp >= 0.70 & allHPexp$Tissue == "liver"),]
+above65liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.65 & allHPexp$ParaGenomeProp >= 0.65 & allHPexp$Tissue == "liver"),]
+above60liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.60 & allHPexp$ParaGenomeProp >= 0.60 & allHPexp$Tissue == "liver"),]
+
+above75liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.75 & allHPexp$OrthoParaGenesExpProp >= 0.75 & allHPexp$Tissue == "liver"),]
+above70liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.70 & allHPexp$OrthoParaGenesExpProp >= 0.70 & allHPexp$Tissue == "liver"),]
+above65liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.65 & allHPexp$OrthoParaGenesExpProp >= 0.65 & allHPexp$Tissue == "liver"),]
+above60liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.60 & allHPexp$OrthoParaGenesExpProp >= 0.60 & allHPexp$Tissue == "liver"),]
+
+
+liver_genome_prop <- data.frame()
+
+hp <- unique(as.character(allHPexp$HostParasite))
+genome_prop <- c(75, 70, 65, 60)
+
+for(i in 1:length(genome_prop))
+{    prop <- data.frame()
+		
+	for(j in 1:length(hp))
+	{
+
+		studies <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "liver"),"Study"])))
+		runs <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "liver"),"RunID"])))
+
+		if(genome_prop[i]==75)
+			{obj = above75liver
+			obj_ortho = above75liverortho}
+		if(genome_prop[i]==70)
+			{obj = above70liver
+			obj_ortho = above70liverortho}
+		if(genome_prop[i]==65)
+			{obj = above65liver
+			obj_ortho = above65liverortho}
+		if(genome_prop[i]==60)
+			{obj = above60liver
+			obj_ortho = above60liverortho}
+
+		prop_studies <- length(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])))
+		prop_runs <- length(unique(as.character(obj[obj$HostParasite==hp[j],"RunID"])))
+    studyIDs <- paste(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])), collapse = ' ')
+
+		ortho_studies <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"Study"])))
+		ortho_runs <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"RunID"])))
+
+
+		prop[j,1] <- genome_prop[i]
+		prop[j,2] <- hp[j]
+		prop[j,3] <- studies
+		prop[j,4] <- runs
+		prop[j,5] <- prop_studies
+		prop[j,6] <- studyIDs
+    prop[j,7] <- prop_runs
+    prop[j,8] <- ortho_studies
+    prop[j,9] <- ortho_runs
+	}
+
+	liver_genome_prop <- rbind(liver_genome_prop, prop)
+}
+colnames(liver_genome_prop) <- c("Genome_proportion_liver", "HostParasite", "Number_of_studies", "Number_of_runs", 
+	"Number_of_studies_in_prop", "Study_in_prop_IDs", "Number_of_runs_in_prop", "Number_of_studies_prop_ortho", "Number_of_runs_prop_ortho")
+
+write.table(blood_genome_prop, "/SAN/Plasmo_compare/SRAdb/Output/blood_genome_prop.txt", sep = '\t', row.names = F)
+write.table(liver_genome_prop, "/SAN/Plasmo_compare/SRAdb/Output/liver_genome_prop.txt", sep = '\t', row.names = F)
 
 ```
