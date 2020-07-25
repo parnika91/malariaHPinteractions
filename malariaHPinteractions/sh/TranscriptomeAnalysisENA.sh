@@ -1,7 +1,7 @@
 #!/bin/bash
 default_path="/SAN/Plasmo_compare/"
 
-for studyID in SRP189198 SRP233153 SRP201249 SRP189666; do
+for studyID in SRP233153 SRP201249 SRP189666 SRP189198; do
 #studyID=$1
 #runs="/SAN/Plasmo_compare/SRAdb/Output/$studyID/runs\_$studyID.txt"
 
