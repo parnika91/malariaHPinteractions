@@ -40,11 +40,19 @@ This plot has host expression % on one axis and parasite expression % on the oth
 library(dplyr)
 library(tibble)
 
-positive_experiments <- read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F, sep = '\t')
+positive_experiments <- read.table("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", header = F, sep = ',')
 studyIDs <- as.character(positive_experiments[,1])
 #studyIDs <- c("ERP020067", "SRP018945", "SRP066796", "ERP106451")
 
 # Second, we want the run IDs for each of the studies we read from the above file. So we go into the folder of each study and read the run IDs from runs_<study>.txt
+colour_fn <- function(HostParasite)
+{
+	cols <- data.frame(HostParasite = c("humanPfalciparum", "humanPvivax", "humanPberghei", "mousePberghei", "mousePchabaudi", "mousePyoelii", "monkeyPcoatneyi", "monkeyPcynomolgi"),
+                   colours = c("chocolate1", "hotpink2", "brown3", "chartreuse3", "darkgreen", "lightgreen", "dodgerblue3", "navy"))
+
+	col <- cols[grep(pattern = HostParasite, cols[,1]),2]
+	return(col)
+}
 
 getAllHPexpression <- function(study)
 { 
@@ -52,55 +60,69 @@ getAllHPexpression <- function(study)
   study_df <- data.frame()
   
   # the following statement gives us both run ID and the study ID
-  runIDs <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/runs_",study,".txt",collapse=''), header = F, sep = ',')
+  runIDs <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/runs_",study,".txt",collapse=''), header = F, sep = ',')[,1]
   
   # number of runs
-  number_of_runs <- nrow(runIDs)
+  number_of_runs <- length(runIDs)
   
   # get hp_percent_<study>.txt
   hp_percent_study <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/hp_percent_",study,".txt",collapse=''), header = T, sep = '\t')
+
+  runs_counted_number <- c()
+  runs_counted_ID <- c()
+  for(j in 1:length(runIDs))
+  { 
+    if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runIDs[j], ".txt", collapse = '')))
+      runs_counted_ID <- c(runs_counted_ID, as.character(runIDs[j]))
+
+  }
+    runs_counted_number <- length(runs_counted_ID)
+
   
-            for(i in 1:number_of_runs)
+  for(i in 1:runs_counted_number)
     {
+    	print(paste0(i,"/",runs_counted_number))
+
       # get runID
-      runID <- as.character(runIDs[i,1])
-      
+      runID <- as.character(runs_counted_ID[i])
+      if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runID,".txt",collapse='')))
+      {
       # get the host and parasite expression percentages for the runID from hp_percent_study
-      # host_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 2]
-      # parasite_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 3]
-      # 
-      # host <- positive_experiments[grep(study,positive_experiments[,1]),2]
-      # parasite <- positive_experiments[grep(study,positive_experiments[,1]),3]
-      # 
-      # count_file <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
-      # if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse='')))
-      # {
-      #   inputReadLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=6)[6]
-      #   mapPercentLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=10)[10]
-      #   
-      #   multipleReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=26)[c(24,26)]
-      #   
-      #   unmappedReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=31)[c(29,30,31)]
-      # 
-      #   inputReads <- as.numeric(strsplit(inputReadLine, split="\t")[[1]][2])
-      #   map_percent <- as.numeric(strsplit(strsplit(mapPercentLine, split="%")[[1]][2], split="\t")[[1]][2])
-      #   multipleReads <- sum(sapply(multipleReadsLine, function(x) as.numeric(strsplit(x, split="\t")[[1]][2])))
-      #   unmappedReads <- sum(sapply(unmappedReadsLine, function(x) (as.numeric(strsplit(strsplit(x, split="%")[[1]][2], split="\t")[[1]][2])/100) * inputReads))
-      # }else
-      # {
-      #   inputReads <- "NA"
-      #   map_percent <- "NA"
-      #   multipleReads <- "NA"
-      #   unmappedReads <- "NA"
-      # }
-      # 
-      # parasite_rows <- as.numeric(grep("P+", count_file[,1]))
-      # host_count <- count_file[-c(parasite_rows),]
-      # parasite_count <- count_file[parasite_rows,]
-      #   
-      # host_sum <- sum(host_count[,6])
-      # parasite_sum <- sum(parasite_count[,6])
-      # 
+       host_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 2]
+       parasite_percent <- hp_percent_study[grep(runID, hp_percent_study[,1]), 3]
+       
+       host <- as.character(positive_experiments[grep(study,positive_experiments[,1]),2])
+       parasite <- as.character(positive_experiments[grep(study,positive_experiments[,1]),3])
+       
+       count_file <- read.table(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runID,".txt",collapse=''), header = T, sep = '\t')
+       if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study[i],"/",runID,"_",study[i],".final.out",collapse='')))
+       {
+         inputReadLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=6)[6]
+         mapPercentLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=10)[10]
+         
+         multipleReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=26)[c(24,26)]
+         
+         unmappedReadsLine <- readLines(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/",runID,"_",study,".final.out",collapse=''), n=31)[c(29,30,31)]
+       
+         inputReads <- as.numeric(strsplit(inputReadLine, split="\t")[[1]][2])
+         map_percent <- as.numeric(strsplit(strsplit(mapPercentLine, split="%")[[1]][2], split="\t")[[1]][2])
+         multipleReads <- sum(sapply(multipleReadsLine, function(x) as.numeric(strsplit(x, split="\t")[[1]][2])))
+         unmappedReads <- sum(sapply(unmappedReadsLine, function(x) (as.numeric(strsplit(strsplit(x, split="%")[[1]][2], split="\t")[[1]][2])/100) * inputReads))
+       }else
+       {
+         inputReads <- "NA"
+         map_percent <- "NA"
+         multipleReads <- "NA"
+         unmappedReads <- "NA"
+       }
+       
+       parasite_rows <- as.numeric(grep("P+", count_file[,1]))
+       host_count <- count_file[-c(parasite_rows),]
+       parasite_count <- count_file[parasite_rows,]
+         
+       host_sum <- sum(host_count[,6])
+       parasite_sum <- sum(parasite_count[,6])
+       
       protein_coding <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study, "/", study, "_coding_genes.txt", collapse = '')) %>%
         # take the current run
         select(contains(runID)) %>% 
@@ -112,46 +134,77 @@ getAllHPexpression <- function(study)
         host_prot_cod <- protein_coding[-c(parasite_rows_prot_cod),]
         parasite_prot_cod <- protein_coding[parasite_rows_prot_cod,]
         
-        # host_count_prot_cod <- sum(host_prot_cod[,2]) #(total number of reads)
-        # parasite_count_prot_cod <- sum(parasite_prot_cod[,2])
-        # 
+        host_count_prot_cod <- sum(host_prot_cod[,2]) #(total number of reads)
+        parasite_count_prot_cod <- sum(parasite_prot_cod[,2])
+         
         host_gene_prot_cod <- length(which(host_prot_cod[,2]>0)) # Total number of gene with count > 0
         parasite_gene_prot_cod <- length(which(parasite_prot_cod[,2]>0))
         
-        # actual_host <- hp_percent_study[grep(runID, hp_percent_study[,1]),5]
-        # actual_para <- hp_percent_study[grep(runID, hp_percent_study[,1]),6]
+        actual_host <- hp_percent_study[grep(runID, hp_percent_study[,1]),5]
+        actual_para <- hp_percent_study[grep(runID, hp_percent_study[,1]),6]
+    	}
+
+    	chr_countfile <- t(read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/", study, "/", study, ".txt", collapse = ''), header = T))
+    	chr_countfile <- as.data.frame(chr_countfile[,grep(pattern = runID, colnames(chr_countfile))])
+    	colnames(chr_countfile) <- paste0(runID, "_", study)
+
+    	host_rows <- grep(pattern = "ENS", rownames(chr_countfile))
+    	host_part <- chr_countfile[host_rows,]
+    	parasite_part <- chr_countfile[-host_rows,]
+
+    	host_genes <- length(which(host_part>0)) # Total number of gene with count > 0
+        parasite_genes <- length(which(parasite_part>0))
+
+        hp <- paste0(as.character(host),as.character(parasite), collapse='')
         # 
-        study_df[i,1] <- runID
-        study_df[i,2] <- study
-        # study_df[i,3] <- host
-        # study_df[i,4] <- host_percent
-        # study_df[i,5] <- parasite
-        # study_df[i,6] <- parasite_percent
-        # study_df[i,7] <- sum(count_file[,6]) # sum(counts)
-        # study_df[i,8] <- inputReads # number of input reads
-        # study_df[i,9] <- map_percent # map_percent
-        # study_df[i,10] <- paste0(host,parasite, collapse='')
-        # study_df[i,11] <- host_sum
-        # study_df[i,12] <- parasite_sum
-        # study_df[i,13] <- multipleReads
-        # study_df[i,14] <- unmappedReads
-        # study_df[i,15] <- actual_para # actual proportion of parasites, taking into account unique map%
-        # study_df[i,16] <- actual_host
-        # study_df[i,17] <- host_count_prot_cod
-        # study_df[i,18] <- parasite_count_prot_cod
-        study_df[i,3] <- host_gene_prot_cod
-        study_df[i,4] <- parasite_gene_prot_cod
+        study_df[i,1] <- study
+        study_df[i,2] <- tissue <- "liver"
+        study_df[i,3] <- runID
+        study_df[i,4] <- hp
+        study_df[i,5] <- host
+
+        study_df[i,6] <- host_percent
+        study_df[i,7] <- parasite #sum(count_file[,6]) # sum(counts)
+        study_df[i,8] <- parasite_percent # number of input reads
+        study_df[i,9] <- sum(count_file[,6]) # map_percent
+        study_df[i,10] <- inputReads
+
+        study_df[i,11] <- map_percent
+        study_df[i,12] <- host_sum
+        study_df[i,13] <- parasite_sum
+        study_df[i,14] <- multipleReads
+        study_df[i,15] <- unmappedReads # actual proportion of parasites, taking into account unique map%
+
+        study_df[i,16] <- "actual_para"
+        study_df[i,17] <- "actual_host"#host_count_prot_cod
+        study_df[i,18] <- parasite_genes
+        study_df[i,19] <- host_genes
+        study_df[i,20] <- colour_fn(hp)
+
+        study_df[i,21] <- host_count_prot_cod
+        study_df[i,22] <- parasite_count_prot_cod
+        study_df[i,23] <- host_gene_prot_cod
+        study_df[i,24] <- parasite_gene_prot_cod
+        study_df[i,25] <- "THG"
+
+        study_df[i,26] <- "TPG"
       }
     }
   return (study_df)
 }
 
 allHPexpression <- data.frame()
+studyIDs <- c("ERP109432", "SRP261098")
+
 for(j in 1:length(studyIDs))
 {
   allHPexpression <- rbind(allHPexpression, getAllHPexpression(studyIDs[j]))
 }
-colnames(allHPexpression) <- c("RunID", "Study", "NumberProtCodGenesHost", "NumberProtCodGenesPara") #  "Host", "Host_percent", "Parasite", "Parasite_percent", "CountSum", "InputReads",  "MapPercent" ,"HostParasite", "HostSum", "ParasiteSum", "MultipleMapReads", "UnmappedReads", "ActualParasite", "ActualHost","ProteinCodHost", "ProteinCodPara"
+colnames(allHPexpression) <-  c("Study", "Tissue", "RunID", "HostParasite", "Host", "Host_percent", "Parasite", "Parasite_percent", "CountSum", 
+	"InputReads", "MapPercent","HostSum", "ParasiteSum","MultipleMapReads", "UnmappedReads", "ActualParasite", "ActualHost", "NumberOfParaGenes",
+	"NumberOfHostGenes", "colours", "ProteinCodHost", "ProteinCodPara", "NumberProtCodGenesHost", "NumberProtCodGenesPara", "TotalHostGenes", "TotalParaGenes")
+
+
 ```
 
 ```{r, echo = F}
@@ -395,8 +448,323 @@ readsvsgenes <- gg_h + geom_point(alpha = 0.7, fill = allHPexp$colours) + xlab("
 readsvsgenes
 ```
 
-```{r} 
-# get total number of host and parasite genes for all rows
-h_tot =
-mon_tot =
-mou_tot =
+```{r extend_allHPexp} 
+require(dplyr)
+# load allHPexp
+
+hPf <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/DRP000987/DRP000987_coding_genes.txt", header = T)
+hPv <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/SRP108632/SRP108632_coding_genes.txt", header = T)
+moPco <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/SRP116117/SRP116117_coding_genes.txt", header = T)
+moPcy <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/SRP106638/SRP106638_coding_genes.txt", header = T)
+mPb <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/ERP004598/ERP004598_coding_genes.txt", header = T)
+mPch <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/ERP004042/ERP004042_coding_genes.txt", header = T)
+mPy <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/SRP066796/SRP066796_coding_genes.txt", header = T)
+
+hrows <- grep(pattern="ENS", rownames(mPy))
+h <- mPy[hrows,]
+p <- mPy[-hrows,]
+hn <- nrow(h)
+pn <- nrow(p)
+
+
+human = 19912
+monkey = 21099
+mouse = 22039
+mouse_py = 22058
+
+Pfalciparum = 5362
+Pvivax = 5389
+Pberghei = 4903
+Pchabaudi = 5157
+Pyoelii = 5926
+Pcynomolgi = 5716
+Pcoatneyi = 5516
+
+Org.db = data.frame(human = human, monkey = monkey, mouse = mouse, mouse_py = mouse_py, Pfalciparum = Pfalciparum,
+	Pvivax = Pvivax, Pberghei = Pberghei, Pchabaudi = Pchabaudi, Pyoelii = Pyoelii,
+	Pcynomolgi = Pcynomolgi, Pcoatneyi = Pcoatneyi)
+
+TotalHostGenes = c()
+TotalParaGenes = c()
+
+for(i in 3129:nrow(allHPexp))
+{
+	if(as.character(allHPexp[i, "Parasite"]) == "Pyoelii")
+		TotalHostGenes[i] = Org.db[1,"mouse_py"]
+	else
+		TotalHostGenes[i] <- Org.db[grep(pattern = allHPexp[i, "Host"], colnames(Org.db))]
+
+	TotalParaGenes[i] <- Org.db[grep(pattern = allHPexp[i, "Parasite"], colnames(Org.db))]
+}
+
+allHPexp[ncol(allHPexp)+1] <- unlist(TotalHostGenes)
+allHPexp[ncol(allHPexp)+1] <- unlist(TotalParaGenes)
+
+colnames(allHPexp)[25] <- "TotalHostGenes"
+colnames(allHPexp)[26] <- "TotalParaGenes"
+
+write.table(allHPexp, "/SAN/Plasmo_compare/SRAdb/Output/allHPexp.txt", sep = "\t", row.names = F)
+
+# include orthogroup related counts
+
+# use positive experiments and _coding_genes.txt to create ortho version of each study
+positive_experiments <- read.delim("/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt", sep = ",", header = F)
+studyIDs <- as.character(positive_experiments[,1])
+parasite_orthogroups <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", stringsAsFactors=FALSE) 
+host_orthogroups <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt", stringsAsFactors=FALSE) 
+
+for(i in 1:length(studyIDs))
+{	print(i)
+	#if the study_coding_genes exists, merge with orthogroups (join functions)
+	filepath = paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[i],"/",studyIDs[i],"_coding_genes.txt", collapse = "")
+	if(file.exists(filepath))
+	{
+		# find out what host and parasite the study is
+		host <- as.character(positive_experiments[grep(pattern = studyIDs[i], positive_experiments[,1]),2])
+		para <- as.character(positive_experiments[grep(pattern = studyIDs[i], positive_experiments[,1]),3])
+
+		# take the host and para orthogroups and make a df -> orthogroup | gene name 
+
+		h.df <- data.frame(Orthogroup = host_orthogroups[,1], Org = host_orthogroups[,grep(pattern = host, colnames(host_orthogroups))])
+		p.df <- data.frame(Orthogroup = parasite_orthogroups[,1], Org = parasite_orthogroups[,grep(pattern = para, colnames(parasite_orthogroups))])
+
+		hp.df <- rbind(h.df, p.df)
+
+		# read table
+		file = read.delim(filepath, header = T) %>% tibble::rownames_to_column("Gene")
+
+		ortho.table = merge(file, hp.df, by.x = "Gene", by.y = "Org")
+		ortho.table <- data.frame(Gene = ortho.table$Gene, Orthogroup = ortho.table$Orthogroup, ortho.table[,2:(ncol(ortho.table)-1)])
+
+		write.table(ortho.table, paste0("/SAN/Plasmo_compare/SRAdb/Output/",studyIDs[i],"/",studyIDs[i],"_orthogroups.txt", collapse = ""), sep = '\t', row.names = F)
+	}
+
+}
+
+# add new study orthogroups to ortho_data.txt
+# merge study_orthogroups.txt to ortho_data.txt
+
+ortho_data <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/ortho_data.txt",header = T) %>% rownames_to_column("Orthogroup")
+SRP250329_ortho <- read.delim("/SAN/Plasmo_compare/SRAdb/Output/SRP250329/SRP250329_orthogroups.txt",header = T) %>%
+	select(-"Gene")
+ortho_data <- merge(ortho_data, SRP250329_ortho)
+
+s <- c("SRP171171", "ERP109432", "SRP261098")
+
+for(i in 1:length(s))
+{
+	ortho <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/",s[i],"/",s[i],"_orthogroups.txt", collapse = ''),header = T) %>% select(-"Gene")
+	ortho_data <- merge(ortho_data, ortho)
+}
+
+ # % of orthogroups expressed
+OrthoHostGenesExp = c()
+OrthoParaGenesExp = c()
+
+allHPexp <- read.delim("/SAN/Plasmo_compare/SRAdb/Output//allHPexp.txt", header = T)
+
+for(j in 1:nrow(allHPexp))
+{
+	study <- as.character(allHPexp[j, "Study"])
+	run <- as.character(allHPexp[j, "RunID"])
+	
+	countfile <- read.delim(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/", study,"_orthogroups.txt", collapse = ''), header = T, stringsAsFactors = F)
+    countfile_ <- as.data.frame(countfile[,grep(pattern = run, colnames(countfile))])
+    colnames(countfile_) <- paste0(runID, "_", study)
+    countfile_$Orthogroup <- countfile$Orthogroup
+
+	host_rows <- grep(pattern = "h_OG", countfile_[,"Orthogroup"])
+    host_part <- countfile_[host_rows,]
+    parasite_part <- countfile_[-host_rows,]
+
+    host_genes <- length(which(host_part[,1]>0)) # Total number of gene with count > 0
+    parasite_genes <- length(which(parasite_part[,1]>0))
+
+    OrthoHostGenesExp[j] <- host_genes
+    OrthoParaGenesExp[j] <- parasite_genes
+
+}
+
+```
+```{r}
+
+#allHPexp_mapthreshold <- allHPexp
+#allHPexp_mapthreshold <- allHPexp[allHPexp$MapPercent>=65,]
+col <- as.character(allHPexp$colours)
+names(col) <- as.character(allHPexp$HostParasite)
+
+NumberProtCodGenesPara <- allHPexp$NumberProtCodGenesPara
+NumberProtCodGenesHost <- allHPexp$NumberProtCodGenesHost
+TotalParaGenes <- as.numeric(allHPexp$TotalParaGenes)
+TotalHostGenes <- as.numeric(allHPexp$TotalHostGenes)
+ParaGenomeProp <- NumberProtCodGenesPara/TotalParaGenes
+HostGenomeProp <- NumberProtCodGenesHost/TotalHostGenes
+
+allHPexp$ParaGenomeProp <- ParaGenomeProp
+allHPexp$HostGenomeProp <- HostGenomeProp
+
+paragenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodPara), 
+                                         y = ParaGenomeProp,
+                                         colour = HostParasite, 
+                                         fill = HostParasite))
+paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) +
+  geom_jitter() + 
+  ggtitle("Proportion of parasite genome represented in runs") + 
+  xlab("(Log10) Number of reads mapping onto parasite genome") + 
+  ylab("Proportion of genome represented by mapped reads") + 
+  theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + 
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=20), plot.title = element_text(size=24)) +
+  theme(legend.title = element_text(size = 14), legend.text = element_text(size = 14))
+paragenes_gg
+ggsave("para_genome_prop.png", width = 40, height = 30, units = "cm")
+
+#### host genes vs host reads ####
+
+hostgenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), 
+                                         y = HostGenomeProp,
+                                         colour = HostParasite, 
+                                         fill = HostParasite))
+hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + 
+  ggtitle("Proportion of host genome represented in runs") +
+  xlab("(Log10) Number of reads mapping onto host genome") + 
+  ylab("Proportion of genome represented by mapped reads") + 
+  theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=20), plot.title = element_text(size=24)) +
+  theme(legend.title = element_text(size = 14), legend.text = element_text(size = 14))
+hostgenes_gg
+ggsave("host_geneome_prop.png", width = 40, height = 30, units = "cm")
+
+
+
+```
+
+```{r}
+
+# make tables to tabulate how many runs and studies are in each hp for each %
+above75blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.75 & allHPexp$ParaGenomeProp >= 0.75 & allHPexp$Tissue == "blood"),]
+above70blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.70 & allHPexp$ParaGenomeProp >= 0.70 & allHPexp$Tissue == "blood"),]
+above65blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.65 & allHPexp$ParaGenomeProp >= 0.65 & allHPexp$Tissue == "blood"),]
+above60blood <- allHPexp[which(allHPexp$HostGenomeProp >= 0.60 & allHPexp$ParaGenomeProp >= 0.60 & allHPexp$Tissue == "blood"),]
+
+above75bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.75 & allHPexp$OrthoParaGenesExpProp >= 0.75 & allHPexp$Tissue == "blood"),]
+above70bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.70 & allHPexp$OrthoParaGenesExpProp >= 0.70 & allHPexp$Tissue == "blood"),]
+above65bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.65 & allHPexp$OrthoParaGenesExpProp >= 0.65 & allHPexp$Tissue == "blood"),]
+above60bloodortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.60 & allHPexp$OrthoParaGenesExpProp >= 0.60 & allHPexp$Tissue == "blood"),]
+
+blood_genome_prop <- data.frame()
+
+hp <- unique(as.character(allHPexp$HostParasite))
+genome_prop <- c(75, 70, 65, 60)
+
+for(i in 1:length(genome_prop))
+{    prop <- data.frame()
+		
+	for(j in 1:length(hp))
+	{
+
+		studies <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "blood"), "Study"])))
+		runs <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "blood"),"RunID"])))
+
+		if(genome_prop[i]==75)
+			{obj = above75blood
+			obj_ortho = above75bloodortho}
+		if(genome_prop[i]==70)
+			{obj = above70blood
+			obj_ortho = above70bloodortho}
+		if(genome_prop[i]==65)
+			{obj = above65blood
+			obj_ortho = above65bloodortho}
+		if(genome_prop[i]==60)
+			{obj = above60blood
+			obj_ortho = above60bloodortho}
+
+		prop_studies <- length(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])))
+		prop_runs <- length(unique(as.character(obj[obj$HostParasite==hp[j],"RunID"])))
+    studyIDs <- paste(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])), collapse = ' ')
+
+		ortho_studies <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"Study"])))
+		ortho_runs <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"RunID"])))
+
+		prop[j,1] <- genome_prop[i]
+		prop[j,2] <- hp[j]
+		prop[j,3] <- studies
+		prop[j,4] <- runs
+		prop[j,5] <- prop_studies
+    prop[j,6] <- studyIDs
+		prop[j,7] <- prop_runs
+		prop[j,8] <- ortho_studies
+		prop[j,9] <- ortho_runs
+	}
+
+	blood_genome_prop <- rbind(blood_genome_prop, prop)
+}
+colnames(blood_genome_prop) <- c("Genome_proportion_blood", "HostParasite", "Number_of_studies", "Number_of_runs", 
+	"Number_of_studies_in_prop", "Study_in_prop_IDs", "Number_of_runs_in_prop", "Number_of_studies_prop_ortho", "Number_of_runs_prop_ortho")
+
+
+above75liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.75 & allHPexp$ParaGenomeProp >= 0.75 & allHPexp$Tissue == "liver"),]
+above70liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.70 & allHPexp$ParaGenomeProp >= 0.70 & allHPexp$Tissue == "liver"),]
+above65liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.65 & allHPexp$ParaGenomeProp >= 0.65 & allHPexp$Tissue == "liver"),]
+above60liver <- allHPexp[which(allHPexp$HostGenomeProp >= 0.60 & allHPexp$ParaGenomeProp >= 0.60 & allHPexp$Tissue == "liver"),]
+
+above75liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.75 & allHPexp$OrthoParaGenesExpProp >= 0.75 & allHPexp$Tissue == "liver"),]
+above70liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.70 & allHPexp$OrthoParaGenesExpProp >= 0.70 & allHPexp$Tissue == "liver"),]
+above65liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.65 & allHPexp$OrthoParaGenesExpProp >= 0.65 & allHPexp$Tissue == "liver"),]
+above60liverortho <- allHPexp[which(allHPexp$OrthoHostGenesExpProp >= 0.60 & allHPexp$OrthoParaGenesExpProp >= 0.60 & allHPexp$Tissue == "liver"),]
+
+
+liver_genome_prop <- data.frame()
+
+hp <- unique(as.character(allHPexp$HostParasite))
+genome_prop <- c(75, 70, 65, 60)
+
+for(i in 1:length(genome_prop))
+{    prop <- data.frame()
+		
+	for(j in 1:length(hp))
+	{
+
+		studies <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "liver"),"Study"])))
+		runs <- length(unique(as.character(allHPexp[(allHPexp$HostParasite==hp[j] & allHPexp$Tissue == "liver"),"RunID"])))
+
+		if(genome_prop[i]==75)
+			{obj = above75liver
+			obj_ortho = above75liverortho}
+		if(genome_prop[i]==70)
+			{obj = above70liver
+			obj_ortho = above70liverortho}
+		if(genome_prop[i]==65)
+			{obj = above65liver
+			obj_ortho = above65liverortho}
+		if(genome_prop[i]==60)
+			{obj = above60liver
+			obj_ortho = above60liverortho}
+
+		prop_studies <- length(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])))
+		prop_runs <- length(unique(as.character(obj[obj$HostParasite==hp[j],"RunID"])))
+    studyIDs <- paste(unique(as.character(obj[obj$HostParasite==hp[j],"Study"])), collapse = ' ')
+
+		ortho_studies <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"Study"])))
+		ortho_runs <- length(unique(as.character(obj_ortho[obj_ortho$HostParasite==hp[j],"RunID"])))
+
+
+		prop[j,1] <- genome_prop[i]
+		prop[j,2] <- hp[j]
+		prop[j,3] <- studies
+		prop[j,4] <- runs
+		prop[j,5] <- prop_studies
+		prop[j,6] <- studyIDs
+    prop[j,7] <- prop_runs
+    prop[j,8] <- ortho_studies
+    prop[j,9] <- ortho_runs
+	}
+
+	liver_genome_prop <- rbind(liver_genome_prop, prop)
+}
+colnames(liver_genome_prop) <- c("Genome_proportion_liver", "HostParasite", "Number_of_studies", "Number_of_runs", 
+	"Number_of_studies_in_prop", "Study_in_prop_IDs", "Number_of_runs_in_prop", "Number_of_studies_prop_ortho", "Number_of_runs_prop_ortho")
+
+write.table(blood_genome_prop, "/SAN/Plasmo_compare/SRAdb/Output/blood_genome_prop.txt", sep = '\t', row.names = F)
+write.table(liver_genome_prop, "/SAN/Plasmo_compare/SRAdb/Output/liver_genome_prop.txt", sep = '\t', row.names = F)
+
+```
