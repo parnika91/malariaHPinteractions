@@ -1,33 +1,43 @@
 #!/bin/bash
+
 run=$1
 echo $run
+runID="$(echo $run | cut -d, -f1)"
+studyID="$(echo $run | cut -d, -f2)"
 
-default_path="/SAN/Plasmo_compare/"
+# take studyID
+
+default_path="/SAN/Plasmo_compare/SRAdb"
+positive_experiments="/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt"
+
+host="$(grep $studyID $positive_experiments | cut -d, -f2)"
+parasite="$(grep $studyID $positive_experiments | cut -d, -f3)"
 
 
-studyID="ERP109432"
-host=human
-parasite=Pberghei
-
-#example: era-fasp@fasp.sra.ebi.ac.uk:/vol1/fastq/SRR826/004/SRR8263174/SRR8263174_1.fastq.gz
-runID="$(cut -d, -f1 <<< $run)"
-
-ulimit -m 130000000000
-ulimit -v 130000000000
-
-# Step 2: map
+echo $run $runID $host $parasite >> output.txt
 
 cd /SAN/Plasmo_compare/fastq_download_tmp/
 
-if [ -e $runID\_1.fastq.gz ]; then
-#put .gz; then add --readFilesCommand zcat
-  STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID\_1.fastq.gz /SAN/Plasmo_compare/fastq_download_tmp/$runID\_2.fastq.gz --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --readFilesCommand zcat
 
+if [ $host$parasite == "monkeyPknowlesi" ]; then
+  if [ -e $runID\_1.fastq.gz ]; then
+    /SAN/Plasmo_compare/SRAdb/STAR-2.7.5a/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID\_1.fastq.gz /SAN/Plasmo_compare/fastq_download_tmp/$runID\_2.fastq.gz --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --readFilesCommand zcat
+
+  else
+    /SAN/Plasmo_compare/SRAdb/STAR-2.7.5a/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
+  fi
 else
-  STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
+  if [ -e $runID\_1.fastq.gz ]; then
+    /SAN/Plasmo_compare/SRAdb/STAR-2.6.0c/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID\_1.fastq.gz /SAN/Plasmo_compare/fastq_download_tmp/$runID\_2.fastq.gz --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --readFilesCommand zcat
 
+  else
+    /SAN/Plasmo_compare/SRAdb/STAR-2.6.0c/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
+  fi
 fi
-cd ..
+
+cat /SAN/Plasmo_compare/fastq_download_tmp/$runID*.final.out > /SAN/Plasmo_compare/fastq_download_tmp/$runID\_$studyID.final.out
+mv /SAN/Plasmo_compare/fastq_download_tmp/$runID\_$studyID.final.out /SAN/Plasmo_compare/SRAdb/Output/$studyID/
+mv /SAN/Plasmo_compare/fastq_download_tmp/$runID*.out.tab -t /SAN/Plasmo_compare/SRAdb/Output/$studyID/
 
 # Step 3: gene expression quantification
 
@@ -35,10 +45,11 @@ Rscript --vanilla $default_path/SRAdb/Scripts/malariaHPinteractions/R/countOverl
 
 # Step 4: Enter used runs in blacklist
 
-cat $default_path/$studyID/runs.txt | grep $run >> $default_path/Input/blacklist.txt # also study
+if [ -e $default_path/Output/$studyID/countWithGFF3_$runID.txt ]; then
+  cat $default_path/$studyID/runs\_$studyID.txt | grep $run >> $default_path/Input/blacklist.txt # also study
+ 
 # Step 5: remove fastq and bam files
-rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.fastq
-rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.bam
+  rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.fastq
+  rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.bam
 
-
-
+fi

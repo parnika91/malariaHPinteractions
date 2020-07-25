@@ -10,3 +10,4 @@ cat mouse.fa PbergheiANKA.fa > mousePbergheiANKA.fa
 
 cat monkey.fa Pcoatneyi.fa > monkeyPcoatneyi.fa
 cat monkey.fa Pvivax.fa > monkeyPvivax.fa
+cat monkey.fa Pknowlesi.fa > monkeyPknowlesi.fa

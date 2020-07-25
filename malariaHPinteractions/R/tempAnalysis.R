@@ -18,25 +18,29 @@ table_output <- data.frame()
 
 # check for runs in the study that already have count_run.txt files
 
-current_runs <- read.csv2("/SAN/Plasmo_compare/SRAdb/Input/current_runs.txt", header = FALSE, sep = ',')
-runs_in_study <- current_runs[grep(study, current_runs[,2]),1]
+current_runs <- read.csv2(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study, "/runs_", study,".txt", collapse = ''), header = FALSE, sep = ',')
+runs_in_study <- as.character(current_runs[,1])
 
 runs_counted_number <- c()
 runs_counted_ID <- c()
 for(i in 1:length(runs_in_study))
 {
- runs_counted_number <- c(runs_counted_number, length(grep(runs_in_study[i], list.files(paste0("/SAN/Plasmo_compare/SRAdb/#Output/",study,collapse=''), pattern = "*.txt"))))
- if(length(grep(runs_in_study[i], list.files(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,collapse=''), pattern = "*.txt"))) #> 0)
+ #runs_counted_number <- c(runs_counted_number, length(grep(runs_in_study[i], list.files(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,collapse=''), pattern = "countWithGFF3"))))
+ #if(length(grep(runs_in_study[i], list.files(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,collapse=''), pattern = "countWithGFF3"))) #> 0)
+ if(file.exists(paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runs_in_study[i], ".txt", collapse = '')))
   runs_counted_ID <- c(runs_counted_ID, as.character(runs_in_study[i]))
+
 }
-runs_counted_number <- sum(runs_counted_number)/2
+runs_counted_number <- length(runs_counted_ID)
 
 # function for calculating parasite-host %
-content <- data.frame()
+
 HostParasitePercent <- function(runs)
 {
+  content <- data.frame()
   for( i in 1:length(runs))
   {
+    print(paste0(i,"/",length(runs)))
     count_df <- read.csv2(file=paste0("/SAN/Plasmo_compare/SRAdb/Output/",study,"/countWithGFF3_",runs[i],".txt",collapse=''), sep='\t', header=TRUE)
     
     parasite_rows <- grep(paste0(substr(para,1,3),"_chr",collapse=''), count_df[,1])

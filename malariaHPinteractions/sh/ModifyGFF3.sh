@@ -2,8 +2,12 @@
 
 
 # remove all comment lines
-grep -v '^#.' Pcynomolgi.gff3 > temp && mv temp Pcynomolgi.gff3
+grep -v '^#.' Pknowlesi.gtf > temp && mv temp Pknowlesi.gtf
 
-# attach prefix
-sed -e 's/^/Pcy_chr/' Pcynomolgi.fa > temp && mv temp Pcynomolgi.fa
+# attach prefix to gtf
+sed -e 's/^/Pkn_chr/' Pknowlesi.gtf > temp && mv temp Pknowlesi.gtf
+
+
+# attach prefix to fasta
+sed -e 's/>/>Pkn_chr/' Pknowlesi.fa > temp && mv temp Pknowlesi.fa
 
