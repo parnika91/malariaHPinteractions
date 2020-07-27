@@ -13,9 +13,6 @@ positive_experiments="/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt"
 host="$(grep $studyID $positive_experiments | cut -d, -f2)"
 parasite="$(grep $studyID $positive_experiments | cut -d, -f3)"
 
-
-echo $run $runID $host $parasite >> output.txt
-
 cd /SAN/Plasmo_compare/fastq_download_tmp/
 
 
@@ -49,7 +46,7 @@ if [ -e $default_path/Output/$studyID/countWithGFF3_$runID.txt ]; then
   cat /SAN/Plasmo_compare/SRAdb/Output/$studyID/runs\_$studyID.txt | grep $run >> /SAN/Plasmo_compare/SRAdb/Input/blacklist.txt # also study
  
 # Step 5: remove fastq and bam files
-  rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.fastq
-  rm /SAN/Plasmo_compare/fastq_download_tmp/$run*.bam
+  rm /SAN/Plasmo_compare/fastq_download_tmp/$runID*.fastq.gz
+  rm /SAN/Plasmo_compare/fastq_download_tmp/$runID*.bam
 
 fi
