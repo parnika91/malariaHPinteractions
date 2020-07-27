@@ -112,53 +112,6 @@ for( i in 1:length(studyIDs))
 require(rtracklayer)
 require(dplyr)
 
-hPfal_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/humanPfalciparum.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-hPber_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/humanPberghei.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-hPviv_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/humanPvivax.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-mPyoe_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/mousePyoelii.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-mPcha_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/mousePchabaudi.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-mPber_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/mousePberghei.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-moPcoa_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/monkeyPcoatneyi.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-moPcyn_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/monkeyPcynomolgi.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-moPkn_coding <- as.data.frame(import("/SAN/Plasmo_compare/Genomes/annotation/monkeyPknowlesi.gtf")) %>%
-  filter(type%in%"exon") %>%
-  filter(gene_biotype%in%"protein_coding") %>%
-  distinct(gene_id)
-
-########## do it for every study #########
-
 for(i in 1:length(studyIDs))
 {
   print(i)
