@@ -330,39 +330,113 @@ write.table(allHPexp, "allHPexp.txt", sep = '\t', row.names = F)
 save(allHPexp, file = "allHPexp.RData")
 
 #### parasite genes vs parasite reads ####
-allHPexp_mapthreshold <- allHPexp
-#allHPexp_mapthreshold <- allHPexp[allHPexp$MapPercent>=65,]
-col <- as.character(allHPexp_mapthreshold$colours)
-names(col) <- as.character(allHPexp_mapthreshold$HostParasite)
+col <- as.character(allHPexp$colours)
+names(col) <- as.character(allHPexp$HostParasite)
 
-paragenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodPara), 
-                                         y = log10(NumberProtCodGenesPara),
+#### blood ##
+blood <- allHPexp[allHPexp$Tissue=="blood",]
+blood$ProtCodGenesHostPerMaxValue_b <- blood$NumberProtCodGenesHost / max(blood$NumberProtCodGenesHost)
+blood$ProtCodGenesParaPerMaxValue_b <- blood$NumberProtCodGenesPara / max(blood$NumberProtCodGenesPara)
+
+paragenes_ggplot <- ggplot(blood, aes(x = log10(ProteinCodPara), 
+                                         y = ProtCodGenesParaPerMaxValue_b,
                                          colour = HostParasite, 
                                          fill = HostParasite))
 paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) +
   geom_jitter() + 
   ggtitle("Number of reads mapping onto parasite genes") + 
-  xlab("(Log10) Number of reads mapping onto parasite genome") + 
-  ylab("(Log10) Number of genes represented by mapped reads") + 
+  xlab("(Log10) Number of reads mapping onto parasite transcriptome") + 
+  ylab("Number of genes in blood samples") + 
   theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + 
-  theme(axis.text=element_text(size=18), axis.title=element_text(size=20), plot.title = element_text(size=24))
+  theme(axis.text=element_text(size=22), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
 paragenes_gg
-ggsave("paragenes.png", width = 30, height = 30, units = "cm")
+ggsave("paragenes_blood_30July2020.png", width = 35, height = 30, units = "cm")
 
 #### host genes vs host reads ####
-
-hostgenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), 
-                                         y = log10(NumberProtCodGenesHost),
+hostgenes_ggplot <- ggplot(blood, aes(x = log10(ProteinCodHost), 
+                                         y = ProtCodGenesHostPerMaxValue_b,
                                          colour = HostParasite, 
                                          fill = HostParasite))
 hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + 
   ggtitle("Number of reads mapping onto host genes") +
-  xlab("(Log10) Number of reads mapping onto host genome") + 
-  ylab("(Log10) Number of genes represented by mapped reads") + 
+  xlab("(Log10) Number of reads mapping onto host transcriptome") + 
+  ylab("Number of genes represented in blood samples") + 
   theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) +
-  theme(axis.text=element_text(size=18), axis.title=element_text(size=20), plot.title = element_text(size=24))
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
 hostgenes_gg
-ggsave("hostgenes.png", width = 30, height = 30, units = "cm")
+ggsave("hostgenes_blood_30July2020.png", width = 30, height = 30, units = "cm")
+
+#liver 
+liver <- allHPexp[allHPexp$Tissue=="liver",]
+liver$ProtCodGenesHostPerMaxValue_l <- liver$NumberProtCodGenesHost / max(liver$NumberProtCodGenesHost)
+liver$ProtCodGenesParaPerMaxValue_l <- liver$NumberProtCodGenesPara / max(liver$NumberProtCodGenesPara)
+
+paragenes_ggplot <- ggplot(liver, aes(x = log10(ProteinCodPara), 
+                                         y =  ProtCodGenesParaPerMaxValue_l,
+                                         colour = HostParasite, 
+                                         fill = HostParasite))
+paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) +
+  geom_jitter() + 
+  ggtitle("Number of reads mapping onto parasite genes") + 
+  xlab("(Log10) Number of reads mapping onto parasite transcriptome") + 
+  ylab("Number of genes in liver samples") + 
+  theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + 
+  theme(axis.text=element_text(size=22), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
+paragenes_gg
+ggsave(plot = paragenes_gg, "paragenes_liver_30July2020.png", width = 35, height = 30, units = "cm")
+
+#### host genes vs host reads ####
+hostgenes_ggplot <- ggplot(liver, aes(x = log10(ProteinCodHost), 
+                                         y = ProtCodGenesHostPerMaxValue_l,
+                                         colour = HostParasite, 
+                                         fill = HostParasite))
+hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + 
+  ggtitle("Number of reads mapping onto host genes") +
+  xlab("(Log10) Number of reads mapping onto host transcriptome") + 
+  ylab("Number of genes in liver samples") + 
+  theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
+hostgenes_gg
+ggsave(plot = hostgenes_gg, "hostgenes_liver_30July2020.png", width = 30, height = 30, units = "cm")
+
+
+#### overall host and para gene vs read #####
+
+paragenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodPara), 
+                                      y =  allHPexp$NumberProtCodGenesPara / max(allHPexp$NumberProtCodGenesPara),
+                                      colour = HostParasite, 
+                                      fill = HostParasite))
+paragenes_gg <- paragenes_ggplot + geom_point(alpha = 0.7) +
+  geom_jitter() + 
+  ggtitle("Number of reads mapping onto parasite genes") + 
+  xlab("(Log10) Number of reads mapping onto parasite transcriptome") + 
+  ylab("Number of genes in a sample") + 
+  theme_bw() + scale_color_manual(values = col) + scale_fill_manual(values = col) + 
+  theme(axis.text=element_text(size=22), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
+paragenes_gg
+ggsave(plot = paragenes_gg, "paragenes_all_30July2020.png", width = 35, height = 30, units = "cm")
+
+#### host genes vs host reads ####
+
+hostgenes_ggplot <- ggplot(allHPexp, aes(x = log10(ProteinCodHost), 
+                                      y = allHPexp$NumberProtCodGenesHost / max(allHPexp$NumberProtCodGenesHost),
+                                      colour = HostParasite, 
+                                      fill = HostParasite))
+hostgenes_gg <- hostgenes_ggplot + geom_point(alpha = 0.7) + 
+  ggtitle("Number of reads mapping onto host genes") +
+  xlab("(Log10) Number of reads mapping onto host transcriptome") + 
+  ylab("Number of genes in a sample") + 
+  theme_bw()  + scale_color_manual(values = col) + scale_fill_manual(values = col) +
+  theme(axis.text=element_text(size=18), axis.title=element_text(size=22), 
+        plot.title = element_text(size=24))
+hostgenes_gg
+ggsave(plot = hostgenes_gg, "hostgenes_all_30July2020.png", width = 30, height = 30, units = "cm")
+
 
 ggplot(allHPexp, aes(x = log10(NumberOfParaGenes), y = log10(NumberOfHostGenes))) + geom_point(alpha = 0.7) # Most runs have host genes > 10000 and para genes > 5000(!)
 
