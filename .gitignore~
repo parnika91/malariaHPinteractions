@@ -36,6 +36,7 @@ malariaHPinteractions/R/ConcatRunsToStudy.R
 malariaHPinteractions/R/CodingGenes.R
 malariaHPinteractions/R/tempAnalysis.R
 malariaHPinteractions/R/count_analysis.R
+malariaHPinteractions/R/models_fn.R
 malariaHPinteractions/R/gene_imp.R
 malariaHPinteractions/R/models.R
 malariaHPinteractions/R/poweRlaw.R
