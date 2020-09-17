@@ -143,7 +143,7 @@ write.table(Pb_Pf_Pv_OG, "p_OG_GOterms.txt", sep = '\t', row.names = F, quote = 
 # para_annot[,1] <- paste(para_annot[,1], "0", sep = '')
 # colnames(para_annot) <- c("Gene", "GO")
 # colnames(Pb_annot) <- c("Gene", "GO")
-# 
+#  
 # both <- full_join(Pb_annot, para_annot, by ="Gene")
 # 
 # save(both, file = "combinedGOensemblGeneDBberghei.rds")
@@ -232,15 +232,52 @@ liver.int.overall_host_genes <- unique(as.character(liver.int.overall[,1]))
 write.table(liver.int.overall_para_genes, "liver.int.overall_para_genes.txt", quote = F, row.names = F)
 write.table(liver.int.overall_host_genes, "liver.int.overall_host_genes.txt", quote = F, row.names = F)
 
+hpv_bl <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/hpv_bl/cor/hpv_bl_int_bipartite.RData")
+hpv_bl_para_genes <- unique(as.character(hpv_bl[,2]))
+hpv_bl_host_genes <- unique(as.character(hpv_bl[,1]))
+write.table(hpv_bl_para_genes, "hpv_bl_para_genes.txt", quote = F, row.names = F)
+write.table(hpv_bl_host_genes, "hpv_bl_host_genes.txt", quote = F, row.names = F)
+
+m_bl <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/m_bl/cor/m_bl_int_bipartite.RData")
+m_bl_para_genes <- unique(as.character(m_bl[,2]))
+m_bl_host_genes <- unique(as.character(m_bl[,1]))
+write.table(m_bl_para_genes, "m_bl_para_genes.txt", quote = F, row.names = F)
+write.table(m_bl_host_genes, "m_bl_host_genes.txt", quote = F, row.names = F)
+
+mo_bl <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/mo_bl/cor/mo_bl_int_bipartite.RData")
+mo_bl_para_genes <- unique(as.character(mo_bl[,2]))
+mo_bl_host_genes <- unique(as.character(mo_bl[,1]))
+write.table(mo_bl_para_genes, "mo_bl_para_genes.txt", quote = F, row.names = F)
+write.table(mo_bl_host_genes, "mo_bl_host_genes.txt", quote = F, row.names = F)
+
+overall_addblood <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/overall_addblood/cor/overall_addblood_all_bipartite.RData")
+overall_addblood_para_genes <- unique(as.character(overall_addblood[,2]))
+overall_addblood_host_genes <- unique(as.character(overall_addblood[,1]))
+write.table(overall_addblood_para_genes, "overall_addblood_para_genes.txt", quote = F, row.names = F)
+write.table(overall_addblood_host_genes, "overall_addblood_host_genes.txt", quote = F, row.names = F)
+
+SRP032775 <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/SRP032775/cor/SRP032775_int_bipartite.RData")
+SRP032775_para_genes <- unique(as.character(SRP032775[,2]))
+SRP032775_host_genes <- unique(as.character(SRP032775[,1]))
+write.table(SRP032775_para_genes, "SRP032775_para_genes.txt", quote = F, row.names = F)
+write.table(SRP032775_host_genes, "SRP032775_host_genes.txt", quote = F, row.names = F)
+
+SRP233153 <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/SRP233153/cor/SRP233153_int_bipartite.RData")
+SRP233153_para_genes <- unique(as.character(SRP233153[,2]))
+SRP233153_host_genes <- unique(as.character(SRP233153[,1]))
+write.table(SRP233153_para_genes, "SRP233153_para_genes.txt", quote = F, row.names = F)
+write.table(SRP233153_host_genes, "SRP233153_host_genes.txt", quote = F, row.names = F)
 
 
-#bip_studies <- c("SRP250329", "ERP105548", 
- #                "SRP110282", "SRP096160",
-  #               "liver.int.overall")
-bip_studies <- c("DRP000987","ERP106451",
-                 "ERP110375", "ERP004598",
-                 "SRP118827", "SRP116793",
-                 "df_concat_allhosts")
+
+# bip_studies <- c("SRP250329", "ERP105548", 
+#                  "SRP110282", "SRP096160",
+#                  "liver.int.overall")
+# bip_studies <- c("DRP000987","ERP106451",
+#                  "ERP110375", "ERP004598",
+#                  "SRP118827", "SRP116793",
+#                  "df_concat_allhosts")
+bip_studies <- c("overall_addblood", "SRP032775", "SRP233153", "hpv_bl", "mo_bl", "m_bl")
 geneont <- c("BP", "CC", "MF")
 
 for(m in 1:length(bip_studies))
@@ -315,10 +352,10 @@ for(m in 1:length(bip_studies))
     # GO term if the interesting genes were randomly distributed over all GO terms.
     
     # sg <- sigGenes(GOdata)
-    resultKS=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
+    resultKS=runTest(GOdata, algorithm='weight01', statistic='KS') 
     #resultFisher=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
     allGO=usedGO(GOdata)
-    all_res=GenTable(GOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(GOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(GOdata, score(resultKS), firstSigNodes = 5, useInfo ='all')
@@ -333,22 +370,24 @@ for(m in 1:length(bip_studies))
     {
       myterm <- mygenes[myterms[i]][[1]]
       mygenesforterm <- myterm[which(myterm %in% para_in == TRUE)]
+      mygenesforterm <- sapply(mygenesforterm, 
+                               function(x) pOG[grep(pattern = x, pOG$Orthogroup),"Pb_g"])
       mygenesforterm <- paste(mygenesforterm, collapse=',')
       GenesForGOterm[i] <- mygenesforterm
     }
 
     all_res$GenesForGOterm <- GenesForGOterm
-    write.table(all_res, paste0("p_OG_topGO_", GeneOnt,"_", study, "_para_result_Fisher.txt", collapse = ''), sep = '\t', row.names = F)
-
-    results.ks <- runTest(GOdata, algorithm="weight01", statistic="Fisher")
-    goEnrichment <- GenTable(GOdata, Fisher=results.ks, orderBy="Fisher", topNodes=20)
-    goEnrichment <- goEnrichment[goEnrichment$Fisher<0.05,]
-    goEnrichment <- goEnrichment[,c("GO.ID","Term","Fisher", "Significant")]
+    write.table(all_res, paste0("p_OG_topGO_", GeneOnt,"_", study, "_para_result.txt", collapse = ''), sep = '\t', row.names = F)
+    
+    results.ks <- runTest(GOdata, algorithm="weight01", statistic="KS")
+    goEnrichment <- GenTable(GOdata, KS=results.ks, orderBy="KS", topNodes=20)
+    goEnrichment <- goEnrichment[goEnrichment$KS<0.05,]
+    goEnrichment <- goEnrichment[,c("GO.ID","Term","KS", "Significant")]
     goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
     goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
     goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
     goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
-    goEnrichment$Fisher <- as.numeric(goEnrichment$Fisher)
+    goEnrichment$KS <- as.numeric(goEnrichment$KS)
     # 
     # b <- read.delim("~/topGO/Mmus_topGO_BP_ERP106451_SRP118996_concat_bipartite_host_result.txt",
     #                 stringsAsFactors=FALSE)
@@ -362,7 +401,7 @@ for(m in 1:length(bip_studies))
     # b$Term <- factor(b$Term, levels=rev(b$Term))
     # b$KS <- as.numeric(b$KS)
     
-    ggplot(goEnrichment, aes(x=Term, y=log10(Significant), fill = Fisher)) +
+    ggplot(goEnrichment, aes(x=Term, y=log10(Significant), fill = KS)) +
       stat_summary(geom = "bar", width = 0.5, fun = mean, position = "dodge") +
       xlab("Molecular Function") +
       ylab("Number of parasite genes in GO term") +
@@ -382,7 +421,7 @@ for(m in 1:length(bip_studies))
         title=element_text(size=18)) +
       #guides(colour=guide_legend(override.aes=list(size=2.5))) +
       coord_flip()
-      ggsave(paste0(study, "_", GeneOnt, "_p_OG_Enrichment_Fisher.png"), height = 30, width = 45, units = "cm")
+      ggsave(paste0(study, "_", GeneOnt, "_p_OG_Enrichment.png"), height = 30, width = 45, units = "cm")
       # Host
     # 1. gene-to-GO annotation file
     
@@ -433,9 +472,9 @@ for(m in 1:length(bip_studies))
                    ID = "ensembl")
     
     sg <- sigGenes(hGOdata)
-    resultKS=runTest(hGOdata, algorithm='weight01', statistic='Fisher')
+    resultKS=runTest(hGOdata, algorithm='weight01', statistic='KS')
     allGO=usedGO(hGOdata)
-    all_res=GenTable(hGOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(hGOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     ################################################################
     
     # Plotting results
@@ -457,19 +496,19 @@ for(m in 1:length(bip_studies))
     }
     
     all_res$GenesForGOterm <- GenesForGOterm
-    write.table(all_res, paste0("Mmus_topGO_", GeneOnt,"_", study, "_host_result_Fisher.txt", collapse = ''), sep = '\t', row.names = F)
+    write.table(all_res, paste0("Mmus_topGO_", GeneOnt,"_", study, "_host_result.txt", collapse = ''), sep = '\t', row.names = F)
     
-    results.ks <- runTest(hGOdata, algorithm="weight01", statistic="Fisher")
-    goEnrichment <- GenTable(hGOdata, Fisher=results.ks, orderBy="Fisher", topNodes=20)
-    goEnrichment <- goEnrichment[goEnrichment$Fisher<0.05,]
-    goEnrichment <- goEnrichment[,c("GO.ID","Term","Fisher", "Significant")]
+    results.ks <- runTest(hGOdata, algorithm="weight01", statistic="KS")
+    goEnrichment <- GenTable(hGOdata, KS=results.ks, orderBy="KS", topNodes=20)
+    goEnrichment <- goEnrichment[goEnrichment$KS<0.05,]
+    goEnrichment <- goEnrichment[,c("GO.ID","Term","KS", "Significant")]
     goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
     goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
     goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
     goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
-    goEnrichment$Fisher <- as.numeric(goEnrichment$Fisher)
+    goEnrichment$KS <- as.numeric(goEnrichment$KS)
     
-    ggplot(goEnrichment, aes(x=Term, y=Significant, fill = Fisher)) +
+    ggplot(goEnrichment, aes(x=Term, y=Significant, fill = KS)) +
       stat_summary(geom = "bar", width = 0.3, fun = mean, position = "dodge") +
       xlab(GeneOnt) +
       ylab("Number of host genes in GO term") +
@@ -489,7 +528,7 @@ for(m in 1:length(bip_studies))
         title=element_text(size=8)) +
       #guides(colour=guide_legend(override.aes=list(size=2.5))) +
       coord_flip()
-    ggsave(paste0(study, "_", GeneOnt, "_host_Enrichment_Fisher.png"), height = 20, width = 20, units = "cm")
+    ggsave(paste0(study, "_", GeneOnt, "_host_Enrichment.png"), height = 20, width = 20, units = "cm")
     
   }
 }
