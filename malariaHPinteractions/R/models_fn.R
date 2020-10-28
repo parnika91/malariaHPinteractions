@@ -239,6 +239,125 @@ RGR_MIS_cleaned <- left_join(RGR_MIS_cleaned, join_df)
 save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
 
 
+#### blood core edges
+
+# bipartite
+blood_core_edges <- loadRData("blood_core_edges.RData")
+#blood_core_host <- blood_core_edges[,"host"]
+#blood_core_para <- blood_core_edges[,"para"]
+d  = blood_core_edges
+ig <- graph_from_data_frame(d, directed = F)
+
+dg <- degree(ig, v = V(ig), loops = F, normalized = F)
+
+
+  dg_p <- dg[grep(pattern = "p_OG", names(dg))]
+  dg_df <- as.data.frame(dg_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(dg_df)[2] <- "bl_core_bp_dg"
+## betweenness
+bw <- betweenness(ig, v = V(ig), directed = FALSE)
+  bw_p <- bw[grep(pattern = "p_OG", names(bw))]
+  bw_df <- as.data.frame(bw_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(bw_df)[2] <- "bl_core_bp_bw"
+
+## eigencentrality
+ec <- eigen_centrality(ig, directed = FALSE)
+  ec_p <- ec$vector[grep(pattern = "p_OG", names(ec$vector))]
+  ec_df <- as.data.frame(ec_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(ec_df)[2] <- "bl_core_bp_ec"
+
+property_list <- list(bl_core_bp_dg = dg_df, bl_core_bp_bw = bw_df, bl_core_bp_ec = ec_df)
+
+join_df <-plyr::join_all(property_list, by = "Orthogroup", type = "full")
+
+join_df[is.na(join_df)] <- 0
+
+load("Unweighted_RGR_MIS_cleaned.RData")
+RGR_MIS_cleaned <- left_join(RGR_MIS_cleaned, join_df)
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
+# para
+blood_core_para <- loadRData("blood_core_para_edges.RData")
+#blood_core_host <- blood_core_edges[,"host"]
+#blood_core_para <- blood_core_edges[,"para"]
+d  = blood_core_para
+ig <- graph_from_data_frame(d, directed = F)
+
+dg <- degree(ig, v = V(ig), loops = F, normalized = F)
+
+
+dg_p <- dg[grep(pattern = "p_OG", names(dg))]
+  dg_df <- as.data.frame(dg_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(dg_df)[2] <- "bl_core_pp_dg"
+## betweenness
+bw <- betweenness(ig, v = V(ig), directed = FALSE)
+  bw_p <- bw[grep(pattern = "p_OG", names(bw))]
+  bw_df <- as.data.frame(bw_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(bw_df)[2] <- "bl_core_pp_bw"
+
+## eigencentrality
+ec <- eigen_centrality(ig, directed = FALSE)
+  ec_p <- ec$vector[grep(pattern = "p_OG", names(ec$vector))]
+  ec_df <- as.data.frame(ec_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(ec_df)[2] <- "bl_core_pp_ec"
+
+property_list <- list(bl_core_pp_dg = dg_df, bl_core_pp_bw = bw_df, bl_core_pp_ec = ec_df)
+
+join_df <-plyr::join_all(property_list, by = "Orthogroup", type = "full")
+
+join_df[is.na(join_df)] <- 0
+
+load("Unweighted_RGR_MIS_cleaned.RData")
+RGR_MIS_cleaned <- left_join(RGR_MIS_cleaned, join_df)
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
+# pp_bp
+blood_core <- rbind(blood_core_para, blood_core_edges)
+#blood_core_host <- blood_core_edges[,"host"]
+#blood_core_para <- blood_core_edges[,"para"]
+d  = blood_core
+ig <- graph_from_data_frame(d, directed = F)
+
+dg <- degree(ig, v = V(ig), loops = F, normalized = F)
+
+
+dg_p <- dg[grep(pattern = "p_OG", names(dg))]
+  dg_df <- as.data.frame(dg_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(dg_df)[2] <- "bl_core_pp_bp_dg"
+## betweenness
+bw <- betweenness(ig, v = V(ig), directed = FALSE)
+  bw_p <- bw[grep(pattern = "p_OG", names(bw))]
+  bw_df <- as.data.frame(bw_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(bw_df)[2] <- "bl_core_pp_bp_bw"
+
+## eigencentrality
+ec <- eigen_centrality(ig, directed = FALSE)
+  ec_p <- ec$vector[grep(pattern = "p_OG", names(ec$vector))]
+  ec_df <- as.data.frame(ec_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+colnames(ec_df)[2] <- "bl_core_pp_bp_ec"
+
+property_list <- list(bl_core_pp_bp_dg = dg_df, bl_core_pp_bp_bw = bw_df, bl_core_pp_bp_ec = ec_df)
+
+join_df <-plyr::join_all(property_list, by = "Orthogroup", type = "full")
+
+join_df[is.na(join_df)] <- 0
+
+load("Unweighted_RGR_MIS_cleaned.RData")
+RGR_MIS_cleaned <- left_join(RGR_MIS_cleaned, join_df)
+save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
+
+pb_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg)
+pb_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_ec)
+
 # ov models
 ov_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_pp_dg)
 ov_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_pp_ec)
@@ -470,116 +589,34 @@ ov_ad_all_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_all_dg +
 
 ov_ad_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_all_dg + ov_ad_all_bw + ov_ad_all_ec)
 
-# intersect models
+# blood core
 
-# ov_ad_pb
+bl_core_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg)
+bl_core_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_ec)
+bl_core_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bw)
 
-ov_ad_pb_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_dg)
-ov_ad_pb_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_ec)
-ov_ad_pb_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bw)
+bl_core_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_bw)
+bl_core_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_ec)
 
-ov_ad_pb_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_bw)
-ov_ad_pb_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_ec)
+bl_core_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_bw + bl_core_pp_ec)
 
-ov_ad_pb_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_bw + ov_ad_pb_pp_ec)
+bl_core_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_dg)
+bl_core_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_ec)
+bl_core_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_bw)
 
-ov_ad_pb_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_dg)
-ov_ad_pb_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_ec)
-ov_ad_pb_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_bw)
+bl_core_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_dg + bl_core_bp_bw)
+bl_core_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_dg + bl_core_bp_ec)
 
-ov_ad_pb_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_bw)
-ov_ad_pb_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_ec)
+bl_core_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_dg + bl_core_bp_bw + bl_core_bp_ec)
 
-ov_ad_pb_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_bw + ov_ad_pb_bp_ec)
+bl_core_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_dg)
+bl_core_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_ec)
+bl_core_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_bw)
 
-ov_ad_pb_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bp_dg)
-ov_ad_pb_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bp_ec)
-ov_ad_pb_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bp_bw)
+bl_core_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_dg + bl_core_pp_bp_bw)
+bl_core_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_dg + bl_core_pp_bp_ec)
 
-ov_ad_pb_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bp_dg + ov_ad_pb_pp_bp_bw)
-ov_ad_pb_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pb_pp_bp_dg + ov_ad_pb_pp_bp_ec)
-
-#ov_ad_pf
-
-ov_ad_pf_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_dg)
-ov_ad_pf_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_ec)
-ov_ad_pf_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bw)
-
-ov_ad_pf_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_bw)
-ov_ad_pf_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_ec)
-
-ov_ad_pf_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_bw + ov_ad_pf_pp_ec)
-
-ov_ad_pf_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_dg)
-ov_ad_pf_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_ec)
-ov_ad_pf_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_bw)
-
-ov_ad_pf_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_bw)
-ov_ad_pf_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_ec)
-
-ov_ad_pf_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_bw + ov_ad_pf_bp_ec)
-
-ov_ad_pf_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bp_dg)
-ov_ad_pf_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bp_ec)
-ov_ad_pf_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bp_bw)
-
-ov_ad_pf_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bp_dg + ov_ad_pf_pp_bp_bw)
-ov_ad_pf_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pf_pp_bp_dg + ov_ad_pf_pp_bp_ec)
-
-# ov_ad_pfE
-
-ov_ad_pfE_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_dg)
-ov_ad_pfE_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_ec)
-ov_ad_pfE_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bw)
-
-ov_ad_pfE_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_bw)
-ov_ad_pfE_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_ec)
-
-ov_ad_pfE_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_bw + ov_ad_pfE_pp_ec)
-
-ov_ad_pfE_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_dg)
-ov_ad_pfE_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_ec)
-ov_ad_pfE_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_bw)
-
-ov_ad_pfE_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_bw)
-ov_ad_pfE_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_ec)
-
-ov_ad_pfE_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_bw + ov_ad_pfE_bp_ec)
-
-ov_ad_pfE_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bp_dg)
-ov_ad_pfE_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bp_ec)
-ov_ad_pfE_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bp_bw)
-
-ov_ad_pfE_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bp_dg + ov_ad_pfE_pp_bp_bw)
-ov_ad_pfE_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pfE_pp_bp_dg + ov_ad_pfE_pp_bp_ec)
-
-# ov_ad_pv
-
-ov_ad_pv_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_dg)
-ov_ad_pv_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_ec)
-ov_ad_pv_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bw)
-
-ov_ad_pv_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_bw)
-ov_ad_pv_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_ec)
-
-ov_ad_pv_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_bw + ov_ad_pv_pp_ec)
-
-ov_ad_pv_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_dg)
-ov_ad_pv_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_ec)
-ov_ad_pv_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_bw)
-
-ov_ad_pv_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_bw)
-ov_ad_pv_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_ec)
-
-ov_ad_pv_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_bw + ov_ad_pv_bp_ec)
-
-ov_ad_pv_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bp_dg)
-ov_ad_pv_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bp_ec)
-ov_ad_pv_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bp_bw)
-
-ov_ad_pv_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bp_dg + ov_ad_pv_pp_bp_bw)
-ov_ad_pv_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_pv_pp_bp_dg + ov_ad_pv_pp_bp_ec)
-
+bl_core_pp_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_dg + bl_core_pp_bp_bw + bl_core_pp_bp_ec)
 
 # MIS models
 
@@ -815,115 +852,34 @@ ov_ad_all_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_all_dg
 
 ov_ad_all_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_all_dg + ov_ad_all_bw + ov_ad_all_ec)
 
-# intersect models
+## blood core
 
-# ov_ad_pb
+bl_core_pp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg)
+bl_core_pp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_ec)
+bl_core_pp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bw)
 
-ov_ad_pb_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_dg)
-ov_ad_pb_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_ec)
-ov_ad_pb_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bw)
+bl_core_pp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_bw)
+bl_core_pp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_ec)
 
-ov_ad_pb_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_bw)
-ov_ad_pb_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_ec)
+bl_core_pp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_bw + bl_core_pp_ec)
 
-ov_ad_pb_pp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_dg + ov_ad_pb_pp_bw + ov_ad_pb_pp_ec)
+bl_core_bp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_dg)
+bl_core_bp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_ec)
+bl_core_bp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_bw)
 
-ov_ad_pb_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_dg)
-ov_ad_pb_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_ec)
-ov_ad_pb_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_bw)
+bl_core_bp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_dg + bl_core_bp_bw)
+bl_core_bp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_dg + bl_core_bp_ec)
 
-ov_ad_pb_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_bw)
-ov_ad_pb_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_ec)
+bl_core_bp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_dg + bl_core_bp_bw + bl_core_bp_ec)
 
-ov_ad_pb_bp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_bp_dg + ov_ad_pb_bp_bw + ov_ad_pb_bp_ec)
+bl_core_pp_bp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_dg)
+bl_core_pp_bp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_ec)
+bl_core_pp_bp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_bw)
 
-ov_ad_pb_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bp_dg)
-ov_ad_pb_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bp_ec)
-ov_ad_pb_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bp_bw)
+bl_core_pp_bp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_dg + bl_core_pp_bp_bw)
+bl_core_pp_bp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_dg + bl_core_pp_bp_ec)
 
-ov_ad_pb_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bp_dg + ov_ad_pb_pp_bp_bw)
-ov_ad_pb_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pb_pp_bp_dg + ov_ad_pb_pp_bp_ec)
-
-#ov_ad_pf
-
-ov_ad_pf_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_dg)
-ov_ad_pf_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_ec)
-ov_ad_pf_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bw)
-
-ov_ad_pf_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_bw)
-ov_ad_pf_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_ec)
-
-ov_ad_pf_pp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_dg + ov_ad_pf_pp_bw + ov_ad_pf_pp_ec)
-
-ov_ad_pf_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_dg)
-ov_ad_pf_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_ec)
-ov_ad_pf_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_bw)
-
-ov_ad_pf_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_bw)
-ov_ad_pf_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_ec)
-
-ov_ad_pf_bp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_bp_dg + ov_ad_pf_bp_bw + ov_ad_pf_bp_ec)
-
-ov_ad_pf_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bp_dg)
-ov_ad_pf_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bp_ec)
-ov_ad_pf_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bp_bw)
-
-ov_ad_pf_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bp_dg + ov_ad_pf_pp_bp_bw)
-ov_ad_pf_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pf_pp_bp_dg + ov_ad_pf_pp_bp_ec)
-
-# ov_ad_pfE
-
-ov_ad_pfE_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_dg)
-ov_ad_pfE_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_ec)
-ov_ad_pfE_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bw)
-
-ov_ad_pfE_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_bw)
-ov_ad_pfE_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_ec)
-
-ov_ad_pfE_pp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_dg + ov_ad_pfE_pp_bw + ov_ad_pfE_pp_ec)
-
-ov_ad_pfE_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_dg)
-ov_ad_pfE_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_ec)
-ov_ad_pfE_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_bw)
-
-ov_ad_pfE_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_bw)
-ov_ad_pfE_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_ec)
-
-ov_ad_pfE_bp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_bp_dg + ov_ad_pfE_bp_bw + ov_ad_pfE_bp_ec)
-
-ov_ad_pfE_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bp_dg)
-ov_ad_pfE_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bp_ec)
-ov_ad_pfE_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bp_bw)
-
-ov_ad_pfE_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bp_dg + ov_ad_pfE_pp_bp_bw)
-ov_ad_pfE_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pfE_pp_bp_dg + ov_ad_pfE_pp_bp_ec)
-
-# ov_ad_pv
-
-ov_ad_pv_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_dg)
-ov_ad_pv_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_ec)
-ov_ad_pv_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bw)
-
-ov_ad_pv_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_bw)
-ov_ad_pv_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_ec)
-
-ov_ad_pv_pp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_dg + ov_ad_pv_pp_bw + ov_ad_pv_pp_ec)
-
-ov_ad_pv_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_dg)
-ov_ad_pv_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_ec)
-ov_ad_pv_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_bw)
-
-ov_ad_pv_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_bw)
-ov_ad_pv_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_ec)
-
-ov_ad_pv_bp_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_bp_dg + ov_ad_pv_bp_bw + ov_ad_pv_bp_ec)
-
-ov_ad_pv_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bp_dg)
-ov_ad_pv_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bp_ec)
-ov_ad_pv_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bp_bw)
-
-ov_ad_pv_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bp_dg + ov_ad_pv_pp_bp_bw)
-ov_ad_pv_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_pp_bp_dg + ov_ad_pv_pp_bp_ec)
+bl_core_pp_bp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bp_dg + bl_core_pp_bp_bw + bl_core_pp_bp_ec)
 
 
 # trying to make the table automated
@@ -931,6 +887,8 @@ ov_ad_pv_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_pv_
 # | model name | dg | bw | cl | ec | kc | prsq |
 
 #ls()[which(class(eval(parse(text = ls()))) == "betareg")]
+
+summary(bl_core_pp_dg_m)$coef
 
 f <-c()
 for(i in ls())
@@ -1159,6 +1117,34 @@ dev.off()
 library(ggeffects)
 
 ## RGR
+
+# pb
+# bl_core_pp_ec_ef <- ggeffect(bl_core_pp_ec_m, terms = c("bl_core_pp_ec"))
+# ggplot(pfE_pp_dg_ef, aes(x, predicted)) +
+#   geom_line() +
+#   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1) +
+#   xlab("P. berghei dataset node degree")
+# ggsave("pfE_pp_dg_ef.png")
+# 
+# plot(bl_core_pp_ec_ef, rawdata = T)#, xlab = "Eigenvector centrality of blood core network", main = "RGR prediction")
+
+#################
+############
+#############
+### golden code
+############
+##############
+#############
+
+library(ggplot2)
+ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = RGR, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(pb_pp_ec_m, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Relative Growth Rate prediction") + 
+  xlab("P. berghei network centrality") + 
+  ylab("Relative Growth Rate") +
+  theme(axis.text = element_text(size = 15), axis.title = element_text(size = 15), plot.title = element_text(size = 15))
 ##pfE
 pfE_pp_dg_ef <- ggeffect(pfE_pp_dg_m, terms = c("pfE_pp_dg"))
 

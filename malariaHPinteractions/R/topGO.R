@@ -26,115 +26,115 @@ loadRData <- function(fileName){
 # 
 
 ## Parasite
-Pb_Gdb <- read.delim("~/topGO/Pberghei.gaf", header=FALSE, 
-                     stringsAsFactors=FALSE)
-Pb_bm <- read.delim("~/topGO/Pb_mart_export.txt", header=T,
-                   stringsAsFactors=FALSE)
-
-Pf_Gdb <- read.delim("~/topGO/Pfalciparum.gaf", header=FALSE, 
-                     stringsAsFactors=FALSE)
-Pf_bm <- read.delim("~/topGO/Pf_mart_export.txt", header=T,
-                    stringsAsFactors=FALSE)
-
-Pv_Gdb <- read.delim("~/topGO/PvivaxP01.gaf", header=FALSE, 
-                     stringsAsFactors=FALSE)
-Pv_bm <- read.delim("~/topGO/Pv_mart_export.txt", header=T,
-                    stringsAsFactors=FALSE)
+# Pb_Gdb <- read.delim("~/topGO/Pberghei.gaf", header=FALSE, 
+#                      stringsAsFactors=FALSE)
+# Pb_bm <- read.delim("~/topGO/Pb_mart_export.txt", header=T,
+#                    stringsAsFactors=FALSE)
+# 
+# Pf_Gdb <- read.delim("~/topGO/Pfalciparum.gaf", header=FALSE, 
+#                      stringsAsFactors=FALSE)
+# Pf_bm <- read.delim("~/topGO/Pf_mart_export.txt", header=T,
+#                     stringsAsFactors=FALSE)
+# 
+# Pv_Gdb <- read.delim("~/topGO/PvivaxP01.gaf", header=FALSE, 
+#                      stringsAsFactors=FALSE)
+# Pv_bm <- read.delim("~/topGO/Pv_mart_export.txt", header=T,
+#                     stringsAsFactors=FALSE)
 
 pOG <- read.delim("~/Documents/Data/parasite_orthogroups.txt", 
                                    stringsAsFactors=FALSE)
 
-# treating Pf tables
-# remove rows with empty GO accession from both
-Pf_bm <- Pf_bm[which(Pf_bm$GO.term.accession != ""),]
-Pf_Gdb <- Pf_Gdb[which(Pf_Gdb$V5 != ""),]
-
-# remove .1 from Pf_Gdb
-Pf_Gdb$V2 <- substr(Pf_Gdb$V2, 1, 13)
-
-# collect rows wih gene IDs and GO term
-Pf_bm_red <- Pf_bm[,c("Gene.stable.ID", "GO.term.accession")]
-Pf_Gdb_red <- Pf_Gdb[,c("V2", "V5")]
-colnames(Pf_Gdb_red) <- colnames(Pf_bm_red)
-
-# rbind bm and Gdb
-Pf <- rbind(Pf_bm_red, Pf_Gdb_red)
-Pf <- aggregate(Pf$GO.term.accession,Pf['Gene.stable.ID'],paste,collapse=',')
- 
-# keep unique GOterms
-Pf$GO <- sapply(Pf$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
-Pf <- Pf[, -c(2)]
-
-# treating Pb tables
-# remove rows with empty GO accession from both
-Pb_bm <- Pb_bm[which(Pb_bm$GO.term.accession != ""),]
-Pb_Gdb <- Pb_Gdb[which(Pb_Gdb$V5 != ""),]
-
-# remove .1 from Pb_Gdb
-Pb_Gdb$V2 <- substr(Pb_Gdb$V2, 1, 13)
-
-# collect rows wih gene IDs and GO term
-Pb_bm_red <- Pb_bm[,c("Gene.stable.ID", "GO.term.accession")]
-Pb_Gdb_red <- Pb_Gdb[,c("V2", "V5")]
-colnames(Pb_Gdb_red) <- colnames(Pb_bm_red)
-
-# rbind bm and Gdb
-Pb <- rbind(Pb_bm_red, Pb_Gdb_red)
-Pb <- aggregate(Pb$GO.term.accession,Pb['Gene.stable.ID'],paste,collapse=',')
-
-# keep unique GOterms
-Pb$GO <- sapply(Pb$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
-Pb <- Pb[, -c(2)]
-
-# treating Pv tables
-# remove rows with empty GO accession from both
-Pv_bm <- Pv_bm[which(Pv_bm$GO.term.accession != ""),]
-Pv_Gdb <- Pv_Gdb[which(Pv_Gdb$V5 != ""),]
-
-# remove .1 from Pb_Gdb
-Pv_Gdb$V2 <- substr(Pv_Gdb$V2, 1, 13)
-
-# collect rows wih gene IDs and GO term
-Pv_bm_red <- Pv_bm[,c("Gene.stable.ID", "GO.term.accession")]
-Pv_Gdb_red <- Pv_Gdb[,c("V2", "V5")]
-colnames(Pv_Gdb_red) <- colnames(Pv_bm_red)
-
-# rbind bm and Gdb
-Pv <- rbind(Pv_bm_red, Pv_Gdb_red)
-Pv <- aggregate(Pv$GO.term.accession,Pv['Gene.stable.ID'],paste,collapse=',')
-
-# keep unique GOterms
-Pv$GO <- sapply(Pv$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
-Pv <- Pv[, -c(2)]
-
-save(Pf, file = "Pf_annot.RData")
-save(Pb, file = "Pb_annot.RData")
-save(Pv, file = "Pv_annot.RData")
-
-# merge with orthogroups
-Pb_OG <- merge(Pb, pOG[,c("Orthogroup", "Pb_g")], by.x = "Gene.stable.ID", by.y = "Pb_g")
-Pf_OG <- merge(Pf, pOG[,c("Orthogroup", "Pf_g")], by.x = "Gene.stable.ID", by.y = "Pf_g")
-Pv_OG <- merge(Pv, pOG[,c("Orthogroup", "Pv_g")], by.x = "Gene.stable.ID", by.y = "Pv_g")
-
-Pb_Pf <- full_join(Pb_OG, Pf_OG, by = "Orthogroup")
-Pb_Pf_Pv <- full_join(Pb_Pf, Pv_OG, by = "Orthogroup")
-
-# keeping only orthogroups
-GO <- data.frame(paste(as.character(Pb_Pf_Pv$GO.x), as.character(Pb_Pf_Pv$GO.y), as.character(Pb_Pf_Pv$GO), sep = ","))
-GO_ <- data.frame()
-for(i in 1:nrow(GO))
-{
-  t <- unique(strsplit(as.character(GO[i,]), split = ",")[[1]])
-  t <- t[!t %in% "NA"]
-  GO_[i,1] <- paste(t, collapse = ",")
-}
-
-Pb_Pf_Pv_OG <- data.frame(Orthogroup = Pb_Pf_Pv$Orthogroup, GOterm = GO_)
-colnames(Pb_Pf_Pv_OG)[2] <- "GO"
-save(Pb_Pf_Pv_OG, file = "p_OG_GOterms.RData")
-colnames(Pb_Pf_Pv_OG) <- NULL
-
-write.table(Pb_Pf_Pv_OG, "p_OG_GOterms.txt", sep = '\t', row.names = F, quote = F)
+# # treating Pf tables
+# # remove rows with empty GO accession from both
+# Pf_bm <- Pf_bm[which(Pf_bm$GO.term.accession != ""),]
+# Pf_Gdb <- Pf_Gdb[which(Pf_Gdb$V5 != ""),]
+# 
+# # remove .1 from Pf_Gdb
+# Pf_Gdb$V2 <- substr(Pf_Gdb$V2, 1, 13)
+# 
+# # collect rows wih gene IDs and GO term
+# Pf_bm_red <- Pf_bm[,c("Gene.stable.ID", "GO.term.accession")]
+# Pf_Gdb_red <- Pf_Gdb[,c("V2", "V5")]
+# colnames(Pf_Gdb_red) <- colnames(Pf_bm_red)
+# 
+# # rbind bm and Gdb
+# Pf <- rbind(Pf_bm_red, Pf_Gdb_red)
+# Pf <- aggregate(Pf$GO.term.accession,Pf['Gene.stable.ID'],paste,collapse=',')
+#  
+# # keep unique GOterms
+# Pf$GO <- sapply(Pf$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+# Pf <- Pf[, -c(2)]
+# 
+# # treating Pb tables
+# # remove rows with empty GO accession from both
+# Pb_bm <- Pb_bm[which(Pb_bm$GO.term.accession != ""),]
+# Pb_Gdb <- Pb_Gdb[which(Pb_Gdb$V5 != ""),]
+# 
+# # remove .1 from Pb_Gdb
+# Pb_Gdb$V2 <- substr(Pb_Gdb$V2, 1, 13)
+# 
+# # collect rows wih gene IDs and GO term
+# Pb_bm_red <- Pb_bm[,c("Gene.stable.ID", "GO.term.accession")]
+# Pb_Gdb_red <- Pb_Gdb[,c("V2", "V5")]
+# colnames(Pb_Gdb_red) <- colnames(Pb_bm_red)
+# 
+# # rbind bm and Gdb
+# Pb <- rbind(Pb_bm_red, Pb_Gdb_red)
+# Pb <- aggregate(Pb$GO.term.accession,Pb['Gene.stable.ID'],paste,collapse=',')
+# 
+# # keep unique GOterms
+# Pb$GO <- sapply(Pb$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+# Pb <- Pb[, -c(2)]
+# 
+# # treating Pv tables
+# # remove rows with empty GO accession from both
+# Pv_bm <- Pv_bm[which(Pv_bm$GO.term.accession != ""),]
+# Pv_Gdb <- Pv_Gdb[which(Pv_Gdb$V5 != ""),]
+# 
+# # remove .1 from Pb_Gdb
+# Pv_Gdb$V2 <- substr(Pv_Gdb$V2, 1, 13)
+# 
+# # collect rows wih gene IDs and GO term
+# Pv_bm_red <- Pv_bm[,c("Gene.stable.ID", "GO.term.accession")]
+# Pv_Gdb_red <- Pv_Gdb[,c("V2", "V5")]
+# colnames(Pv_Gdb_red) <- colnames(Pv_bm_red)
+# 
+# # rbind bm and Gdb
+# Pv <- rbind(Pv_bm_red, Pv_Gdb_red)
+# Pv <- aggregate(Pv$GO.term.accession,Pv['Gene.stable.ID'],paste,collapse=',')
+# 
+# # keep unique GOterms
+# Pv$GO <- sapply(Pv$x, function(y) paste(unique(strsplit(y, split = ",")[[1]]), collapse = ","))
+# Pv <- Pv[, -c(2)]
+# 
+# save(Pf, file = "Pf_annot.RData")
+# save(Pb, file = "Pb_annot.RData")
+# save(Pv, file = "Pv_annot.RData")
+# 
+# # merge with orthogroups
+# Pb_OG <- merge(Pb, pOG[,c("Orthogroup", "Pb_g")], by.x = "Gene.stable.ID", by.y = "Pb_g")
+# Pf_OG <- merge(Pf, pOG[,c("Orthogroup", "Pf_g")], by.x = "Gene.stable.ID", by.y = "Pf_g")
+# Pv_OG <- merge(Pv, pOG[,c("Orthogroup", "Pv_g")], by.x = "Gene.stable.ID", by.y = "Pv_g")
+# 
+# Pb_Pf <- full_join(Pb_OG, Pf_OG, by = "Orthogroup")
+# Pb_Pf_Pv <- full_join(Pb_Pf, Pv_OG, by = "Orthogroup")
+# 
+# # keeping only orthogroups
+# GO <- data.frame(paste(as.character(Pb_Pf_Pv$GO.x), as.character(Pb_Pf_Pv$GO.y), as.character(Pb_Pf_Pv$GO), sep = ","))
+# GO_ <- data.frame()
+# for(i in 1:nrow(GO))
+# {
+#   t <- unique(strsplit(as.character(GO[i,]), split = ",")[[1]])
+#   t <- t[!t %in% "NA"]
+#   GO_[i,1] <- paste(t, collapse = ",")
+# }
+# 
+# Pb_Pf_Pv_OG <- data.frame(Orthogroup = Pb_Pf_Pv$Orthogroup, GOterm = GO_)
+# colnames(Pb_Pf_Pv_OG)[2] <- "GO"
+# save(Pb_Pf_Pv_OG, file = "p_OG_GOterms.RData")
+# colnames(Pb_Pf_Pv_OG) <- NULL
+# 
+# write.table(Pb_Pf_Pv_OG, "p_OG_GOterms.txt", sep = '\t', row.names = F, quote = F)
 
 # 1. Backgound genes and their annotations
 # Found via GeneDB redirecting to
@@ -268,6 +268,26 @@ SRP233153_host_genes <- unique(as.character(SRP233153[,1]))
 write.table(SRP233153_para_genes, "SRP233153_para_genes.txt", quote = F, row.names = F)
 write.table(SRP233153_host_genes, "SRP233153_host_genes.txt", quote = F, row.names = F)
 
+blood_liver_overall <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/blood_liver_overall/cor/blood_liver_overall_all_bipartite.RData")
+blood_liver_overall_para_genes <- unique(as.character(blood_liver_overall[,2]))
+blood_liver_overall_host_genes <- unique(as.character(blood_liver_overall[,1]))
+write.table(blood_liver_overall_para_genes, "blood_liver_overall_para_genes.txt", quote = F, row.names = F)
+write.table(blood_liver_overall_host_genes, "blood_liver_overall_host_genes.txt", quote = F, row.names = F)
+
+blood_core_host <- as.character(blood_core_edges_default_node[grep(pattern = "h_OG",
+                                                       blood_core_edges_default_node[,1]),1])
+blood_core_para <- as.character(blood_core_edges_default_node[grep(pattern = "p_OG",
+                                                                   blood_core_edges_default_node[,1]),1])
+write.table(blood_core_host, "blood_core_host_genes.txt", quote = F, row.names = F)
+write.table(blood_core_para, "blood_core_para_genes.txt", quote = F, row.names = F)
+
+
+liver_core_host <- as.character(liver_core_edges_default_node[grep(pattern = "h_OG",
+                                                                   liver_core_edges_default_node[,1]),1])
+liver_core_para <- as.character(liver_core_edges_default_node[grep(pattern = "p_OG",
+                                                                   liver_core_edges_default_node[,1]),1])
+write.table(liver_core_host, "liver_core_host_genes.txt", quote = F, row.names = F)
+write.table(liver_core_para, "liver_core_para_genes.txt", quote = F, row.names = F)
 
 
 # bip_studies <- c("SRP250329", "ERP105548", 
@@ -277,8 +297,9 @@ write.table(SRP233153_host_genes, "SRP233153_host_genes.txt", quote = F, row.nam
 #                  "ERP110375", "ERP004598",
 #                  "SRP118827", "SRP116793",
 #                  "df_concat_allhosts")
-bip_studies <- c("overall_addblood", "SRP032775", "SRP233153", "hpv_bl", "mo_bl", "m_bl")
-geneont <- c("BP", "CC", "MF")
+#bip_studies <- c("overall_addblood", "SRP032775", "SRP233153", "hpv_bl", "mo_bl", "m_bl")
+bip_studies <- c("blood_core_cd74")
+geneont <- c("BP", "CC")
 
 for(m in 1:length(bip_studies))
 {
