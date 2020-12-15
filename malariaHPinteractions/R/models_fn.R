@@ -306,6 +306,7 @@ ec <- eigen_centrality(ig, directed = FALSE)
   ec_df <- as.data.frame(ec_p) %>%
     tibble::rownames_to_column("Orthogroup")
 colnames(ec_df)[2] <- "bl_core_pp_ec"
+}
 
 property_list <- list(bl_core_pp_dg = dg_df, bl_core_pp_bw = bw_df, bl_core_pp_ec = ec_df)
 
@@ -398,42 +399,42 @@ ov_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_all_dg + ov_all_bw +
 
 # pfE models
 
-pfE_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_dg)
-pfE_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_ec)
-pfE_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bw)
+pb_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg)
+pb_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_ec)
+pb_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bw)
 
-pfE_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_dg + pfE_pp_bw)
-pfE_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_dg + pfE_pp_ec)
+pb_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg + pb_pp_bw)
+pb_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg + pb_pp_ec)
 
-pfE_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_dg + pfE_pp_bw + pfE_pp_ec)
+pb_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg + pb_pp_bw + pb_pp_ec)
 
-pfE_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_dg)
-pfE_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_ec)
-pfE_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_bw)
+pb_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_dg)
+pb_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_ec)
+pb_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_bw)
 
-pfE_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_dg + pfE_bp_bw)
-pfE_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_dg + pfE_bp_ec)
+pb_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_dg + pb_bp_bw)
+pb_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_dg + pb_bp_ec)
 
-pfE_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_bp_dg + pfE_bp_bw + pfE_bp_ec)
+pb_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_bp_dg + pb_bp_bw + pb_bp_ec)
 
-pfE_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_dg)
-pfE_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_ec)
-pfE_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_bw)
+pb_pp_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_dg)
+pb_pp_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_ec)
+pb_pp_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_bw)
 
-pfE_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_dg + pfE_pp_bp_bw)
-pfE_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_dg + pfE_pp_bp_ec)
+pb_pp_bp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_dg + pb_pp_bp_bw)
+pb_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_dg + pb_pp_bp_ec)
 
-pfE_pp_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_pp_bp_dg + pfE_pp_bp_bw + pfE_pp_bp_ec)
+pb_pp_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bp_dg + pb_pp_bp_bw + pb_pp_bp_ec)
 
 
-pfE_all_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_dg)
-pfE_all_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_ec)
-pfE_all_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_bw)
+pb_all_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_dg)
+pb_all_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_ec)
+pb_all_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_bw)
 
-pfE_all_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_dg + pfE_all_bw)
-pfE_all_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_dg + pfE_all_ec)
+pb_all_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_dg + pb_all_bw)
+pb_all_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_dg + pb_all_ec)
 
-pfE_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pfE_all_dg + pfE_all_bw + pfE_all_ec)
+pb_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_all_dg + pb_all_bw + pb_all_ec)
 
 # pf models
 
@@ -619,6 +620,46 @@ bl_core_pp_bp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp
 bl_core_pp_bp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bp_dg + bl_core_pp_bp_bw + bl_core_pp_bp_ec)
 
 # MIS models
+
+# pb models 
+# pb models
+pb_pp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_dg)
+pb_pp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_ec)
+pb_pp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bw)
+
+pb_pp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_dg + pb_pp_bw)
+pb_pp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_dg + pb_pp_ec)
+
+pb_pp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_dg + pb_pp_bw + pb_pp_ec)
+
+pb_bp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_dg)
+pb_bp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_ec)
+pb_bp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_bw)
+
+pb_bp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_dg + pb_bp_bw)
+pb_bp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_dg + pb_bp_ec)
+
+pb_bp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_bp_dg + pb_bp_bw + pb_bp_ec)
+
+pb_pp_bp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_dg)
+pb_pp_bp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_ec)
+pb_pp_bp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_bw)
+
+pb_pp_bp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_dg + pb_pp_bp_bw)
+pb_pp_bp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_dg + pb_pp_bp_ec)
+
+pb_pp_bp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_pp_bp_dg + pb_pp_bp_bw + pb_pp_bp_ec)
+
+
+pb_all_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_dg)
+pb_all_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_ec)
+pb_all_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_bw)
+
+pb_all_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_dg + pb_all_bw)
+pb_all_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_dg + pb_all_ec)
+
+pb_all_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ pb_all_dg + pb_all_bw + pb_all_ec)
+
 
 # ov models
 ov_pp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_pp_dg)
@@ -1137,14 +1178,90 @@ library(ggeffects)
 #############
 
 library(ggplot2)
-ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = RGR, fill = phenotype.y, colour = phenotype.y)) +
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = RGR, fill = phenotype.y, colour = phenotype.y)) +
   geom_point(size = 2, alpha = 0.7) +
   geom_line(aes(y = predict(pb_pp_ec_m, rgr_mis_allgenes_clean))) +
   theme_bw() + 
   ggtitle("Relative Growth Rate prediction") + 
   xlab("P. berghei network centrality") + 
   ylab("Relative Growth Rate") +
-  theme(axis.text = element_text(size = 15), axis.title = element_text(size = 15), plot.title = element_text(size = 15))
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("RGR_vs_Pberg.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = ov_pp_ec, y = RGR, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(ov_pp_ec_m, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Relative Growth Rate prediction") + 
+  xlab("Overall network centrality") + 
+  ylab("Relative Growth Rate") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("RGR_vs_overall.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = bl_core_pp_ec, y = RGR, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(bl_core_pp_ec_m, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Relative Growth Rate prediction") + 
+  xlab("Core network centrality") + 
+  ylab("Relative Growth Rate") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("RGR_vs_core.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = MIS, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(pb_pp_ec_mis, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Mutagenesis Index Score prediction") + 
+  xlab("P. berghei network centrality") + 
+  ylab("Mutagenesis Index Score") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("MIS_vs_Pberg.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = ov_pp_ec, y = MIS, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(ov_pp_ec_mis, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Mutagenesis Index Score prediction") + 
+  xlab("Overall network centrality") + 
+  ylab("Mutagenesis Index Score") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("MIS_vs_overall.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = bl_core_pp_ec, y = MIS, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(bl_core_pp_ec_mis, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Mutagenesis Index Score prediction") + 
+  xlab("Core network centrality") + 
+  ylab("Mutagenesis Index Score") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("MIS_vs_core.png", width = 30, height = 20, units = "cm")
+
+p <- ggplot(rgr_mis_allgenes_clean, aes(x = pfE_pp_ec, y = MIS, fill = phenotype.y, colour = phenotype.y)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line(aes(y = predict(pfE_pp_ec_mis, rgr_mis_allgenes_clean))) +
+  theme_bw() + 
+  ggtitle("Mutagenesis Index Score prediction") + 
+  xlab("P. falciparum (E) network centrality") + 
+  ylab("Mutagenesis Index Score") +
+  theme(axis.text = element_text(size = 15), 
+        axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+ggsave("MIS_vs_pfE.png", width = 30, height = 20, units = "cm")
+
 ##pfE
 pfE_pp_dg_ef <- ggeffect(pfE_pp_dg_m, terms = c("pfE_pp_dg"))
 

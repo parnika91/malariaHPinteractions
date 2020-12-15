@@ -1,0 +1,620 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.21)  26 NOV 2020 10:39
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**stargazer.tex
+(./stargazer.tex
+LaTeX2e <2020-02-02> patch level 2
+L3 programming layer <2020-02-14>
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
+File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
+\l__kernel_color_stack_int=\count167
+\l__pdf_internal_box=\box45
+)
+(./stargazer.aux)
+\openout1 = `stargazer.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+
+
+! LaTeX Error: The font size command \normalsize is not defined:
+               there is probably something wrong with the class file.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.4 \begin{document}
+                    
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: Can be used only in preamble.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.5 \usepackage
+               {dcolumn}
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: Environment table undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.7 \begin{table}
+                 [!htbp]
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 8.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 8.
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+! LaTeX Error: Illegal character in array arg.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.8 ...}{-3} D{.}{.}{-3} D{.}{.}{-3} D{.}{.}{-3} }
+                                                  
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.19  bl\_core\_pp\_ec & -1.022^
+                                {***} &  & -0.503^{***} &  \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.19  bl\_core\_pp\_ec & -1.022^{***} &
+                                         & -0.503^{***} &  \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.19  bl\_core\_pp\_ec & -1.022^{***} &
+                                         & -0.503^{***} &  \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.19  bl\_core\_pp\_ec & -1.022^{***} &
+                                         & -0.503^{***} &  \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.19  bl\_core\_pp\_ec & -1.022^{***} &  & -0.503^
+                                                  {***} &  \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.19 ..._pp\_ec & -1.022^{***} &  & -0.503^{***} &
+                                                    \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.19 ..._pp\_ec & -1.022^{***} &  & -0.503^{***} &
+                                                    \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.19 ..._pp\_ec & -1.022^{***} &  & -0.503^{***} &
+                                                    \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.22  pb\_pp\_ec &  & -1.445^
+                             {***} &  & -0.754^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.22  pb\_pp\_ec &  & -1.445^{***} &
+                                      & -0.754^{***} \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.22  pb\_pp\_ec &  & -1.445^{***} &
+                                      & -0.754^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.22  pb\_pp\_ec &  & -1.445^{***} &
+                                      & -0.754^{***} \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.22  pb\_pp\_ec &  & -1.445^{***} &  & -0.754^
+                                               {***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.23   &
+          & (0.089) &  & (0.087) \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.23   &
+          & (0.089) &  & (0.087) \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.23   &
+          & (0.089) &  & (0.087) \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25  Constant & 0.904^
+                       {***} & 1.092^{***} & 1.033^{***} & 1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.25  Constant & 0.904^{***} &
+                               1.092^{***} & 1.033^{***} & 1.146^{***} \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25  Constant & 0.904^{***} &
+                               1.092^{***} & 1.033^{***} & 1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.25  Constant & 0.904^{***} &
+                               1.092^{***} & 1.033^{***} & 1.146^{***} \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25  Constant & 0.904^{***} & 1.092^
+                                     {***} & 1.033^{***} & 1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.25  Constant & 0.904^{***} & 1.092^{***} &
+                                             1.033^{***} & 1.146^{***} \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25  Constant & 0.904^{***} & 1.092^{***} &
+                                             1.033^{***} & 1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.25  Constant & 0.904^{***} & 1.092^{***} &
+                                             1.033^{***} & 1.146^{***} \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25 ...stant & 0.904^{***} & 1.092^{***} & 1.033^
+                                                  {***} & 1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.25 ... 0.904^{***} & 1.092^{***} & 1.033^{***} &
+                                                   1.146^{***} \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25 ... 0.904^{***} & 1.092^{***} & 1.033^{***} &
+                                                   1.146^{***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.25 ... 0.904^{***} & 1.092^{***} & 1.033^{***} &
+                                                   1.146^{***} \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.25 ...{***} & 1.092^{***} & 1.033^{***} & 1.146^
+                                                  {***} \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Extra }, or forgotten $.
+<template> \unskip \hfil }
+                          \hskip \tabcolsep \endtemplate 
+l.26   &
+         (0.043) & (0.048) & (0.044) & (0.049) \\
+I've deleted a group-closing symbol because it seems to be
+spurious, as in `$x}$'. But perhaps the } is legitimate and
+you forgot something else, as in `\hbox{$x}'. In such cases
+the way to recover is to insert both the forgotten and the
+deleted material, e.g., by typing `I$}'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.26   &
+         (0.043) & (0.048) & (0.044) & (0.049) \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.26   &
+         (0.043) & (0.048) & (0.044) & (0.049) \\
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+
+! LaTeX Error: \begin{document} ended by \end{table}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.38 \end{table}
+                
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: The font size command \normalsize is not defined:
+               there is probably something wrong with the class file.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.39 \end{document}
+                   
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./stargazer.aux) ) 
+Here is how much of TeX's memory you used:
+ 168 strings out of 483140
+ 4228 string characters out of 5965151
+ 236752 words of memory out of 5000000
+ 15281 multiletter control sequences out of 15000+600000
+ 532684 words of font info for 25 fonts, out of 8000000 for 9000
+ 36 hyphenation exceptions out of 8191
+ 19i,8n,19p,162b,165s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr
+/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on stargazer.pdf (1 page, 51908 bytes).
+PDF statistics:
+ 28 PDF objects out of 1000 (max. 8388607)
+ 19 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

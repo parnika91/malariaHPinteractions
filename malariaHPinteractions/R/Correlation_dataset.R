@@ -16,9 +16,10 @@ studyID <- args[1] # for example, for a dataset called SRP1188996.RData, write S
 load(paste0("Data/", studyID, ".RData"))
 study <- loadRData(studyID)
 study <- t(study)
+study_sampled <- study[sample(120, 120),]
 
 ### correlation ####
-system.time(ori_cor <- cor(study, use = 'pairwise.complete.obs'))
+system.time(ori_cor <- cor(study_sampled, use = 'pairwise.complete.obs'))
 n <- nrow(study)
 
 reps <- 1000
@@ -27,7 +28,7 @@ PermAsso <- function()
 {
   perm <- foreach(i=1:reps, .combine = "+") %do%
     {
-      (abs(cor(study, study[sample(n, n),], use = 'pairwise.complete.obs') >= abs(ori_cor) +0))
+      (abs(cor(study_sampled, study[sample(120, 120),], use = 'pairwise.complete.obs') >= abs(ori_cor) +0))
     }
   return(perm)
 }

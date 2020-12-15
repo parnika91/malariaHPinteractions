@@ -1,52 +1,60 @@
 #!/bin/bash
 
-run=$1
-echo $run
+# With this script, for every run, the reads are mapped and sent to an R script for counting
+
+run_study=$1
+echo $run_study
 runID="$(echo $run | cut -d, -f1)"
 studyID="$(echo $run | cut -d, -f2)"
 
-# take studyID
+# take studyID, host and parasite info from positive_experiments.txt file.
 
-default_path="/SAN/Plasmo_compare/SRAdb"
-positive_experiments="/SAN/Plasmo_compare/SRAdb/Input/positive_experiments.txt"
+positive_experiments="positive_experiments.txt"
 
 host="$(grep $studyID $positive_experiments | cut -d, -f2)"
 parasite="$(grep $studyID $positive_experiments | cut -d, -f3)"
 
-cd /SAN/Plasmo_compare/fastq_download_tmp/
+sh getHPstudies.sh $host$parasite
 
+cd tmp/
 
-if [ $host$parasite == "monkeyPknowlesi" ]; then
-  if [ -e $runID\_1.fastq.gz ]; then
-    /SAN/Plasmo_compare/SRAdb/STAR-2.7.5a/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID\_1.fastq.gz /SAN/Plasmo_compare/fastq_download_tmp/$runID\_2.fastq.gz --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --readFilesCommand zcat
+echo "Time to map run $runID of study $studyID!"
 
-  else
-    /SAN/Plasmo_compare/SRAdb/STAR-2.7.5a/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
-  fi
-else
-  if [ -e $runID\_1.fastq.gz ]; then
-    /SAN/Plasmo_compare/SRAdb/STAR-2.6.0c/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID\_1.fastq.gz /SAN/Plasmo_compare/fastq_download_tmp/$runID\_2.fastq.gz --outSAMtype BAM SortedByCoordinate --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --readFilesCommand zcat
+if [ -e $runID\_1.fastq.gz ]; then # mapping paired end reads
+    STAR --runThreadN 6 \
+    --genomeDir Genomes/indices/$host$parasite \
+    --readFilesIn tmp/$runID\_1.fastq.gz tmp/$runID\_2.fastq.gz \
+    --outSAMtype BAM SortedByCoordinate \
+    --outFileNamePrefix tmp/$runID \
+    --readFilesCommand zcat
 
-  else
-    /SAN/Plasmo_compare/SRAdb/STAR-2.6.0c/bin/Linux_x86_64/STAR --runThreadN 6 --genomeDir /SAN/Plasmo_compare/Genomes/indices/$host$parasite --readFilesIn /SAN/Plasmo_compare/fastq_download_tmp/$runID.fastq --outFileNamePrefix /SAN/Plasmo_compare/fastq_download_tmp/$runID --outSAMtype BAM SortedByCoordinate --readFilesCommand zcat
-  fi
+  else # mapping single end reads
+    STAR --runThreadN 6 \
+    --genomeDir Genomes/indices/$host$parasite \
+    --readFilesIn tmp/$runID.fastq \
+    --outFileNamePrefix tmp/$runID \
+    --outSAMtype BAM SortedByCoordinate \
+    --readFilesCommand zcat
 fi
 
-cat /SAN/Plasmo_compare/fastq_download_tmp/$runID*.final.out > /SAN/Plasmo_compare/fastq_download_tmp/$runID\_$studyID.final.out
-mv /SAN/Plasmo_compare/fastq_download_tmp/$runID\_$studyID.final.out /SAN/Plasmo_compare/SRAdb/Output/$studyID/
-mv /SAN/Plasmo_compare/fastq_download_tmp/$runID*.out.tab -t /SAN/Plasmo_compare/SRAdb/Output/$studyID/
+# moving with info about unique mapping percentage, etc and splice junctions into the study folder
 
-# Step 3: gene expression quantification
+cat tmp/$runID*.final.out > tmp/$runID\_$studyID.final.out
+mv tmp/$runID\_$studyID.final.out $studyID/
+mv tmp/$runID*.out.tab -t $studyID/
 
-Rscript --vanilla /SAN/Plasmo_compare/SRAdb/Scripts/malariaHPinteractions/R/countOverlaps.R $host $parasite $runID $studyID --save
+# Gene expression quantification
 
-# Step 4: Enter used runs in blacklist
+Rscript --vanilla countOverlaps.R $host $parasite $runID $studyID --save
 
-if [ -e $default_path/Output/$studyID/countWithGFF3_$runID.txt ]; then
-  cat /SAN/Plasmo_compare/SRAdb/Output/$studyID/runs\_$studyID.txt | grep $run >> /SAN/Plasmo_compare/SRAdb/Input/blacklist.txt # also study
+# Enter used runs in "finished-runs" list
+
+if [ -e $studyID/countWithGFF3_$runID.txt ]; then
+  cat $studyID/runs\_$studyID.txt | grep $run_study >> finished_runs.txt # also study
  
-# Step 5: remove fastq and bam files
-  rm /SAN/Plasmo_compare/fastq_download_tmp/$runID*.fastq.gz
-  rm /SAN/Plasmo_compare/fastq_download_tmp/$runID*.bam
+  # Removing fastq and bam files to save space
+
+  rm tmp/$runID*.fastq.gz
+  rm tmp/$runID*.bam
 
 fi

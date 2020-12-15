@@ -49,9 +49,9 @@ hostGOenr <- function(host_genes, GO)
                    mapping = "org.Mm.eg",
                    ID = "ensembl")
     
-    resultKS=runTest(hGOdata, algorithm='weight01', statistic='KS')
+    resultKS=runTest(hGOdata, algorithm='weight01', statistic='Fisher')
     allGO=usedGO(hGOdata)
-    all_res=GenTable(hGOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
+    all_res=GenTable(hGOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(hGOdata, score(resultKS), firstSigNodes = 5, useInfo ='all')
@@ -90,9 +90,9 @@ paraGOenr <- function(para_genes, GO)
                   annot = annFUN.gene2GO,
                   gene2GO = geneID2GO,
                   nodeSize = 1)
-    resultKS=runTest(GOdata, algorithm='weight01', statistic='KS') 
+    resultKS=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
     allGO=usedGO(GOdata)
-    all_res=GenTable(GOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
+    all_res=GenTable(GOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(GOdata, score(resultKS), firstSigNodes = length(allGO), useInfo ='all')
@@ -122,11 +122,11 @@ pOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt",
 hOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt", stringsAsFactors=FALSE)
 
 
-p_GO <- read.table(paste0("p_OG_topGO_BP_overall_addblood_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
-				filter(KS <= 0.05)
-h_GO <- read.table(paste0("Mmus_topGO_BP_overall_addblood_host_result.txt", collapse = ''), header = T, sep = '\t') %>%
-					filter(KS <= 0.05)
-ov_ad_bp <- loadRData("overall_addblood/cor/overall_addblood_all_bipartite.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
+p_GO <- read.table(paste0("p_OG_topGO_BP_blood_liver_overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
+				dplyr::filter(Fisher <= 0.05)
+h_GO <- read.table(paste0("Mmus_topGO_BP_blood_liver_overall_host_result.txt", collapse = ''), header = T, sep = '\t') %>%
+					dplyr::filter(Fisher <= 0.05)
+ov_ad_bp <- loadRData("blood_liver_overall/cor/blood_liver_overall_all_bipartite.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
 
 
 GO_asso_from_parasite <- list()
@@ -149,7 +149,7 @@ for(i in 1:nrow(p_GO))
 
 	# Go analysis of host genes
 	allres <- hostGOenr(hg_vector, GO = p_GO[i,1])%>%
-		filter(KS <= 0.05)
+		dplyr::filter(Fisher <= 0.05)
 
 	GO_asso_from_parasite[[i]] <- allres
 	names(GO_asso_from_parasite)[i] <- paste0(p_GO[i,"GO.ID"], "_", p_GO[i,"Term"])
@@ -325,3 +325,47 @@ for(i in 1:length(liver_GO_asso_from_host))
 
 save(liver_GO_asso_from_parasite_edges, file = "liver_GO_asso_from_parasite_edges.RData")
 save(liver_GO_asso_from_host_edges, file = "liver_GO_asso_from_host_edges.RData")
+
+
+######## for paper1, I want to show the parasite GO terms connected to host GO term cell-cell adhesion with cadherin
+# 1. cell-cell adhesion by cadherin
+cell_adh <- GO_asso_from_host[[93]]
+cell_adh <- cell_adh[which(cell_adh$GenesForGOterm != ""),]
+
+# # get all the genes, see how many unique genes are here
+# cadh_genes <- paste(cell_adh$GenesForGOterm, collapse = ",")
+# cadh_genes <- strsplit(cadh_genes, split = ',')[[1]]
+# cadh_genes <- unique(cadh_genes)
+# 
+# ### get the interactor in overall_addblood
+# host_cell_adh <- h_GO[which(h_GO$GO.ID == "GO:0044331"),]
+# host_cadh_genes <- paste(host_cell_adh$GenesForGOterm, collapse = ",")
+# host_cadh_genes <- strsplit(host_cadh_genes, split = ',')[[1]]
+# 
+# host_cadh_ortho <- sapply(host_cadh_genes, function(x) hOG[grep(pattern = x, hOG$mouse),1])
+# 
+# host_cadh_interactors <- data.frame()
+# a = 1
+# 
+# for(i in 1:length(host_cadh_ortho))
+# {
+#   para_ortho <- ov_ad_bp[grep(pattern = host_cadh_ortho[i], ov_ad_bp[,1]),2]
+#   host_cadh_interactors[a:(a+(length(para_ortho)-1)),1] <- rep(host_cadh_ortho[i], length(para_ortho))
+#   host_cadh_interactors[a:(a+(length(para_ortho)-1)),2] <- para_ortho
+#   a = a+length(para_ortho)
+# }
+# colnames(host_cadh_interactors) <- c("host", "para")
+# hg <- sapply(host_cadh_interactors[,1], function(x) hOG[grep(pattern = x, hOG$Orthogroup), "mouse"])
+# pg <- sapply(host_cadh_interactors[,2], function(x) pOG[grep(pattern = x, pOG$Orthogroup), "Pberghei"])
+# 
+# host_cadh_interactors <- data.frame(host = hg, para = pg)
+
+cell_adh_interactions <- data.frame(host = rep("GO:0044331 Cell-cell adhesion with cadherin", nrow(cell_adh)),
+                                    para = apply(cell_adh[,c(1,2)], 1, paste, collapse = " "))
+write.csv2(cell_adh_interactions, "cell_adh_interactions.csv", row.names = F, quote = F)
+
+patho <- GO_asso_from_parasite[[9]]
+patho <- patho[which(patho$GenesForGOterm != ""),]
+patho_interactions <- data.frame(host = rep("GO:0009405_pathogenesis", nrow(patho)),
+                                    para = apply(patho[,c(1,2)], 1, paste, collapse = " "))
+write.csv2(patho_interactions, "patho_interactions.csv", row.names = F, quote = F)
