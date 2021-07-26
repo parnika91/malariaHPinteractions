@@ -266,11 +266,11 @@ loadRData <- function(fileName){
 # write.table(SRP233153_para_genes, "SRP233153_para_genes.txt", quote = F, row.names = F)
 # write.table(SRP233153_host_genes, "SRP233153_host_genes.txt", quote = F, row.names = F)
 # 
-# blood_liver_overall <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/blood_liver_overall/cor/blood_liver_overall_all_bipartite.RData")
-# blood_liver_overall_para_genes <- unique(as.character(blood_liver_overall[,2]))
-# blood_liver_overall_host_genes <- unique(as.character(blood_liver_overall[,1]))
-# write.table(blood_liver_overall_para_genes, "blood_liver_overall_para_genes.txt", quote = F, row.names = F)
-# write.table(blood_liver_overall_host_genes, "blood_liver_overall_host_genes.txt", quote = F, row.names = F)
+blood_liver_overall <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/blood_liver_overall/cor/blood.liver.overall_all_bipartite.RData")
+blood_liver_overall_para_genes <- unique(as.character(blood_liver_overall[,2]))
+blood_liver_overall_host_genes <- unique(as.character(blood_liver_overall[,1]))
+write.table(blood_liver_overall_para_genes, "blood_liver_overall_para_genes.txt", quote = F, row.names = F)
+write.table(blood_liver_overall_host_genes, "blood_liver_overall_host_genes.txt", quote = F, row.names = F)
 # 
 # blood_core_host <- as.character(blood_core_edges_default_node[grep(pattern = "h_OG",
 #                                                        blood_core_edges_default_node[,1]),1])
@@ -293,8 +293,17 @@ blood_liver_core_para <- as.character(blood_liver_core_edges[,2])
 write.table(blood_liver_core_host, "blood_liver_core_host_genes.txt", quote = F, row.names = F)
 write.table(blood_liver_core_para, "blood_liver_core_para_genes.txt", quote = F, row.names = F)
 
+blood_overall <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/overall_addblood/cor/blood_all_bipartite.RData")
+blood_overall_para_genes <- unique(as.character(blood_overall[,2]))
+blood_overall_host_genes <- unique(as.character(blood_overall[,1]))
+write.table(blood_overall_para_genes, "blood_overall_para_genes.txt", quote = F, row.names = F)
+write.table(blood_overall_host_genes, "blood_overall_host_genes.txt", quote = F, row.names = F)
 
-
+blood_core_edges <- loadRData("/SAN/Plasmo_compare/SRAdb/Output/blood_core_edges.RData")
+blood_core_host <- as.character(blood_core_edges[,1])
+blood_core_para <- as.character(blood_core_edges[,2])
+write.table(blood_core_host, "blood_core_host_genes.txt", quote = F, row.names = F)
+write.table(blood_core_para, "blood_core_para_genes.txt", quote = F, row.names = F)
 
 # bip_studies <- c("SRP250329", "ERP105548", 
 #                  "SRP110282", "SRP096160",
@@ -308,7 +317,7 @@ write.table(blood_liver_core_para, "blood_liver_core_para_genes.txt", quote = F,
 pOG <- read.delim("~/Documents/Data/parasite_orthogroups.txt", 
                   stringsAsFactors=FALSE)
 
-bip_studies <- c("blood_liver_core")
+bip_studies <- c("blood_liver_overall")
 geneont <- c("BP", "CC", "MF")
 
 for(m in 1:length(bip_studies))
@@ -344,9 +353,8 @@ for(m in 1:length(bip_studies))
                                   collapse = ""), stringsAsFactors=FALSE, header = T)
     #para_in <- inner_join(para_genes, parasite_orthogroups)
     #para_in <- para_in[,c(1,4)]
-    para_in <- unique(as.character(para_genes[,1]))
-    para_bg <- names(geneID2GO)
-    # para_in <- paste(para_in, "0", sep = "")
+    
+   # para_in <- paste(para_in, "0", sep = "")
     # 
     # # 3. Interesting genes
     # # para_in <- inner_join(ERP004598_all_bipartite_paragenes, parasite_orthogroups)
@@ -361,12 +369,18 @@ for(m in 1:length(bip_studies))
     # # Make topGOdata
     # 
     #3. To know which genes are interesting in the universe, we do %in% with background genes
-    # universe for core network: 
-    para_uni <- loadRData("Documents/Data/para_universe_for_blood_liver_core.RData")
-    para_bg <- factor(as.integer(names(geneID2GO) %in% para_uni))
     
-    bg <- intersect(para_uni, names(geneID2GO))
-    gene2GO = sapply(bg, function(x) geneID2GO[[grep(pattern = x, names(geneID2GO))]])
+    # normal:
+    para_in <- unique(as.character(para_genes[,1]))
+    para_bg <- names(geneID2GO)
+    
+    # universe for core network: 
+    #para_uni <- loadRData("Documents/Data/para_universe_for_liver_core.RData")
+    #dont use this: para_bg <- factor(as.integer(names(geneID2GO) %in% para_uni))
+    #para_in <- unique(as.character(para_genes[,1]))
+    #bg <- intersect(para_uni, names(geneID2GO))
+    
+    #gene2GO = sapply(bg, function(x) geneID2GO[[grep(pattern = x, names(geneID2GO))]])
     #colnames(para_bg) <- "p_OG"
     #para_annot <- parasite_orthogroups[,2]
     #para_bg <- unlist(c(inner_join(para_bg, para_annot)))
@@ -374,11 +388,12 @@ for(m in 1:length(bip_studies))
     # universe containing annotated genes out of 4010 orthogroups
     # para_bg <- gsub("\"", "", para_bg, fixed = T)#
     #for core:
-    geneList = factor(as.integer(bg %in% para_in))
-    names(geneList)= bg
+    #geneList = factor(as.integer(bg %in% para_in))
+    #names(geneList)= bg
     
-    #geneList = factor(as.integer(para_bg %in% para_in))
-    #names(geneList)= para_bg
+    #normal:
+    geneList = factor(as.integer(para_bg %in% para_in))
+    names(geneList)= para_bg
 
     GOdata <- new("topGOdata",
                   ontology = GeneOnt,
@@ -396,10 +411,10 @@ for(m in 1:length(bip_studies))
     # GO term if the interesting genes were randomly distributed over all GO terms.
     
     # sg <- sigGenes(GOdata)
-    resultKS=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
-    #resultFisher=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
+    resultKS=runTest(GOdata, algorithm='weight01', statistic='KS') 
+    #resultKS=runTest(GOdata, algorithm='weight01', statistic='KS') 
     allGO=usedGO(GOdata)
-    all_res=GenTable(GOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(GOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(GOdata, score(resultKS), firstSigNodes = 5, useInfo ='all')
@@ -415,58 +430,58 @@ for(m in 1:length(bip_studies))
       myterm <- mygenes[myterms[i]][[1]]
       mygenesforterm <- myterm[which(myterm %in% para_in == TRUE)]
       mygenesforterm <- sapply(mygenesforterm, 
-                               function(x) pOG[grep(pattern = x, pOG$Orthogroup),"Pb_g"])
+                               function(x) pOG[grep(pattern = x, pOG$Orthogroup),"Pberghei"])
       mygenesforterm <- paste(mygenesforterm, collapse=',')
       GenesForGOterm[i] <- mygenesforterm
     }
 
     all_res$GenesForGOterm <- GenesForGOterm
-    write.table(all_res, paste0("p_OG_topGO_", GeneOnt,"_", study, "_para_result.txt", collapse = ''), sep = '\t', row.names = F)
+    write.table(all_res, paste0("p_OG_topGO_", GeneOnt,"_", study, "_para_result_KS.txt", collapse = ''), sep = '\t', row.names = F)
     
-    results.ks <- runTest(GOdata, algorithm="weight01", statistic="Fisher")
-    goEnrichment <- GenTable(GOdata, Fisher=results.ks, orderBy="Fisher", topNodes=20)
-    goEnrichment <- goEnrichment[goEnrichment$Fisher<0.05,]
-    goEnrichment <- goEnrichment[,c("GO.ID","Term","Fisher", "Significant")]
-    goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
-    goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
-    goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
-    goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
-    goEnrichment$Fisher <- as.numeric(goEnrichment$Fisher)
+    # results.KS <- runTest(GOdata, algorithm="weight01", statistic="KS")
+    # goEnrichment <- GenTable(GOdata, KS=results.KS, orderBy="KS", topNodes=20)
+    # goEnrichment <- goEnrichment[goEnrichment$KS<0.05,]
+    # goEnrichment <- goEnrichment[,c("GO.ID","Term","KS", "Significant")]
+    # goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
+    # goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
+    # goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
+    # goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
+    # goEnrichment$KS <- as.numeric(goEnrichment$KS)
+    # # 
+    # # b <- read.delim("~/topGO/Mmus_topGO_BP_ERP106451_SRP118996_concat_bipartite_host_result.txt",
+    # #                 stringsAsFactors=FALSE)
+    # # b <- b[-which(b$Significant == 0),]
+    # # b <- b[-which(b$Significant == 1),]
+    # # b <- b[b$KS<0.05,]
+    # # b <- b[,c("GO.ID","Term","KS", "Significant")]
+    # # b$Term <- gsub(" [a-z]*\\.\\.\\.$", "", b$Term)
+    # # b$Term <- gsub("\\.\\.\\.$", "", b$Term)
+    # # b$Term <- paste(b$GO.ID, b$Term, sep=", ")
+    # # b$Term <- factor(b$Term, levels=rev(b$Term))
+    # # b$KS <- as.numeric(b$KS)
     # 
-    # b <- read.delim("~/topGO/Mmus_topGO_BP_ERP106451_SRP118996_concat_bipartite_host_result.txt",
-    #                 stringsAsFactors=FALSE)
-    # b <- b[-which(b$Significant == 0),]
-    # b <- b[-which(b$Significant == 1),]
-    # b <- b[b$KS<0.05,]
-    # b <- b[,c("GO.ID","Term","KS", "Significant")]
-    # b$Term <- gsub(" [a-z]*\\.\\.\\.$", "", b$Term)
-    # b$Term <- gsub("\\.\\.\\.$", "", b$Term)
-    # b$Term <- paste(b$GO.ID, b$Term, sep=", ")
-    # b$Term <- factor(b$Term, levels=rev(b$Term))
-    # b$KS <- as.numeric(b$KS)
-    
-    ggplot(goEnrichment, aes(x=Term, y=log10(Significant), fill = Fisher)) +
-      stat_summary(geom = "bar", width = 0.5, fun = mean, position = "dodge") +
-      xlab("Molecular Function") +
-      ylab("Number of parasite genes in GO term") +
-      ggtitle("Significant Plasmodium GOterms") +
-      #scale_y_continuous(breaks = round(seq(0, max(-log10(goEnrichment$KS)), by = 2), 1)) +
-      theme_bw(base_size=20) +
-      theme(
-        #legend.position='none',
-        #legend.background=element_rect(),
-        plot.title=element_text(angle=0, size=20, face="bold", vjust=1),
-        axis.text.x=element_text(angle=0, size=20, face="bold", hjust=1.10),
-        axis.text.y=element_text(angle=0, size=20, face="bold", vjust=0.5),
-        axis.title=element_text(size=20, face="bold"),
-        #legend.key=element_blank(),     #removes the border
-        #legend.key.size=unit(1, "cm"),      #Sets overall area/size of the legend
-        #legend.text=element_text(size=8),  #Text size
-        title=element_text(size=18)) +
-      #guides(colour=guide_legend(override.aes=list(size=2.5))) +
-      coord_flip()
-      ggsave(paste0(study, "_", GeneOnt, "_p_OG_Enrichment.png"), height = 30, width = 45, units = "cm")
-      # Host
+    # ggplot(goEnrichment, aes(x=Term, y=log10(Significant), fill = KS)) +
+    #   stat_summary(geom = "bar", width = 0.5, fun = mean, position = "dodge") +
+    #   xlab("Molecular Function") +
+    #   ylab("Number of parasite genes in GO term") +
+    #   ggtitle("Significant Plasmodium GOterms") +
+    #   #scale_y_continuous(breaKS = round(seq(0, max(-log10(goEnrichment$KS)), by = 2), 1)) +
+    #   theme_bw(base_size=20) +
+    #   theme(
+    #     #legend.position='none',
+    #     #legend.background=element_rect(),
+    #     plot.title=element_text(angle=0, size=20, face="bold", vjust=1),
+    #     axis.text.x=element_text(angle=0, size=20, face="bold", hjust=1.10),
+    #     axis.text.y=element_text(angle=0, size=20, face="bold", vjust=0.5),
+    #     axis.title=element_text(size=20, face="bold"),
+    #     #legend.key=element_blank(),     #removes the border
+    #     #legend.key.size=unit(1, "cm"),      #Sets overall area/size of the legend
+    #     #legend.text=element_text(size=8),  #Text size
+    #     title=element_text(size=18)) +
+    #   #guides(colour=guide_legend(override.aes=list(size=2.5))) +
+    #   coord_flip()
+    #   ggsave(paste0(study, "_", GeneOnt, "_p_OG_Enrichment.png"), height = 30, width = 45, units = "cm")
+    #   # Host
     # 1. gene-to-GO annotation file
     
     # 2. Background genes
@@ -483,11 +498,13 @@ for(m in 1:length(bip_studies))
     host_bg <- host_orthogroups[,3]
     
     # universe for core blood 
-    host_uni <- loadRData("Documents/Data/host_universe_for_blood_core.RData")
-    host_bg <- host_orthogroups$Orthogroup
-    h_bg <- intersect(host_uni, host_bg)
-    host_in <- host_genes[,1]
-    ########################################################################
+    # host_uni <- loadRData("Documents/Data/host_universe_for_liver_core.RData")
+    # host_bg <- host_orthogroups$Orthogroup
+    # h_bg <- intersect(host_uni, host_bg)
+    # h_bg <- host_orthogroups[host_orthogroups$Orthogroup%in%h_bg,"mouse"]
+    # host_in <- host_genes[,1]
+    # host_in <- host_orthogroups[host_orthogroups$Orthogroup%in%host_in,"mouse"]
+    # ########################################################################
     
     # getBM() wasn't returning results
     # ensembl <- useMart("ensembl")
@@ -504,14 +521,14 @@ for(m in 1:length(bip_studies))
     
     ##################### good code ##################################
     # normal: 
-    #h_geneList <- as.integer(host_bg %in% host_in)
-    #names(h_geneList) <- host_bg
+    h_geneList <- as.integer(host_bg %in% host_in)
+    names(h_geneList) <- host_bg
     
     # for core:
-    h_geneList <- as.factor(as.integer(h_bg %in% host_in))
-    h_genenames <- sapply(h_bg, function(x) host_orthogroups[grep(pattern = x, host_orthogroups$Orthogroup), 3])
-    names(h_geneList) <- h_genenames
-    ##############
+    #h_geneList <- as.factor(as.integer(h_bg %in% host_in))
+    #h_genenames <- sapply(h_bg, function(x) host_orthogroups[grep(pattern = x, host_orthogroups$Orthogroup), 3])
+    #names(h_geneList) <- h_bg
+    # ##############
     
     topDiffGenes <- function(allScore) 
     {
@@ -529,9 +546,9 @@ for(m in 1:length(bip_studies))
                    ID = "ensembl")
     
     #sg <- sigGenes(hGOdata)
-    resultKS=runTest(hGOdata, algorithm='weight01', statistic='Fisher')
+    resultKS=runTest(hGOdata, algorithm='weight01', statistic='KS')
     allGO=usedGO(hGOdata)
-    all_res=GenTable(hGOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(hGOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     ################################################################
     
     # Plotting results
@@ -556,40 +573,40 @@ for(m in 1:length(bip_studies))
     }
     
     all_res$GenesForGOterm <- GenesForGOterm
-    write.table(all_res, paste0("Mmus_topGO_", GeneOnt,"_", study, "_host_result.txt", collapse = ''), sep = '\t', row.names = F)
+    write.table(all_res, paste0("Mmus_topGO_", GeneOnt,"_", study, "_host_result_KS.txt", collapse = ''), sep = '\t', row.names = F)
     
-    results.ks <- runTest(hGOdata, algorithm="weight01", statistic="Fisher")
-    goEnrichment <- GenTable(hGOdata, Fisher=results.ks, orderBy="Fisher", topNodes=20)
-    goEnrichment <- goEnrichment[goEnrichment$Fisher<0.05,]
-    goEnrichment <- goEnrichment[,c("GO.ID","Term","Fisher", "Significant")]
-    goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
-    goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
-    goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
-    goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
-    goEnrichment$Fisher <- as.numeric(goEnrichment$Fisher)
-    
-    ggplot(goEnrichment, aes(x=Term, y=Significant, fill = Fisher)) +
-      stat_summary(geom = "bar", width = 0.3, fun = mean, position = "dodge") +
-      xlab(GeneOnt) +
-      ylab("Number of host genes in GO term") +
-      ggtitle(study) +
-      #scale_y_continuous(breaks = round(seq(0, max(-log10(goEnrichment$KS)), by = 2), 1)) +
-      theme_bw(base_size=14) +
-      theme(
-        #legend.position='none',
-        #legend.background=element_rect(),
-        plot.title=element_text(angle=0, size=10, face="bold", vjust=1),
-        axis.text.x=element_text(angle=0, size=10, face="bold", hjust=1.10),
-        axis.text.y=element_text(angle=0, size=10, face="bold", vjust=0.5),
-        axis.title=element_text(size=10, face="bold"),
-        #legend.key=element_blank(),     #removes the border
-        #legend.key.size=unit(1, "cm"),      #Sets overall area/size of the legend
-        #legend.text=element_text(size=8),  #Text size
-        title=element_text(size=8)) +
-      #guides(colour=guide_legend(override.aes=list(size=2.5))) +
-      coord_flip()
-    ggsave(paste0(study, "_", GeneOnt, "_host_Enrichment.png"), height = 20, width = 20, units = "cm")
-    
+    # results.KS <- runTest(hGOdata, algorithm="weight01", statistic="KS")
+    # goEnrichment <- GenTable(hGOdata, KS=results.KS, orderBy="KS", topNodes=20)
+    # goEnrichment <- goEnrichment[goEnrichment$KS<0.05,]
+    # goEnrichment <- goEnrichment[,c("GO.ID","Term","KS", "Significant")]
+    # goEnrichment$Term <- gsub(" [a-z]*\\.\\.\\.$", "", goEnrichment$Term)
+    # goEnrichment$Term <- gsub("\\.\\.\\.$", "", goEnrichment$Term)
+    # goEnrichment$Term <- paste(goEnrichment$GO.ID, goEnrichment$Term, sep=", ")
+    # goEnrichment$Term <- factor(goEnrichment$Term, levels=rev(goEnrichment$Term))
+    # goEnrichment$KS <- as.numeric(goEnrichment$KS)
+    # 
+    # ggplot(goEnrichment, aes(x=Term, y=Significant, fill = KS)) +
+    #   stat_summary(geom = "bar", width = 0.3, fun = mean, position = "dodge") +
+    #   xlab(GeneOnt) +
+    #   ylab("Number of host genes in GO term") +
+    #   ggtitle(study) +
+    #   #scale_y_continuous(breaKS = round(seq(0, max(-log10(goEnrichment$KS)), by = 2), 1)) +
+    #   theme_bw(base_size=14) +
+    #   theme(
+    #     #legend.position='none',
+    #     #legend.background=element_rect(),
+    #     plot.title=element_text(angle=0, size=10, face="bold", vjust=1),
+    #     axis.text.x=element_text(angle=0, size=10, face="bold", hjust=1.10),
+    #     axis.text.y=element_text(angle=0, size=10, face="bold", vjust=0.5),
+    #     axis.title=element_text(size=10, face="bold"),
+    #     #legend.key=element_blank(),     #removes the border
+    #     #legend.key.size=unit(1, "cm"),      #Sets overall area/size of the legend
+    #     #legend.text=element_text(size=8),  #Text size
+    #     title=element_text(size=8)) +
+    #   #guides(colour=guide_legend(override.aes=list(size=2.5))) +
+    #   coord_flip()
+    # ggsave(paste0(study, "_", GeneOnt, "_host_Enrichment.png"), height = 20, width = 20, units = "cm")
+    # 
   }
 }
 

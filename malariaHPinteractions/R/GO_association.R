@@ -23,16 +23,27 @@ loadRData <- function(fileName){
 
 hostGOenr <- function(host_genes, GO)
 {
-	host_orthogroups <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt", stringsAsFactors=FALSE)
+	host_orthogroups <- read.delim("host_orthogroups.txt", stringsAsFactors=FALSE)
 	host_genes <- data.frame(Orthogroup = host_genes)
-    #colnames(host_genes)[1] <- "Orthogroup"
+    colnames(host_genes)[1] <- "Orthogroup"
     host_in <- inner_join(host_genes, host_orthogroups)
     host_in <- host_in[,c(1,3)]
     host_in <- unique(as.character(host_in[,2]))
-    
     host_bg <- host_orthogroups[,3]
     h_geneList <- as.integer(host_bg %in% host_in)
     names(h_geneList) <- host_bg
+
+    # universe for core blood 
+    # host_uni <- loadRData("host_universe_for_blood_core.RData")
+    # host_bg <- host_orthogroups$Orthogroup
+    # h_bg <- intersect(host_uni, host_bg)
+    # h_bg <- host_orthogroups[host_orthogroups$Orthogroup%in%h_bg,"mouse"]
+    # host_in <- host_genes[,1]
+    # host_in <- host_orthogroups[host_orthogroups$Orthogroup%in%host_in,"mouse"]
+    # h_geneList <- as.factor(as.integer(h_bg %in% host_in))
+    # h_genenames <- sapply(h_bg, function(x) host_orthogroups[grep(pattern = x, host_orthogroups$Orthogroup), 3])
+    # names(h_geneList) <- h_genenames
+    # 
     
     topDiffGenes <- function(allScore) 
     {
@@ -76,13 +87,26 @@ hostGOenr <- function(host_genes, GO)
 paraGOenr <- function(para_genes, GO)
 {
 	para_genes <- data.frame(Orthogroup = para_genes)
-	pOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", 
+	pOG <- read.delim("parasite_orthogroups.txt", 
                                    stringsAsFactors=FALSE)
-	geneID2GO <- readMappings(file = "p_OG_GOterms.txt") # 3659 genes
+	geneID2GO <- readMappings(file = "~/topGO/p_OG_GOterms.txt") # 3659 genes
+  all_res <- data.frame(GO.ID = "GO:000000", Term = "xyz", Annotated = 0, Significant = 0, Expected = 0, Fisher = 1, GenesForGOterm = "")
+	#normal:
     para_in <- unique(as.character(para_genes[,1]))
     para_bg <- names(geneID2GO)
     geneList = factor(as.integer(para_bg %in% para_in))
+
+    if(nlevels(factor(as.integer(para_bg %in% para_in))) == 2)
+    {
     names(geneList)= para_bg
+
+    # universe for core network: 
+    # para_uni <- loadRData("para_universe_for_blood_core.RData")
+    # para_in <- unique(as.character(para_genes[,1]))
+    # bg <- intersect(para_uni, names(geneID2GO))
+    # geneList = factor(as.integer(bg %in% para_in))
+    # names(geneList)= bg
+    # 
 
     GOdata <- new("topGOdata",
                   ontology = "BP",
@@ -114,38 +138,43 @@ paraGOenr <- function(para_genes, GO)
     }
 
     all_res$GenesForGOterm <- GenesForGOterm
+  }
     return(all_res)
+  
 }
 
-pOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", 
+pOG <- read.delim("parasite_orthogroups.txt", 
                                    stringsAsFactors=FALSE)
-hOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt", stringsAsFactors=FALSE)
+hOG <- read.delim("host_orthogroups.txt", stringsAsFactors=FALSE)
 
 
-p_GO <- read.table(paste0("p_OG_topGO_BP_blood_liver_overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
-				dplyr::filter(Fisher <= 0.05)
-h_GO <- read.table(paste0("Mmus_topGO_BP_blood_liver_overall_host_result.txt", collapse = ''), header = T, sep = '\t') %>%
-					dplyr::filter(Fisher <= 0.05)
-ov_ad_bp <- loadRData("blood_liver_overall/cor/blood_liver_overall_all_bipartite.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
+p_GO <- read.table(paste0("~/p_OG_topGO_BP_blood_overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
+				dplyr::filter(KS <= 0.05)
+h_GO <- read.delim(paste0("~/Mmus_topGO_BP_blood_overall_host_result.txt", collapse = ''), header = T, sep = '\t', stringsAsFactors=FALSE) %>%
+					dplyr::filter(KS <= 0.05)
+#ov_ad_bp <- loadRData("blood_core_network_nomo.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
+ov_ad_bp <- loadRData("blood_all_bipartite.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
 
 
 GO_asso_from_parasite <- list()
 for(i in 1:nrow(p_GO))
 {
-	genes_in_GO_term <- p_GO[i,"GenesForGOterm"]
-	genes_in_GO_term <- strsplit(genes_in_GO_term, split = ",")[[1]]
+	genes_in_GO_term <- as.character(p_GO[i,"GenesForGOterm"])
+	if(genes_in_GO_term != "")
+	{
+	  genes_in_GO_term <- strsplit(genes_in_GO_term, split = ",")[[1]]
 
 	# Find their interactors
-	hg_vector <- c()
-	for(j in 1:length(genes_in_GO_term))
-	{
-		pg <- genes_in_GO_term[j]
-		p_ortho <- pOG[grep(pattern = pg, pOG$Pberghei), "Orthogroup"]
-
-		# find its interactors
-		hg_vector <- c(hg_vector, as.character(ov_ad_bp[grep(pattern = p_ortho, ov_ad_bp$para), "host"]))
-		
-	}
+  	hg_vector <- c()
+  	for(j in 1:length(genes_in_GO_term))
+  	{
+  		pg <- genes_in_GO_term[j]
+  		p_ortho <- pOG[grep(pattern = pg, pOG$Pberghei), "Orthogroup"]
+  
+  		# find its interactors
+  		hg_vector <- c(hg_vector, as.character(ov_ad_bp[grep(pattern = p_ortho, ov_ad_bp$para), "host"]))
+  	}
+	
 
 	# Go analysis of host genes
 	allres <- hostGOenr(hg_vector, GO = p_GO[i,1])%>%
@@ -153,12 +182,18 @@ for(i in 1:nrow(p_GO))
 
 	GO_asso_from_parasite[[i]] <- allres
 	names(GO_asso_from_parasite)[i] <- paste0(p_GO[i,"GO.ID"], "_", p_GO[i,"Term"])
+	}
 }
+save(GO_asso_from_parasite, file = "GO_asso_from_parasite.RData")
+
 
 GO_asso_from_host <- list()
 for(i in 1:nrow(h_GO))
 {
-	hgenes_in_GO_term <- h_GO[i,"GenesForGOterm"]
+  print(i)
+	hgenes_in_GO_term <- as.character(h_GO[i,"GenesForGOterm"])
+	if(hgenes_in_GO_term != "")
+	{ 
 	hgenes_in_GO_term <- strsplit(hgenes_in_GO_term, split = ",")[[1]]
 
 
@@ -166,24 +201,25 @@ for(i in 1:nrow(h_GO))
 	pg_vector <- c()
 	for(j in 1:length(hgenes_in_GO_term))
 	{
-		hg <- hgenes_in_GO_term[j]
-		h_ortho <- hOG[grep(pattern = hg, hOG$mouse), "Orthogroup"]
+		hg <- as.character(hgenes_in_GO_term[j])
+	 
+  		h_ortho <- hOG[grep(pattern = hg, hOG$mouse), "Orthogroup"]
+  
+  		# find its interactors
+  		pg_vector <- c(pg_vector, as.character(ov_ad_bp[grep(pattern = h_ortho, ov_ad_bp$host), "para"]))
 
-		# find its interactors
-		pg_vector <- c(pg_vector, as.character(ov_ad_bp[grep(pattern = h_ortho, ov_ad_bp$host), "para"]))
+  	}
 
+  	# Go analysis of host genes
+  	allres <- paraGOenr(pg_vector, GO = h_GO[i,1])%>%
+  		filter(Fisher <= 0.05)
+  		
+  	GO_asso_from_host[[i]] <- allres
+  	names(GO_asso_from_host)[i] <- paste0(h_GO[i,"GO.ID"], "_", h_GO[i,"Term"])
 	}
-
-	# Go analysis of host genes
-	allres <- paraGOenr(pg_vector, GO = h_GO[i])%>%
-		filter(KS <= 0.05)
-		
-	GO_asso_from_host[[i]] <- allres
-	names(GO_asso_from_host)[i] <- paste0(h_GO[i,"GO.ID"], "_", h_GO[i,"Term"])
 }
 
 save(GO_asso_from_host, file = "GO_asso_from_host.RData")
-save(GO_asso_from_parasite, file = "GO_asso_from_parasite.RData")
 
 # make GO term edges to vis as networks
 
@@ -192,21 +228,57 @@ a = 1
 for(i in 1:length(GO_asso_from_parasite))
 {
 	rows <- nrow(GO_asso_from_parasite[[i]])
-	GO_asso_from_parasite_edges[a:(a+rows-1),1] <- rep(strsplit(names(GO_asso_from_parasite)[i], split = "_")[[1]][2], rows)
+	if(length(rows) != 0)
+	{GO_asso_from_parasite_edges[a:(a+rows-1),1] <- rep(strsplit(names(GO_asso_from_parasite)[i], split = "_")[[1]][2], rows)
 	GO_asso_from_parasite_edges[a:(a+rows-1),2] <- GO_asso_from_parasite[[i]]$Term
 
-	a = a+rows
+	a = a+rows}
+}
+
+g = 1
+GO_asso_list = list()
+for(k in 1:length(GO_asso_from_host))
+{
+  if(!is.null(GO_asso_from_host[[k]]))
+    {
+      GO_asso_list[[g]] <- GO_asso_from_host[[k]]
+      names(GO_asso_list)[[g]] <- names(GO_asso_from_host)[[k]]
+      g = g+1
+    }
 }
 
 GO_asso_from_host_edges <- data.frame()
 a = 1
-for(i in 1:length(GO_asso_from_host))
+for(i in 1:length(GO_asso_list))
 {
-	rows <- nrow(GO_asso_from_host[[i]])
-	GO_asso_from_host_edges[a:(a+rows-1),1] <- rep(strsplit(names(GO_asso_from_host)[i], split = "_")[[1]][2], rows)
-	GO_asso_from_host_edges[a:(a+rows-1),2] <- GO_asso_from_host[[i]]$Term
+  if(nrow(GO_asso_list[[i]]) > 0)
+  {
+   rows <- nrow(GO_asso_list[[i]])
+	if(!is.null(rows))
+	{
+	GO_asso_from_host_edges[a:(a+rows-1),1] <- rep(strsplit(names(GO_asso_list)[i], split = "_")[[1]][2], rows)
+	GO_asso_from_host_edges[a:(a+rows-1),2] <- GO_asso_list[[i]]$Term
 
 	a = a+rows
+	}
+}
+}
+
+adhesion_edges <- data.frame()
+a = 1
+for(i in 1:length(adhesion))
+{
+  if(nrow(adhesion[[i]]) > 0 | !is.null(adhesion[[i]]))
+  {
+    rows <- nrow(adhesion[[i]])
+    if(!is.null(rows))
+    {
+      adhesion_edges[a:(a+rows-1),1] <- rep(strsplit(names(adhesion)[i], split = "_")[[1]][2], rows)
+      adhesion_edges[a:(a+rows-1),2] <- adhesion[[i]]$Term
+      
+      a = a+rows
+    }
+  }
 }
 
 GO_asso_from_parasite_edges[,1] <- paste("p_", GO_asso_from_parasite_edges[,1], sep ="")
@@ -217,7 +289,9 @@ GO_asso_from_host_edges[,2] <- paste("p_", GO_asso_from_host_edges[,2], sep ="")
 
 save(GO_asso_from_parasite_edges, file = "GO_asso_from_parasite_edges.RData")
 save(GO_asso_from_host_edges, file = "GO_asso_from_host_edges.RData")
+save(adhesion_edges, file = "adhesion_edges.RData")
 
+GO_asso_overall <- full_join(GO_asso_overall_from_host_edges, GO_asso_overall_from_parasite_edges)
 
 ############################################################################################################################################
 

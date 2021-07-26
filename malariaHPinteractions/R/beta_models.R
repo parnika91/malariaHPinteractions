@@ -14,7 +14,7 @@ loadRData <- function(fileName){
 
 models_list <- list()
 
-study <- "overall_addblood"
+study <- "blood"
 type <- "all" # str, int or all
 nw <- "bp" # pp_bp, pp or bp
 
@@ -46,7 +46,7 @@ if(net=="pp_bp")
   } else {
     data <- loadRData(paste0(study,"/","cor", "/", study, "_", type, "_", net, ".RData", collapse = ""))
   }
-
+data_<- loadRData("blood_all_para.RData")
 d <- data.frame(h = as.character(data[,1]), p = as.character(data[,2]))
 ig <- graph_from_data_frame(d, directed = F)
 
@@ -369,6 +369,8 @@ ov_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_pp_dg + ov_pp_e
 
 ov_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_pp_dg + ov_pp_bw + ov_pp_ec)
 
+
+
 ov_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_bp_dg)
 ov_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_bp_ec)
 ov_bp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_bp_bw)
@@ -400,6 +402,8 @@ ov_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_all_dg + ov_all_bw +
 # pfE models
 
 pb_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_dg)
+
+
 pb_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_ec)
 pb_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ pb_pp_bw)
 
@@ -592,14 +596,14 @@ ov_ad_all_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ ov_ad_all_dg + ov_ad
 
 # blood core
 
-bl_core_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg)
-bl_core_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_ec)
-bl_core_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_bw)
+bl_core_pp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_dg)
+bl_core_pp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_ec)
+bl_core_pp_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_bw)
 
-bl_core_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_bw)
-bl_core_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_ec)
+bl_core_pp_dg_bw_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_dg + core_pp_bw)
+bl_core_pp_dg_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_dg + core_pp_ec)
 
-bl_core_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_pp_dg + bl_core_pp_bw + bl_core_pp_ec)
+bl_core_pp_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ core_pp_dg + core_pp_bw + core_pp_ec)
 
 bl_core_bp_dg_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_dg)
 bl_core_bp_ec_m <- betareg(data = rgr_mis_allgenes_clean, RGR ~ bl_core_bp_ec)
@@ -895,14 +899,14 @@ ov_ad_all_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ ov_ad_all_dg + ov_
 
 ## blood core
 
-bl_core_pp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg)
-bl_core_pp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_ec)
-bl_core_pp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_bw)
+bl_core_pp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_dg)
+bl_core_pp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_ec)
+bl_core_pp_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_bw)
 
-bl_core_pp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_bw)
-bl_core_pp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_ec)
+bl_core_pp_dg_bw_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_dg + core_pp_bw)
+bl_core_pp_dg_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_dg + core_pp_ec)
 
-bl_core_pp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_pp_dg + bl_core_pp_bw + bl_core_pp_ec)
+bl_core_pp_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ core_pp_dg + core_pp_bw + core_pp_ec)
 
 bl_core_bp_dg_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_dg)
 bl_core_bp_ec_mis <- betareg(data = rgr_mis_allgenes_clean, MIS ~ bl_core_bp_ec)
@@ -1183,7 +1187,7 @@ p <- ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = RGR, fill = phenotype.
   geom_line(aes(y = predict(pb_pp_ec_m, rgr_mis_allgenes_clean))) +
   theme_bw() + 
   ggtitle("Relative Growth Rate prediction") + 
-  xlab("P. berghei network centrality") + 
+  xlab("P. berghei network eigenvector centrality") + 
   ylab("Relative Growth Rate") +
   theme(axis.text = element_text(size = 15), 
         axis.title = element_text(size = 18), 
@@ -1219,7 +1223,7 @@ p <- ggplot(rgr_mis_allgenes_clean, aes(x = pb_pp_ec, y = MIS, fill = phenotype.
   geom_line(aes(y = predict(pb_pp_ec_mis, rgr_mis_allgenes_clean))) +
   theme_bw() + 
   ggtitle("Mutagenesis Index Score prediction") + 
-  xlab("P. berghei network centrality") + 
+  xlab("P. berghei network eigenvector centrality") + 
   ylab("Mutagenesis Index Score") +
   theme(axis.text = element_text(size = 15), 
         axis.title = element_text(size = 18), 
@@ -1400,3 +1404,303 @@ ggplot(pfE_pp_ec_mis_ef, aes(x, predicted)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)+
   xlab("P.falciparum (Gambia) eigen centrality (MIS)")
 ggsave("pfE_pp_ec_mis_ef.png")
+
+stargazer(pb_pp_ec_m, ov_pp_ec_m, bl_core_pp_ec_m, pf_pp_ec_m, pfE_pp_ec_m,
+          pb_pp_ec_mis, ov_pp_ec_mis, bl_core_pp_ec_mis, pf_pp_ec_mis, pfE_pp_ec_mis,
+          title="Results", align=TRUE, type = "text")
+
+
+### liver
+
+# ov
+ov_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_dg)
+ov_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_ec)
+ov_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_bw)
+
+ov_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_dg + liver_ov_bw)
+ov_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_dg + liver_ov_ec)
+
+ov_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ liver_ov_dg + liver_ov_bw + liver_ov_ec)
+
+ov_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_dg)
+ov_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_ec)
+ov_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_bw)
+
+ov_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_dg + liver_ov_bw)
+ov_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_dg + liver_ov_ec)
+
+ov_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ liver_ov_dg + liver_ov_bw + liver_ov_ec)
+### 
+
+# SRP250329
+SRP250329_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_dg)
+SRP250329_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_ec)
+SRP250329_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_bw)
+
+SRP250329_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_dg + h_SRP250329_bw)
+SRP250329_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_dg + h_SRP250329_ec)
+
+SRP250329_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP250329_dg + h_SRP250329_bw + h_SRP250329_ec)
+
+SRP250329_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_dg)
+SRP250329_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_ec)
+SRP250329_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_bw)
+
+SRP250329_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_dg + h_SRP250329_bw)
+SRP250329_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_dg + h_SRP250329_ec)
+
+SRP250329_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP250329_dg + h_SRP250329_bw + h_SRP250329_ec)
+### 
+
+# ERP105548
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+ERP105548_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_dg)
+ERP105548_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_ec)
+ERP105548_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_bw)
+
+ERP105548_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_dg + h_ERP105548_bw)
+ERP105548_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_dg + h_ERP105548_ec)
+
+ERP105548_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_ERP105548_dg + h_ERP105548_bw + h_ERP105548_ec)
+
+ERP105548_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_dg)
+ERP105548_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_ec)
+ERP105548_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_bw)
+
+ERP105548_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_dg + h_ERP105548_bw)
+ERP105548_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_dg + h_ERP105548_ec)
+
+ERP105548_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_ERP105548_dg + h_ERP105548_bw + h_ERP105548_ec)
+### 
+
+# SRP110282
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP110282_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_dg)
+SRP110282_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_ec)
+SRP110282_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_bw)
+
+SRP110282_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_dg + h_SRP110282_bw)
+SRP110282_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_dg + h_SRP110282_ec)
+
+SRP110282_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP110282_dg + h_SRP110282_bw + h_SRP110282_ec)
+
+SRP110282_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_dg)
+SRP110282_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_ec)
+SRP110282_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_bw)
+
+SRP110282_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_dg + h_SRP110282_bw)
+SRP110282_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_dg + h_SRP110282_ec)
+
+SRP110282_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP110282_dg + h_SRP110282_bw + h_SRP110282_ec)
+### 
+
+# SRP034011
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP034011_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_dg)
+SRP034011_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_ec)
+SRP034011_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_bw)
+
+SRP034011_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_dg + h_SRP034011_bw)
+SRP034011_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_dg + h_SRP034011_ec)
+
+SRP034011_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP034011_dg + h_SRP034011_bw + h_SRP034011_ec)
+
+SRP034011_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_dg)
+SRP034011_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_ec)
+SRP034011_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_bw)
+
+SRP034011_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_dg + h_SRP034011_bw)
+SRP034011_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_dg + h_SRP034011_ec)
+
+SRP034011_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP034011_dg + h_SRP034011_bw + h_SRP034011_ec)
+### 
+
+# SRP071199
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP071199_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_dg)
+SRP071199_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_ec)
+SRP071199_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_bw)
+
+SRP071199_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_dg + h_SRP071199_bw)
+SRP071199_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_dg + h_SRP071199_ec)
+
+SRP071199_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP071199_dg + h_SRP071199_bw + h_SRP071199_ec)
+
+SRP071199_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_dg)
+SRP071199_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_ec)
+SRP071199_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_bw)
+
+SRP071199_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_dg + h_SRP071199_bw)
+SRP071199_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_dg + h_SRP071199_ec)
+
+SRP071199_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP071199_dg + h_SRP071199_bw + h_SRP071199_ec)
+###
+
+# SRP126641
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP126641_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_dg)
+SRP126641_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_ec)
+SRP126641_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_bw)
+
+SRP126641_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_dg + h_SRP126641_bw)
+SRP126641_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_dg + h_SRP126641_ec)
+
+SRP126641_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ h_SRP126641_dg + h_SRP126641_bw + h_SRP126641_ec)
+
+SRP126641_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_dg)
+SRP126641_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_ec)
+SRP126641_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_bw)
+
+SRP126641_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_dg + h_SRP126641_bw)
+SRP126641_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_dg + h_SRP126641_ec)
+
+SRP126641_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ h_SRP126641_dg + h_SRP126641_bw + h_SRP126641_ec)
+### 
+
+# SRP096160
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP096160_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_dg)
+SRP096160_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_ec)
+SRP096160_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_bw)
+
+SRP096160_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_dg + mo_SRP096160_bw)
+SRP096160_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_dg + mo_SRP096160_ec)
+
+SRP096160_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_SRP096160_dg + mo_SRP096160_bw + mo_SRP096160_ec)
+
+SRP096160_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_dg)
+SRP096160_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_ec)
+SRP096160_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_bw)
+
+SRP096160_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_dg + mo_SRP096160_bw)
+SRP096160_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_dg + mo_SRP096160_ec)
+
+SRP096160_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_SRP096160_dg + mo_SRP096160_bw + mo_SRP096160_ec)
+### 
+#
+
+# ERP020067
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+ERP020067_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_dg)
+ERP020067_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_ec)
+ERP020067_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_bw)
+
+ERP020067_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_dg + mo_ERP020067_bw)
+ERP020067_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_dg + mo_ERP020067_ec)
+
+ERP020067_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ mo_ERP020067_dg + mo_ERP020067_bw + mo_ERP020067_ec)
+
+ERP020067_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_dg)
+ERP020067_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_ec)
+ERP020067_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_bw)
+
+ERP020067_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_dg + mo_ERP020067_bw)
+ERP020067_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_dg + mo_ERP020067_ec)
+
+ERP020067_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ mo_ERP020067_dg + mo_ERP020067_bw + mo_ERP020067_ec)
+### 
+
+# SRP018945
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP018945_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_dg)
+SRP018945_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_ec)
+SRP018945_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_bw)
+
+SRP018945_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_dg + m_SRP018945_bw)
+SRP018945_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_dg + m_SRP018945_ec)
+
+SRP018945_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP018945_dg + m_SRP018945_bw + m_SRP018945_ec)
+
+SRP018945_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_dg)
+SRP018945_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_ec)
+SRP018945_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_bw)
+
+SRP018945_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_dg + m_SRP018945_bw)
+SRP018945_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_dg + m_SRP018945_ec)
+
+SRP018945_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP018945_dg + m_SRP018945_bw + m_SRP018945_ec)
+### 
+
+# SRP131855
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP131855_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_dg)
+SRP131855_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_ec)
+SRP131855_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_bw)
+
+SRP131855_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_dg + m_SRP131855_bw)
+SRP131855_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_dg + m_SRP131855_ec)
+
+SRP131855_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP131855_dg + m_SRP131855_bw + m_SRP131855_ec)
+
+SRP131855_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_dg)
+SRP131855_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_ec)
+SRP131855_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_bw)
+
+SRP131855_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_dg + m_SRP131855_bw)
+SRP131855_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_dg + m_SRP131855_ec)
+
+SRP131855_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP131855_dg + m_SRP131855_bw + m_SRP131855_ec)
+###
+
+# SRP150689
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP150689_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_dg)
+SRP150689_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_ec)
+SRP150689_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_bw)
+
+SRP150689_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_dg + m_SRP150689_bw)
+SRP150689_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_dg + m_SRP150689_ec)
+
+SRP150689_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP150689_dg + m_SRP150689_bw + m_SRP150689_ec)
+
+SRP150689_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_dg)
+SRP150689_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_ec)
+SRP150689_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_bw)
+
+SRP150689_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_dg + m_SRP150689_bw)
+SRP150689_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_dg + m_SRP150689_ec)
+
+SRP150689_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP150689_dg + m_SRP150689_bw + m_SRP150689_ec)
+###
+
+# SRP171171
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP171171_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_dg)
+SRP171171_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_ec)
+SRP171171_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_bw)
+
+SRP171171_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_dg + m_SRP171171_bw)
+SRP171171_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_dg + m_SRP171171_ec)
+
+SRP171171_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP171171_dg + m_SRP171171_bw + m_SRP171171_ec)
+
+SRP171171_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_dg)
+SRP171171_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_ec)
+SRP171171_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_bw)
+
+SRP171171_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_dg + m_SRP171171_bw)
+SRP171171_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_dg + m_SRP171171_ec)
+
+SRP171171_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP171171_dg + m_SRP171171_bw + m_SRP171171_ec)
+###
+
+# SRP261098
+liver_RGR_MIS <- left_join(liver_RGR_MIS, join_df)
+SRP261098_pp_dg_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_dg)
+SRP261098_pp_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_ec)
+SRP261098_pp_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_bw)
+
+SRP261098_pp_dg_bw_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_dg + m_SRP261098_bw)
+SRP261098_pp_dg_ec_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_dg + m_SRP261098_ec)
+
+SRP261098_pp_m <- betareg(data = liver_RGR_MIS, RGR ~ m_SRP261098_dg + m_SRP261098_bw + m_SRP261098_ec)
+
+SRP261098_pp_dg_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg)
+SRP261098_pp_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_ec)
+SRP261098_pp_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_bw)
+
+SRP261098_pp_dg_bw_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg + m_SRP261098_bw)
+SRP261098_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg + m_SRP261098_ec)
+
+SRP261098_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg + m_SRP261098_bw + m_SRP261098_ec)
+###
