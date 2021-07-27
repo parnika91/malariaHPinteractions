@@ -1704,3 +1704,135 @@ SRP261098_pp_dg_ec_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg + m
 
 SRP261098_pp_mis <- betareg(data = liver_RGR_MIS, MIS ~ m_SRP261098_dg + m_SRP261098_bw + m_SRP261098_ec)
 ###
+
+####
+
+### create diagnostic plots for beta models
+png("liv_bl_rgr_diags.png")
+par(mfrow = c(2, 2))
+plot(liv_bl_rgr)
+dev.off()
+
+png("liv_rgr_diags.png")
+par(mfrow = c(2, 2))
+plot(liv_rgr)
+dev.off()
+
+png("bl_rgr_diags.png")
+par(mfrow = c(2, 2))
+plot(bl_rgr)
+dev.off()
+
+### now we see the residuals being verx high for a set of genes, we want to remove these points and run the model again
+### and check the fit and existence of genes which might prove essential in one organ and not in the other
+
+liv_bl_rgr1 <- liv_bl_rgr_df[liv_bl_rgr_df$RGR == 0.99999999,]
+# There are 239-241 data points. We will get rid of them all
+
+# remove these points from the dataset
+rgr_without1 <- rgr %>%
+  filter(RGR < 0.99999999)
+
+# make the models with this dataset
+liv_bl_rgr_without1 <- betareg(formula = RGR ~ w_blood_p_core_ec * w_liver_p_core_ec, data = rgr_without1)
+liv_rgr_without1 <- betareg(formula = RGR ~ w_liver_p_core_ec, data = rgr_without1)
+bl_rgr_without1 <- betareg(formula = RGR ~ w_blood_p_core_ec, data = rgr_without1)
+
+# diag plots
+png("liv_bl_rgr_diags_without1.png")
+par(mfrow = c(2, 2))
+plot(liv_bl_rgr_without1)
+dev.off()
+
+png("liv_rgr_diags_without1.png")
+par(mfrow = c(2, 2))
+plot(liv_rgr_without1)
+dev.off()
+
+png("bl_rgr_diags_without1.png")
+par(mfrow = c(2, 2))
+plot(bl_rgr_without1)
+dev.off()
+
+#### make data frames of EC, RGR and Resi
+
+liv_bl_rgr_df_without1 <- data.frame(blood_EC = rgr_without1$w_blood_p_core_ec, liver_EC=rgr_without1$w_liver_p_core_ec, RGR = rgr_without1$RGR)
+liv_bl_rgr_df_without1 <- na.omit(liv_bl_rgr_df_without1)
+liv_bl_rgr_df_without1$Resi <- resid(liv_bl_rgr_without1)
+save(liv_bl_rgr_df_without1, file = "liv_bl_rgr_EC_resid_without1.rds")
+png("liv_bl_int_resid_vs_rgr_without1.png")
+plot(x = liv_bl_rgr_df_without1$RGR, y = liv_bl_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in liver*blood-RGR model (without1)")
+dev.off()
+
+## effects plots - 2D and 3D
+
+# library(effects)
+liv_bl_rgr_without1_effects_b <- predictorEffect("w_blood_p_core_ec", mod = liv_bl_rgr_without1)
+liv_bl_rgr_without1_effects_l <- predictorEffect("w_liver_p_core_ec", mod = liv_bl_rgr_without1)
+png("liv_bl_rgr_without1_effects_b.png", height = 35, width = 35, units = "cm", res = 300)
+plot(liv_bl_rgr_without1_effects_b)
+dev.off()
+
+png("liv_bl_rgr_without1_effects_l.png", height = 35, width = 35, units = "cm", res = 300)
+plot(liv_bl_rgr_without1_effects_l)
+dev.off()
+
+## 3D
+png("liv_bl_rgr_without1_3D_b.png")
+scatter3D(x = liv_bl_rgr_df_without1$blood_EC, y = liv_bl_rgr_df_without1$Resi, z = liv_bl_rgr_df_without1$RGR, phi = 0, bty = "g",
+      xlab="Blood EC", ylab="Model residuals", zlab="RGR", main = "Liver-blood model")
+dev.off()
+png("liv_bl_rgr_without1_3D_l.png")
+scatter3D(x = liv_bl_rgr_df_without1$liver_EC, y = liv_bl_rgr_df_without1$Resi, z = liv_bl_rgr_df_without1$RGR, phi = 0, bty = "g",
+  xlab="Liver EC", ylab="Model residuals", zlab="RGR",main = "Liver-blood model")
+dev.off()
+
+## bl model
+
+bl_rgr_df_without1 <- data.frame(blood_EC = rgr_without1$w_blood_p_core_ec, RGR = rgr_without1$RGR)
+bl_rgr_df_without1 <- na.omit(bl_rgr_df_without1)
+bl_rgr_df_without1$Resi <- resid(bl_rgr_without1)
+save(bl_rgr_df_without1, file = "bl_rgr_EC_resid_without1.rds")
+png("bl_int_resid_vs_rgr_without1.png")
+plot(x = bl_rgr_df_without1$RGR, y = bl_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in blood-RGR model (without1)")
+dev.off()
+
+## effects plots - 2D and 3D
+
+# library(effects)
+bl_rgr_without1_effects <- predictorEffect("w_blood_p_core_ec", mod = bl_rgr_without1)
+
+png("bl_rgr_without1_effects.png", height = 35, width = 35, units = "cm", res = 300)
+plot(bl_rgr_without1_effects)
+dev.off()
+
+## 3D
+png("bl_rgr_without1_3D.png")
+scatter3D(x = bl_rgr_df_without1$blood_EC, y = bl_rgr_df_without1$Resi, z = bl_rgr_df_without1$RGR, phi = 0, bty = "g",
+      xlab="Blood EC", ylab="Model residuals", zlab="RGR", main = "Blood model")
+dev.off()
+
+## liv model
+
+liv_rgr_df_without1 <- data.frame(liver_EC = rgr_without1$w_liver_p_core_ec, RGR = rgr_without1$RGR)
+liv_rgr_df_without1 <- na.omit(liv_rgr_df_without1)
+liv_rgr_df_without1$Resi <- resid(liv_rgr_without1)
+save(liv_rgr_df_without1, file = "liv_rgr_EC_resid_without1.rds")
+png("liv_int_resid_vs_rgr_without1.png")
+plot(x = liv_rgr_df_without1$RGR, y = liv_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in liver-RGR model (without1)")
+dev.off()
+
+## effects plots - 2D and 3D
+
+# library(effects)
+liv_rgr_without1_effects <- predictorEffect("w_liver_p_core_ec", mod = liv_rgr_without1)
+
+png("liv_rgr_without1_effects.png", height = 35, width = 35, units = "cm", res = 300)
+plot(liv_rgr_without1_effects)
+dev.off()
+
+## 3D
+png("liv_rgr_without1_3D.png")
+scatter3D(x = liv_rgr_df_without1$liver_EC, y = liv_rgr_df_without1$Resi, z = liv_rgr_df_without1$RGR, phi = 0, bty = "g",
+      xlab="liver EC", ylab="Model residuals", zlab="RGR", main = "liver model")
+dev.off()
