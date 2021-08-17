@@ -1,14 +1,10 @@
 # libraries
 library(tidyverse)
-library(seqinr)
+# Get orthogroups
+pOG <- read.delim("~/Documents/Data/parasite_orthogroups.txt")
 
-# load string db interactions
-Pb <- read.csv("Downloads/5821.protein.links.full.v11.0.txt", sep="")
-Mm <- read.csv("10090.protein.links.full.v11.0.txt", sep="")
-
-# load orthogroups
-pOG <- read.delim("Downloads//parasite_orthogroups.txt")
-hOG <- read.delim("Downloads//host_orthogroups.txt")
+### Get Pb PPIs
+Pb <- read.csv("~/Downloads/5821.protein.links.full.v11.0.txt", sep="", stringsAsFactors=FALSE)
 
 ### Annotated protein sequences downloaded of version 49, 2020-10-27 from PlasmoDB
 ## load protein sequence fasta file
@@ -65,15 +61,153 @@ intraspecies_DDIs <- function(PPI, OG, D){
     rename(Dom2 = Accession)
   
   ddi <- dom2[,c("Dom1", "Dom2")]
+  ddi_mat <- as.matrix(table(as.character(ddi$Dom1), as.character(ddi$Dom2)))
+  ddi_df <- as.data.frame(table(as.character(ddi$Dom1), as.character(ddi$Dom2)))
+  ddi_df[,1:2] <- lapply(ddi_df[,1:2], as.character)
+  
+  ddi_mat <- spread(ddi_df, Var2, Freq) %>% tibble::column_to_rownames("Var1")
  
   # universe of domain interactions
   domains <- na.omit(unique(as.character(ppi_og_d$Accession)))
   d_uni <- expand.grid(domains, domains)
   
   # takes a very long time
-  x <- d_uni[!duplicated(t(apply(d_uni, 1, sort))), ]
-  y <- ddi[!duplicated(t(apply(ddi, 1, sort))), ]
+  d_uni <- d_uni[!duplicated(t(apply(d_uni, 1, sort))), ]
+  d_uni[] <- lapply(d_uni[], as.character)
   
+  #y <- ddi[!duplicated(t(apply(ddi, 1, sort))), ]
+  
+  # ddpair <- matrix(nrow = 10, ncol = 10)
+  # 
+  # ptm <- proc.time()
+  # for(i in 1:10)
+  #   for(j in 1:10)
+  #   {
+  #     ddpair[i,j] = 
+  #       chisq.test(table(Dom1 = ddi$Dom1 %in% domains[i], 
+  #                        Dom2 = ddi$Dom2 %in% domains[j]) + 
+  #                  table(Dom2 = ddi$Dom2 %in% domains[i], 
+  #                        Dom1 = ddi$Dom1 %in% domains[j]))$p.value
+  #   }
+  # proc.time() - ptm
+  # rownames(ddpair) <- colnames(ddpair) <- domains
+  
+  # if(any(grepl(pattern = d_uni$Var1[i], ddi_df$Var1)) & 
+  #    any(grepl(pattern = d_uni$Var2[i], ddi_df$Var2)) & 
+  #    any(grepl(pattern = d_uni$Var2[i], ddi_df$Var1)) &
+  #    any(grepl(pattern = d_uni$Var1[i], ddi_df$Var2)))
+  # {
+  # tt = sum(ddi_df[which(ddi_df$Var1==d_uni$Var1[i] & ddi_df$Var2==d_uni$Var2[i]), "Freq"],
+  #          ddi_df[which(ddi_df$Var1==d_uni$Var2[i] & ddi_df$Var2==d_uni$Var1[i]), "Freq"])
+  # 
+  # tf = sum(ddi_df[which(ddi_df$Var1 == d_uni$Var1[i]), "Freq"]) + 
+  #   sum(ddi_df[which(ddi_df$Var2 == d_uni$Var1[i]), "Freq"]) - 
+  #   tt
+  # 
+  # ft = sum(ddi_df[which(ddi_df$Var1 == d_uni$Var2[i]), "Freq"]) + 
+  #   sum(ddi_df[which(ddi_df$Var2 == d_uni$Var2[i]), "Freq"]) - 
+  #   tt
+  # 
+  # ff = sum(ddi_df$Freq) - 
+  #   (sum(ddi_df[which(ddi_df$Var2==d_uni$Var1[i]), "Freq"]) + sum(ddi_df[which(ddi_df$Var1==d_uni$Var1[i]), "Freq"]) + 
+  #      sum(ddi_df[which(ddi_df$Var2==d_uni$Var2[i]), "Freq"]) + sum(ddi_df[which(ddi_df$Var1==d_uni$Var2[i]), "Freq"])) + 
+  #   sum(ddi_df[which(ddi_df$Var1==d_uni$Var1[i] & ddi_df$Var2==d_uni$Var2[i]), "Freq"], 
+  #       ddi_df[which(ddi_df$Var1==d_uni$Var2[i] & ddi_df$Var2==d_uni$Var1[i]), "Freq"], 
+  #       ddi_df[which(ddi_df$Var1==d_uni$Var1[i] & ddi_df$Var2==d_uni$Var1[i]), "Freq"],
+  #       ddi_df[which(ddi_df$Var1==d_uni$Var2[i] & ddi_df$Var2==d_uni$Var2[i]), "Freq"])
+  # 
+  # ___________________________
+  
+ enriched_DDI <- function(d_uni)
+ {
+     ddipair <- data.frame()
+     for(i in 1:nrow(d_uni))
+   {
+     ddipair[i,1] <- d_uni$Var1[i]
+     ddipair[i,2] <- d_uni$Var2[i]
+     
+     if(any(grepl(pattern = d_uni$Var1[i], rownames(ddi_mat))) &
+        any(grepl(pattern = d_uni$Var2[i], colnames(ddi_mat))) & 
+        any(grepl(pattern = d_uni$Var2[i], rownames(ddi_mat))) &
+        any(grepl(pattern = d_uni$Var1[i], colnames(ddi_mat))))
+     {
+       tt = sum(ddi_mat[which(rownames(ddi_mat)==d_uni$Var1[i]), which(colnames(ddi_mat)==d_uni$Var2[i])],
+                ddi_mat[which(rownames(ddi_mat)==d_uni$Var2[i]), which(colnames(ddi_mat)==d_uni$Var1[i])])
+       
+       tf = sum(ddi_mat[which(rownames(ddi_mat) == d_uni$Var1[i]),]) + 
+         sum(ddi_mat[,which(colnames(ddi_mat) == d_uni$Var1[i])]) - 
+         tt
+       
+       ft = sum(ddi_mat[which(rownames(ddi_mat) == d_uni$Var2[i]),]) + 
+         sum(ddi_mat[,which(colnames(ddi_mat) == d_uni$Var2[i])]) - 
+         tt
+       
+       ff = sum(colSums(ddi_mat)) - 
+         (sum(ddi_mat[,which(colnames(ddi_mat) == d_uni$Var1[i])]) + sum(ddi_mat[which(rownames(ddi_mat) == d_uni$Var1[i]),]) + 
+            sum(ddi_mat[,which(colnames(ddi_mat) == d_uni$Var2[i])]) + sum(ddi_mat[which(rownames(ddi_mat) == d_uni$Var2[i]),])) + 
+         sum(ddi_mat[which(rownames(ddi_mat) == d_uni$Var1[i]), which(colnames(ddi_mat) == d_uni$Var2[i])], 
+             ddi_mat[which(rownames(ddi_mat) == d_uni$Var2[i]), which(colnames(ddi_mat) == d_uni$Var1[i])], 
+             ddi_mat[which(rownames(ddi_mat) == d_uni$Var1[i]), which(colnames(ddi_mat) == d_uni$Var1[i])],
+             ddi_mat[which(rownames(ddi_mat) == d_uni$Var2[i]), which(colnames(ddi_mat) == d_uni$Var2[i])])
+       
+       ddipair[i,3] <- chisq.test(matrix(c(ff, tf, ft, tt), nrow = 2, byrow = T))$p.value
+     } else {
+       ddipair[i,3] <- NA
+     }
+   }
+   return(ddipair)
  }
-
  
+ system.time(f <- enriched_DDI(d_uni[1:10,]))
+ d_uni_split <- split(d_uni, cut(1:nrow(d_uni), 80))
+ system.time(Pres <- mclapply(d_uni_split, enriched_DDI, mc.cores = 80))
+ 
+
+#   ddipair <- data.frame()
+#   a = 1
+#   
+#   system.time(
+#     for(i in 1)
+#       for(j in 1:ncol(ddi_mat))
+#       {
+#         domain1 <- rownames(ddi_mat)[i]
+#         domain2 <- colnames(ddi_mat)[j]
+#         
+#         ddipair[a,1] <- domain1
+#         ddipair[a,2] <- domain2
+#         
+#        tt = sum(ddi_mat[which(rownames(ddi_mat)==domain1), which(colnames(ddi_mat)==domain2)],
+#                    ddi_mat[which(rownames(ddi_mat)==domain2), which(colnames(ddi_mat)==domain1)])
+#           
+#         tf = sum(ddi_mat[which(rownames(ddi_mat) == domain1),]) + 
+#           sum(ddi_mat[,which(colnames(ddi_mat) == domain1)]) - 
+#           tt
+#         
+#         ft = sum(ddi_mat[which(rownames(ddi_mat) == domain2),]) + 
+#           sum(ddi_mat[,which(colnames(ddi_mat) == domain2)]) - 
+#           tt
+#         
+#         ff = sum(colSums(ddi_mat)) - 
+#           (sum(ddi_mat[,which(colnames(ddi_mat) == domain1)]) + sum(ddi_mat[which(rownames(ddi_mat) == domain1),]) + 
+#              sum(ddi_mat[,which(colnames(ddi_mat) == domain2)]) + sum(ddi_mat[which(rownames(ddi_mat) == domain2),])) + 
+#           sum(ddi_mat[which(rownames(ddi_mat) == domain1), which(colnames(ddi_mat) == domain2)], 
+#               ddi_mat[which(rownames(ddi_mat) == domain2), which(colnames(ddi_mat) == domain1)], 
+#               ddi_mat[which(rownames(ddi_mat) == domain1), which(colnames(ddi_mat) == domain1)],
+#               ddi_mat[which(rownames(ddi_mat) == domain2), which(colnames(ddi_mat) == domain2)])
+#         
+#         ddipair[a,3] <- chisq.test(matrix(c(ff, tf, ft, tt), nrow = 2, byrow = T))$p.value
+#         
+#         a = a+1
+#       })
+#     
+#  }
+# 
+# chisq.test(table(Pfam00004 = ddi$Dom1 %in% "pfam00004", Pfam00026 = ddi$Dom2 %in% "pfam00026") + table(Pfam00004 = ddi$Dom2 %in% "pfam00004", Pfam00026 = ddi$Dom1 %in% "pfam00026"))
+# 
+# table(Pfam00271 = ddi$Dom1 %in% "pfam00271", pfam00270 = ddi$Dom2 %in% "pfam00270") + table(pfam00271 = ddi$Dom2 %in% "pfam00271", pfam00270 = ddi$Dom1 %in% "pfam00270")
+# 
+# table(as.character(dom2$Dom1[1:10000]), as.character(dom2$Dom2[1:10000]))[1:5, 1:5]
+# 
+# df <- data.frame(A=c("j","K","Z"), B=c("i","P","Z"), C=c(100,101,102), ntimes=c(2,4,1))
+# df <- as.data.frame(lapply(df, rep, df$ntimes))
+# mat2 <- as.data.frame(lapply(mat2, rep, mat2$value))
