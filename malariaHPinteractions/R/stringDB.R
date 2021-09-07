@@ -1,10 +1,14 @@
 # libraries
 library(tidyverse)
+library(seqinr)
+
+
 # Get orthogroups
 pOG <- read.delim("~/Documents/Data/parasite_orthogroups.txt")
 
 ### Get Pb PPIs
 Pb <- read.csv("~/Downloads/5821.protein.links.full.v11.0.txt", sep="", stringsAsFactors=FALSE)
+Mm <- read.csv("~/Downloads/10090.protein.links.full.v11.0.txt", sep="", stringsAsFactors=FALSE)
 
 ### Annotated protein sequences downloaded of version 49, 2020-10-27 from PlasmoDB
 ## load protein sequence fasta file
@@ -24,6 +28,15 @@ d1 <- read.csv("Downloads/PbergheiPFAM_1_2_hitdata.txt", stringsAsFactors=TRUE) 
 d2 <- read.csv("Downloads/PbergheiPFAM_2_2_hitdata.txt", stringsAsFactors=TRUE) %>%
   filter(!(Hit.type == "superfamily"))
 d <- rbind(d1, d2)
+
+### for mouse
+dm <- data.frame()
+for(i in 1:17)
+{
+  d <- read.delim(paste0("Downloads/mouse", i, "_hitdata.txt", collapse = ""), stringsAsFactors=TRUE) %>%
+    filter(grepl(pattern = "pfam", Accession))
+  dm <- rbind(dm, d)
+}
 
 ### intra-species DDIs function
 intraspecies_DDIs <- function(PPI, OG, D){
@@ -157,9 +170,10 @@ intraspecies_DDIs <- function(PPI, OG, D){
    }
    return(ddipair)
  }
+}
  
  system.time(f <- enriched_DDI(d_uni[1:10,]))
- d_uni_split <- split(d_uni, cut(1:nrow(d_uni), 80))
+ d_uni_split <- split(d_uni, cut(1:nrow(d_uni), 80)) # ncores = 80
  system.time(Pres <- mclapply(d_uni_split, enriched_DDI, mc.cores = 80))
  
 
@@ -211,3 +225,24 @@ intraspecies_DDIs <- function(PPI, OG, D){
 # df <- data.frame(A=c("j","K","Z"), B=c("i","P","Z"), C=c(100,101,102), ntimes=c(2,4,1))
 # df <- as.data.frame(lapply(df, rep, df$ntimes))
 # mat2 <- as.data.frame(lapply(mat2, rep, mat2$value))
+
+ 
+ ################## mouse
+ 
+
+ fa <- read.fasta("~/Documents/Data/Mus_musculus.GRCm39.pep.all.fa.txt", seqtype = "AA", as.string = T)
+ 
+ protein <- sapply(fa, function(x) substr(strsplit(attr(x, "Annot"), split = " ")[[1]][1], 
+                                          2, 
+                                          nchar(strsplit(attr(x, "Annot"), split = " ")[[1]][1]))) %>%
+   as.data.frame() %>%
+   separate(".", c("A", NA))
+ 
+ gene <- sapply(fa, function(x) substr(strsplit(attr(x, "Annot"), split = " ")[[1]][4], 
+                                       6, 
+                                       nchar(strsplit(attr(x, "Annot"), split = " ")[[1]][4]))) %>%
+   as.data.frame() %>%
+   separate(".", c("B", NA))
+ 
+ 
+ pro_gene <- data.frame(Protein = protein, Gene = gene)
