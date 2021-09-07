@@ -64,7 +64,7 @@ bw_p <- bw[grep(pattern = "p_OG", names(bw))]
 bw_df <- as.data.frame(bw_p) %>%
   tibble::rownames_to_column("Orthogroup")
 
-cl_p <- cl[grep(pattern = "p_OG", names(cl))]
+cl_p <- cl[grep(pattern = SRP118503_int"p_OG", names(cl))]
 cl_df <- as.data.frame(cl_p) %>%
   tibble::rownames_to_column("Orthogroup")
 
@@ -94,6 +94,65 @@ load("Unweighted_RGR_MIS_cleaned.RData")
 RGR_MIS_cleaned <- left_join(RGR_MIS_cleaned, join_df)
 save(RGR_MIS_cleaned, file = "Unweighted_RGR_MIS_cleaned.RData")
 
+#############################
+rgr <- readRDS("Unweighted_RGR_MIS_cleaned_wec_uec_blood_liver_all_para_numofstudies.rds")
+liver_studies <- c("SRP250329", "SRP096160", "SRP110282", "ERP105548", "SRP018945", "SRP034011", "SRP071199", "SRP126641", "SRP131855", "SRP150689", "SRP171171", "SRP261098", "ERP020067")
+liver_type <- c("str", "str", "int", "int", "all", "all", "all", "all", "all", "all", "all", "all", "all")
+
+blood_studies <- c("DRP000987", "ERP106451", "ERP110375", "ERP004598", "SRP118827", "SRP116793", "SRP032775", "SRP233153","SRP118996", "SRP116593", "ERP023982", "SRP108356", "SRP118503", "hpv_bl", "m_bl")
+blood_type <- c("str", "all", "str", "int", "all", "all", "str", "int","all", "int", "int", "str", "int", "int", "int")
+
+
+for(i in 1:length(studies))
+{
+  data <- loadRData(paste0(studies[i],"/","cor", "/", studies[i], "_", type[i], "_para.RData", collapse = "")); colnames(data_pp)[1] <- "p1"; colnames(data_pp)[2] <- "p2"
+
+  d <- data.frame(p1 = as.character(data[,1]), p2 = as.character(data[,2]))
+  ig <- graph_from_data_frame(d, directed = F)
+  ec <- eigen_centrality(ig, directed = FALSE)
+  ec_p <- ec$vector[grep(pattern = "p_OG", names(ec$vector))]
+  ec_df <- as.data.frame(ec_p) %>%
+    tibble::rownames_to_column("Orthogroup")
+  ec_df[is.na(ec_df)] <- 0; colnames(ec_df) <- c("Orthogroup", paste0(studies[i], "_", type[i], "_ec"))
+  rgr <- left_join(rgr, ec_df)
+
+}
+
+
+### cor of centrality between pairwise studies in liver and blood ######
+liv_blood_cormat <- rgr[, 178:205]
+liv_blood_cormat[is.na(liv_blood_cormat)] <- 0
+library(Hmisc)
+ec <- liv_blood_cormat
+cormat <- rcorr(as.matrix(ec))
+
+library(corrplot)
+cormat$r <- cormat$r[,-c(6, 10)]
+cormat$r <- cormat$r[-c(6,10),]
+cormat$P <- cormat$P[,-c(6, 10)]
+cormat$P <- cormat$P[-c(6,10),]
+
+rownames(cormat$r) <- colnames(cormat$r) <- sapply(colnames(cormat$r), function(x) substr(x, 1, (nchar(x)-3)))
+rownames(cormat$P) <- colnames(cormat$P) <- rownames(cormat$r)
+
+f <- c("SRP250329_str_liver", "SRP096160_str_liver", "SRP110282_int_liver", 
+  "ERP105548_int_liver", "SRP018945_all_liver", "SRP071199_all_liver", 
+  "SRP126641_all_liver", "SRP131855_all_liver", "SRP171171_all_liver", 
+  "SRP261098_all_liver","ERP020067_all_liver", "DRP000987_str_blood", 
+  "ERP106451_all_blood", "ERP110375_str_blood", "ERP004598_int_blood", 
+  "SRP118827_all_blood", "SRP116793_all_blood", "SRP032775_str_blood", 
+  "SRP233153_int_blood", "SRP118996_all_blood", "SRP116593_int_blood", 
+  "ERP023982_int_blood", "SRP108356_str_blood", "SRP118503_int_blood", 
+  "hpv_bl_int", "m_bl_int")
+
+rownames(cormat$r) <- colnames(cormat$r) <- rownames(cormat$P) <- colnames(cormat$P) <- f
+
+corrplot(cormat$r, type = "upper", p.mat = cormat$P, sig.level = 0.05, order = "hclust", method = "square", insig = "blank", tl.col = 'black', tl.cex = 0.8)
+
+corrplot(cormat$r, type = "upper", p.mat = cormat$P, order = "hclust", method = 'color',
+         sig.level = c(0.001, 0.01, 0.05), pch.cex = 1, insig = "label_sig", pch.col = 'grey20', 
+         tl.col = 'black', tl.cex = 1, title = "Blood and liver centrality correlation")
+#############################################
 ### models ###
 
 eff <- c("dg_m", "ec_m", "bw_m", "dg_bw_m", "dg_ec_m", "m")
@@ -1759,10 +1818,13 @@ dev.off()
 liv_bl_rgr_df_without1 <- data.frame(blood_EC = rgr_without1$w_blood_p_core_ec, liver_EC=rgr_without1$w_liver_p_core_ec, RGR = rgr_without1$RGR)
 liv_bl_rgr_df_without1 <- na.omit(liv_bl_rgr_df_without1)
 liv_bl_rgr_df_without1$Resi <- resid(liv_bl_rgr_without1)
-save(liv_bl_rgr_df_without1, file = "liv_bl_rgr_EC_resid_without1.rds")
+saveRDS(liv_bl_rgr_df_without1, file = "liv_bl_rgr_EC_resid_without1.rds")
 png("liv_bl_int_resid_vs_rgr_without1.png")
 plot(x = liv_bl_rgr_df_without1$RGR, y = liv_bl_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in liver*blood-RGR model (without1)")
 dev.off()
+
+liv_bl_rgr_df_without1$GeneName <- rgr_without1$gene.y[as.numeric(attr(liv_bl_rgr_without1$fitted.values, "names"))]
+liv_bl_rgr_df_without1$Orthogroup <- rgr_without1$Orthogroup[as.numeric(attr(liv_bl_rgr_without1$fitted.values, "names"))]
 
 ## effects plots - 2D and 3D
 
@@ -1792,10 +1854,13 @@ dev.off()
 bl_rgr_df_without1 <- data.frame(blood_EC = rgr_without1$w_blood_p_core_ec, RGR = rgr_without1$RGR)
 bl_rgr_df_without1 <- na.omit(bl_rgr_df_without1)
 bl_rgr_df_without1$Resi <- resid(bl_rgr_without1)
-save(bl_rgr_df_without1, file = "bl_rgr_EC_resid_without1.rds")
+saveRDS(bl_rgr_df_without1, file = "bl_rgr_EC_resid_without1.rds")
 png("bl_int_resid_vs_rgr_without1.png")
 plot(x = bl_rgr_df_without1$RGR, y = bl_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in blood-RGR model (without1)")
 dev.off()
+
+bl_rgr_df_without1$GeneName <- rgr_without1$gene.y[as.numeric(attr(bl_rgr_without1$fitted.values, "names"))]
+bl_rgr_df_without1$Orthogroup <- rgr_without1$Orthogroup[as.numeric(attr(bl_rgr_without1$fitted.values, "names"))]
 
 ## effects plots - 2D and 3D
 
@@ -1817,10 +1882,13 @@ dev.off()
 liv_rgr_df_without1 <- data.frame(liver_EC = rgr_without1$w_liver_p_core_ec, RGR = rgr_without1$RGR)
 liv_rgr_df_without1 <- na.omit(liv_rgr_df_without1)
 liv_rgr_df_without1$Resi <- resid(liv_rgr_without1)
-save(liv_rgr_df_without1, file = "liv_rgr_EC_resid_without1.rds")
+saveRDS(liv_rgr_df_without1, file = "liv_rgr_EC_resid_without1.rds")
 png("liv_int_resid_vs_rgr_without1.png")
 plot(x = liv_rgr_df_without1$RGR, y = liv_rgr_df_without1$Resi, xlab = "RGR", ylab = "Residuals", main = "Residuals in liver-RGR model (without1)")
 dev.off()
+
+liv_rgr_df_without1$GeneName <- rgr_without1$gene.y[as.numeric(attr(liv_rgr_without1$fitted.values, "names"))]
+liv_rgr_df_without1$Orthogroup <- rgr_without1$Orthogroup[as.numeric(attr(liv_rgr_without1$fitted.values, "names"))]
 
 ## effects plots - 2D and 3D
 
@@ -1836,3 +1904,24 @@ png("liv_rgr_without1_3D.png")
 scatter3D(x = liv_rgr_df_without1$liver_EC, y = liv_rgr_df_without1$Resi, z = liv_rgr_df_without1$RGR, phi = 0, bty = "g",
       xlab="liver EC", ylab="Model residuals", zlab="RGR", main = "liver model")
 dev.off()
+
+################################################
+#### iPbe-liver #####
+library(readxl)
+liver <- read_excel("~/Downloads/1-s2.0-S0092867419311808-mmc3(1).xlsx", sheet = "S3.2") %>%
+  slice(1:428) %>%
+  rename(gene.y = `Genes in iPbe`) %>%
+  rename(liv_ess = `iPbe-liver: growth rate upon KO / growth rate WT (values for essential classification of previous colum)`)
+
+liver[361:427,1] <- substring(liver$gene.y[361:427], 10, 22)
+liver[,1] <- sapply(liver[,1], function(x) substr(x, 1, 13))
+
+rgr <- load("/home/parnika/Documents/Data/rgr.rda")
+d <- left_join(rgr, liver, by = "gene.y") %>%
+  #filter(RGR < 0.999999990) %>%
+  mutate(liv_ess = replace(liv_ess, liv_ess == 0, 0.0000000001))
+
+
+  
+
+
