@@ -23,7 +23,8 @@ loadRData <- function(fileName){
 
 hostGOenr <- function(host_genes, GO)
 {
-	host_orthogroups <- read.delim("host_orthogroups.txt", stringsAsFactors=FALSE)
+	#host_orthogroups <- read.delim("host_orthogroups.txt", stringsAsFactors=FALSE)
+  host_orthogroups <- hOG
 	host_genes <- data.frame(Orthogroup = host_genes)
     colnames(host_genes)[1] <- "Orthogroup"
     host_in <- inner_join(host_genes, host_orthogroups)
@@ -60,9 +61,9 @@ hostGOenr <- function(host_genes, GO)
                    mapping = "org.Mm.eg",
                    ID = "ensembl")
     
-    resultKS=runTest(hGOdata, algorithm='weight01', statistic='Fisher')
+    resultKS=runTest(hGOdata, algorithm='weight01', statistic='KS')
     allGO=usedGO(hGOdata)
-    all_res=GenTable(hGOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(hGOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(hGOdata, score(resultKS), firstSigNodes = 5, useInfo ='all')
@@ -87,9 +88,8 @@ hostGOenr <- function(host_genes, GO)
 paraGOenr <- function(para_genes, GO)
 {
 	para_genes <- data.frame(Orthogroup = para_genes)
-	pOG <- read.delim("parasite_orthogroups.txt", 
-                                   stringsAsFactors=FALSE)
-	geneID2GO <- readMappings(file = "~/topGO/p_OG_GOterms.txt") # 3659 genes
+	#pOG <- read.delim("parasite_orthogroups.txt", stringsAsFactors=FALSE)
+	geneID2GO <- readMappings(file = "p_OG_GOterms.txt") # 3659 genes
   all_res <- data.frame(GO.ID = "GO:000000", Term = "xyz", Annotated = 0, Significant = 0, Expected = 0, Fisher = 1, GenesForGOterm = "")
 	#normal:
     para_in <- unique(as.character(para_genes[,1]))
@@ -114,9 +114,9 @@ paraGOenr <- function(para_genes, GO)
                   annot = annFUN.gene2GO,
                   gene2GO = geneID2GO,
                   nodeSize = 1)
-    resultKS=runTest(GOdata, algorithm='weight01', statistic='Fisher') 
+    resultKS=runTest(GOdata, algorithm='weight01', statistic='KS') 
     allGO=usedGO(GOdata)
-    all_res=GenTable(GOdata, Fisher=resultKS, orderBy="Fisher", topNodes=length(allGO))
+    all_res=GenTable(GOdata, KS=resultKS, orderBy="KS", topNodes=length(allGO))
     #par(cex = 0.4)
     # Plotting results
     #showSigOfNodes(GOdata, score(resultKS), firstSigNodes = length(allGO), useInfo ='all')
@@ -143,14 +143,14 @@ paraGOenr <- function(para_genes, GO)
   
 }
 
-pOG <- read.delim("parasite_orthogroups.txt", 
+pOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/parasite_orthogroups.txt", 
                                    stringsAsFactors=FALSE)
-hOG <- read.delim("host_orthogroups.txt", stringsAsFactors=FALSE)
+hOG <- read.delim("/SAN/Plasmo_compare/OrthoFinder/host_orthogroups.txt", stringsAsFactors=FALSE)
 
 
-p_GO <- read.table(paste0("~/p_OG_topGO_BP_blood_overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
+p_GO <- read.table(paste0("p_OG_topGO_BP_blood_overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
 				dplyr::filter(KS <= 0.05)
-h_GO <- read.delim(paste0("~/Mmus_topGO_BP_blood_overall_host_result.txt", collapse = ''), header = T, sep = '\t', stringsAsFactors=FALSE) %>%
+h_GO <- read.delim(paste0("Mmus_topGO_BP_blood_overall_host_result.txt", collapse = ''), header = T, sep = '\t', stringsAsFactors=FALSE) %>%
 					dplyr::filter(KS <= 0.05)
 #ov_ad_bp <- loadRData("blood_core_network_nomo.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
 ov_ad_bp <- loadRData("blood_all_bipartite.RData"); colnames(ov_ad_bp)[1] <- "host"; colnames(ov_ad_bp)[2] <- "para"
@@ -178,7 +178,7 @@ for(i in 1:nrow(p_GO))
 
 	# Go analysis of host genes
 	allres <- hostGOenr(hg_vector, GO = p_GO[i,1])%>%
-		dplyr::filter(Fisher <= 0.05)
+		dplyr::filter(KS <= 0.05)
 
 	GO_asso_from_parasite[[i]] <- allres
 	names(GO_asso_from_parasite)[i] <- paste0(p_GO[i,"GO.ID"], "_", p_GO[i,"Term"])
@@ -212,7 +212,7 @@ for(i in 1:nrow(h_GO))
 
   	# Go analysis of host genes
   	allres <- paraGOenr(pg_vector, GO = h_GO[i,1])%>%
-  		filter(Fisher <= 0.05)
+  		filter(KS <= 0.05)
   		
   	GO_asso_from_host[[i]] <- allres
   	names(GO_asso_from_host)[i] <- paste0(h_GO[i,"GO.ID"], "_", h_GO[i,"Term"])
@@ -298,11 +298,20 @@ GO_asso_overall <- full_join(GO_asso_overall_from_host_edges, GO_asso_overall_fr
 
 #### liver
 
-liver_bp <- loadRData("liver.int.overall/cor/liver.int.overall_bipartite.RData"); colnames(liver_bp)[1] <- "host"; colnames(liver_bp)[2] <- "para"
-l_p_GO <- read.table(paste0("p_OG_topGO_BP_liver.int.overall_para_result.txt", collapse = ""), header = T, sep = '\t') %>%
-				filter(KS <= 0.05)
-l_h_GO <- read.table(paste0("Mmus_topGO_BP_liver.int.overall_host_result.txt", collapse = ''), header = T, sep = '\t') %>%
-					filter(KS <= 0.05)
+liver_bp <- loadRData("liver.int.overall/cor/liver_ov_bipartite.RData"); colnames(liver_bp)[1] <- "host"; colnames(liver_bp)[2] <- "para"
+l_p_GO <- read.csv("p_OG_topGO_BP_liver_overall_para_result_KS.txt") %>%
+				filter(KS <= 0.05) %>% 
+        filter(GenesForGOterm != "")
+l_h_GO <- read.delim("Mmus_topGO_BP_liver_overall_host_result_KS.txt") %>%
+					filter(KS <= 0.05) %>% 
+          filter(GenesForGOterm != "")
+
+l_core_p_GO <- read.delim("p_OG_topGO_BP_liver_core_para_result_KS.txt") %>%
+  filter(KS <= 0.05) %>% 
+  filter(GenesForGOterm != "")
+l_core_h_GO <- read.delim("Mmus_topGO_BP_liver_core_host_result_KS.txt") %>%
+  filter(KS <= 0.05) %>% 
+  filter(GenesForGOterm != "")
 
 liver_GO_asso_from_parasite <- list()
 for(i in 1:nrow(l_p_GO))
@@ -333,6 +342,7 @@ for(i in 1:nrow(l_p_GO))
 	names(liver_GO_asso_from_parasite)[i] <- paste0(l_p_GO[i,"GO.ID"], "_", l_p_GO[i,"Term"])
 }
 }
+save(liver_GO_asso_from_parasite, file = "liver_core_GO_asso_from_parasite.RData")
 
 liver_GO_asso_from_host <- list()
 for(i in 1:nrow(l_h_GO))
@@ -364,8 +374,7 @@ for(i in 1:nrow(l_h_GO))
 }
 }
 
-save(liver_GO_asso_from_host, file = "liver_GO_asso_from_host.RData")
-save(liver_GO_asso_from_parasite, file = "liver_GO_asso_from_parasite.RData")
+save(liver_GO_asso_from_host, file = "liver_core_GO_asso_from_host.RData")
 
 # make GO term edges to vis as networks
 
@@ -378,28 +387,37 @@ for(i in 1:length(liver_GO_asso_from_parasite))
 		rows <- nrow(liver_GO_asso_from_parasite[[i]])
 		liver_GO_asso_from_parasite_edges[a:(a+rows-1),1] <- rep(strsplit(names(liver_GO_asso_from_parasite)[i], split = "_")[[1]][2], rows)
 		liver_GO_asso_from_parasite_edges[a:(a+rows-1),2] <- liver_GO_asso_from_parasite[[i]]$Term
+		liver_GO_asso_from_parasite_edges[a:(a+rows-1),3] <- liver_GO_asso_from_parasite[[i]]$Significant
 
 		a = a+rows
 	}
 }
+colnames(liver_GO_asso_from_parasite_edges) <- c("para_GO", "host_GO", "numberOfGenes_GOfromPara")
 
 liver_GO_asso_from_host_edges <- data.frame()
 a = 1
 for(i in 1:length(liver_GO_asso_from_host))
 {
-	if(!is.null(nrow(liver_GO_asso_from_parasite[[i]]))) 
+	if(!is.null(nrow(liver_GO_asso_from_host[[i]]))) 
 	{
-	rows <- nrow(liver_GO_asso_from_host[i])
+	rows <- nrow(liver_GO_asso_from_host[[i]])
 	liver_GO_asso_from_host_edges[a:(a+rows-1),1] <- rep(strsplit(names(liver_GO_asso_from_host)[i], split = "_")[[1]][2], rows)
 	liver_GO_asso_from_host_edges[a:(a+rows-1),2] <- liver_GO_asso_from_host[[i]]$Term
-
+	liver_GO_asso_from_host_edges[a:(a+rows-1),3] <- liver_GO_asso_from_host[[i]]$Significant
+	
 	a = a+rows
 }
 }
+colnames(liver_GO_asso_from_host_edges) <- c("host_GO", "para_GO", "numberOfGenes_GOfromHost")
 
 save(liver_GO_asso_from_parasite_edges, file = "liver_GO_asso_from_parasite_edges.RData")
 save(liver_GO_asso_from_host_edges, file = "liver_GO_asso_from_host_edges.RData")
 
+# merge these two
+merged_liver_GO_asso <- merge(liver_GO_asso_from_parasite_edges, liver_GO_asso_from_host_edges)
+merged_liver_GO_asso <- merged_liver_GO_asso[!(merged_liver_GO_asso$numberOfGenes_GOfromHost == 0 | merged_liver_GO_asso$numberOfGenes_GOfromPara == 0),]
+
+save(merged_liver_GO_asso, file = "merged_liver_GO_asso.RData")
 
 ######## for paper1, I want to show the parasite GO terms connected to host GO term cell-cell adhesion with cadherin
 # 1. cell-cell adhesion by cadherin
